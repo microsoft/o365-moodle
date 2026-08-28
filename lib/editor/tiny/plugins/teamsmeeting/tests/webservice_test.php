@@ -181,9 +181,6 @@ final class webservice_test extends externallib_advanced_testcase {
     /**
      * execute() throws required_capability_exception when the caller lacks
      * tiny/teamsmeeting:add in the meeting's stored context.
-     *
-     * Capability is checked before ownership, so the record is owned by the
-     * student to isolate this case from the ownership check.
      */
     public function test_execute_throws_on_missing_capability(): void {
         global $DB;
@@ -211,10 +208,10 @@ final class webservice_test extends externallib_advanced_testcase {
     }
 
     /**
-     * execute() throws moodle_exception when a user with the capability tries
-     * to retrieve a meeting record they did not create.
+     * execute() succeeds for any user holding the capability in the meeting's
+     * context, even when they are not the user who created the record.
      */
-    public function test_execute_throws_on_wrong_owner(): void {
+    public function test_execute_allows_other_user_with_capability(): void {
         global $DB;
 
         $course = $this->getDataGenerator()->create_course();
@@ -235,11 +232,13 @@ final class webservice_test extends externallib_advanced_testcase {
             'timecreated' => time(),
         ]);
 
-        // Other user has the same capability but is not the record owner.
+        // Other user has the same capability but is not the record creator.
         $this->setUser($other);
 
-        $this->expectException(\moodle_exception::class);
-        get_meeting_details::execute($meetingurl);
+        $result = get_meeting_details::execute($meetingurl);
+
+        $this->assertTrue($result['status']);
+        $this->assertStringContainsString('result.php', $result['url']);
     }
 
     /**
