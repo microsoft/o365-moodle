@@ -35,6 +35,7 @@ use moodle_exception;
 use moodle_url;
 use required_capability_exception;
 use stdClass;
+use tiny_teamsmeeting\token;
 
 /**
  * Get existing meeting details from database.
@@ -88,12 +89,13 @@ class get_meeting_details extends external_api {
         }
         require_capability('tiny/teamsmeeting:add', $context);
 
+        // The result.php page runs without a session and authenticates from this token.
         $resulturl = new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/result.php', [
             'title' => $record->title,
             'link' => $record->link,
             'options' => $record->options,
             'viewexisting' => 1,
-            'sesskey' => sesskey(),
+            'session' => token::generate(),
         ]);
         return [
             'status' => true,
