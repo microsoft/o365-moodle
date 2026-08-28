@@ -60,7 +60,11 @@ if ($viewexisting) {
         : context_system::instance();
     require_capability('tiny/teamsmeeting:add', $context);
 } else {
-    confirm_sesskey($session);
+    // The meetings app callback carries a scoped token (not the session key).
+    // confirm_sesskey() only returns a bool, so it must be checked explicitly.
+    if (!\tiny_teamsmeeting\token::validate($session)) {
+        throw new moodle_exception('invalidsesskey', 'error');
+    }
     if ($courseid) {
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
         $context = context_course::instance($course->id);
