@@ -156,8 +156,8 @@ $headerattributes = [
     'class' => 'meetingcreatedheader',
     'style' => 'font-size: 20px; font-weight: 600; display: block; text-align: center;',
 ];
-// html_writer::tag() does not escape its contents and get_string() does not
-// escape its $a placeholder, so the title must be escaped before it is used.
+// Neither html_writer::tag() (contents) nor get_string() ($a placeholder)
+// escapes its input, so the title must be escaped before it is used here.
 $headermessage = html_writer::tag(
     'span',
     get_string('iframe_meeting_created', 'tiny_teamsmeeting', s($title ?? '')),
