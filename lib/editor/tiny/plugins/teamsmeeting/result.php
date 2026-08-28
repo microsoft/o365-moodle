@@ -85,7 +85,7 @@ if ($viewexisting) {
 
 $meetingoptions = null;
 
-if (!empty($preview)) {
+if (!empty($preview) && !empty($meetinglink)) {
     $htmldom = new DOMDocument();
     @$htmldom->loadHTML($preview);
     $links = $htmldom->getElementsByTagName('a');
@@ -107,7 +107,13 @@ if (!empty($preview)) {
         $meetingdata->timecreated = time();
         $meetingdata->userid = $USER->id;
         $meetingdata->contextid = $context->id;
-        $DB->insert_record('tiny_teamsmeeting', $meetingdata);
+        try {
+            $DB->insert_record('tiny_teamsmeeting', $meetingdata);
+        } catch (dml_write_exception $e) {
+            // A concurrent request inserted the same link first; the unique
+            // linkhash index turns that race into a harmless no-op.
+            debugging($e->getMessage(), DEBUG_DEVELOPER);
+        }
     }
 } else if (!empty($optionslink) && filter_var($optionslink, FILTER_VALIDATE_URL)) {
     $meetingoptions = $optionslink;
