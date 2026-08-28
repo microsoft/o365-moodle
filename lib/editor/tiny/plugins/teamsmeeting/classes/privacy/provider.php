@@ -110,7 +110,11 @@ class provider implements
         );
 
         foreach ($records as $record) {
-            $context = context::instance_by_id($record->contextid);
+            $context = context::instance_by_id($record->contextid, IGNORE_MISSING);
+            if (!$context) {
+                // The context has been deleted since the meeting was created.
+                continue;
+            }
             $data = (object) [
                 'title' => $record->title,
                 'link' => $record->link,
