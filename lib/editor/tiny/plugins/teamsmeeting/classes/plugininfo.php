@@ -25,8 +25,6 @@
 
 namespace tiny_teamsmeeting;
 
-defined('MOODLE_INTERNAL') || die();
-
 use context;
 use editor_tiny\editor;
 use editor_tiny\plugin;
