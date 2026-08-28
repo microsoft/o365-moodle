@@ -50,9 +50,11 @@ $string['tiny_input_url_placeholder'] = 'Link zostanie wygenerowany po utworzeni
 $string['tiny_checkbox_new_window_label'] = 'Otwórz w nowym oknie';
 
 // Privacy subsystem.
-$string['privacy:metadata'] = 'Wtyczka Tiny Teams Meeting nie przechowuje żadnych danych osobowych.';
-$string['privacy:metadata:msteamsapp'] = 'Wtyczka Tiny Teams Meeting nie przechowuje żadnych danych. Jednak wysyła kod języka użytkownika do aplikacji Microsoft Teams, aby zapewnić interfejs użytkownika oparty na języku użytkownika.';
-$string['privacy:metadata:msteamsapp:userlang'] = 'Kod języka użytkownika jest wysyłany do aplikacji Microsoft Teams.';
+$string['privacy:metadata'] = 'Wtyczka Tiny Teams Meeting przechowuje rekordy spotkań utworzonych przez użytkowników, w tym identyfikator użytkownika oraz kontekst, w którym utworzono spotkanie.';
+$string['privacy:metadata:msteamsapp'] = 'Aby utworzyć spotkanie, wtyczka Tiny Teams Meeting wymienia dane z aplikacją spotkań Microsoft Teams.';
+$string['privacy:metadata:msteamsapp:courseid'] = 'Identyfikator kursu, w którym tworzone jest spotkanie, jest wysyłany do aplikacji spotkań Microsoft Teams.';
+$string['privacy:metadata:msteamsapp:moodleurl'] = 'Adres URL tej witryny Moodle jest wysyłany do aplikacji spotkań Microsoft Teams, aby mogła zwrócić link do spotkania we właściwe miejsce.';
+$string['privacy:metadata:msteamsapp:userlang'] = 'Kod języka użytkownika jest wysyłany do aplikacji spotkań Microsoft Teams, aby jej interfejs był zgodny z językiem użytkownika.';
 
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
