@@ -23,9 +23,11 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__ . '/../../../../../config.php');
+// Loaded inside the editor iframe; it only shows a static, translated "meeting
+// not found" message and carries no session.
+define('NO_MOODLE_COOKIES', true);
 
-require_login();
+require_once(__DIR__ . '/../../../../../config.php');
 
 // This script echoes its response directly rather than through $OUTPUT, so the
 // standard security headers (notably X-Frame-Options) must be sent explicitly.

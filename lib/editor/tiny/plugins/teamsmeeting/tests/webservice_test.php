@@ -273,6 +273,6 @@ final class webservice_test extends externallib_advanced_testcase {
         $this->assertStringContainsString('result.php', $result['url']);
         $this->assertStringContainsString('viewexisting=1', $result['url']);
         $this->assertStringContainsString(urlencode($meetingurl), $result['url']);
-        $this->assertStringContainsString('sesskey=', $result['url']);
+        $this->assertStringContainsString('session=', $result['url']);
     }
 }
