@@ -55,9 +55,14 @@ if ($viewexisting) {
     } else {
         $viewrecord = null;
     }
-    $context = ($viewrecord && !empty($viewrecord->contextid))
-        ? context::instance_by_id($viewrecord->contextid)
-        : context_system::instance();
+    $context = null;
+    if ($viewrecord && !empty($viewrecord->contextid)) {
+        // The course the meeting was created in may since have been deleted.
+        $context = context::instance_by_id($viewrecord->contextid, IGNORE_MISSING) ?: null;
+    }
+    if (!$context) {
+        $context = context_system::instance();
+    }
     require_capability('tiny/teamsmeeting:add', $context);
 } else {
     // The meetings app callback carries a scoped token (not the session key).
