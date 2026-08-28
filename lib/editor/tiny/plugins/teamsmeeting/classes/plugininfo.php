@@ -25,15 +25,11 @@
 
 namespace tiny_teamsmeeting;
 
-defined('MOODLE_INTERNAL') || die();
-
 use context;
 use editor_tiny\editor;
 use editor_tiny\plugin;
 use editor_tiny\plugin_with_buttons;
 use editor_tiny\plugin_with_configuration;
-
-require_once($CFG->dirroot . '/repository/url/lib.php');
 
 /**
  * Tiny Teams Meeting plugin info.
@@ -96,15 +92,16 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_conf
             $courseid = SITEID;
         }
 
-        // The result.php page always resolves its own context from this courseid,
-        // so the token must be scoped to that same context to be accepted there.
-        $resultcontext = \context_course::instance($courseid);
-
         return [
             'appurl' => get_config('tiny_teamsmeeting', 'meetingapplink'),
-            'clientdomain' => encode_url($CFG->wwwroot),
+            // The raw wwwroot is passed as-is; the JavaScript side URL-encodes it
+            // when building the query string for the meetings app.
+            'clientdomain' => $CFG->wwwroot,
             'localevalue' => (empty($SESSION->lang) ? $USER->lang : $SESSION->lang),
-            'msession' => result_token::generate((int) $USER->id, $resultcontext->id),
+            // A short-lived token bound to the current user (never the session
+            // key) is handed to the external meetings app and validated when it
+            // calls back into result.php.
+            'msession' => token::generate(),
             'courseid' => $courseid,
         ];
     }
