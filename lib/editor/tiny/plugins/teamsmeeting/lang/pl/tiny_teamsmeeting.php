@@ -40,6 +40,7 @@ $string['iframe_meeting_options'] = 'Opcje spotkania';
 $string['iframe_meeting_created'] = 'Spotkanie online "{$a}" utworzone!';
 $string['iframe_go_to_meeting'] = 'Go to meeting';
 $string['iframe_not_found'] = 'Nie znaleziono spotkania';
+$string['invalidtoken'] = 'Token wywołania zwrotnego spotkania jest nieprawidłowy lub wygasł. Zamknij to okno i spróbuj ponownie utworzyć spotkanie.';
 
 // TinyMCE strings.
 $string['tiny_modal_title'] = 'Utwórz Teams Meeting';
