@@ -23,9 +23,15 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// Loaded inside the editor iframe; it only shows a static, translated "meeting
+// not found" message and carries no session.
+define('NO_MOODLE_COOKIES', true);
+
 require_once(__DIR__ . '/../../../../../config.php');
 
-require_login();
+// This script echoes its response directly rather than through $OUTPUT, so the
+// standard security headers (notably X-Frame-Options) must be sent explicitly.
+send_headers('text/html; charset=utf-8', false);
 
 // Error message text.
 $errormessage = get_string('iframe_not_found', 'tiny_teamsmeeting');

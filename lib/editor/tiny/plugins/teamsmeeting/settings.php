@@ -33,6 +33,6 @@ if ($ADMIN->fulltree) {
     $name = new lang_string('settings_meetings_app_link', 'tiny_teamsmeeting');
     $desc = new lang_string('settings_meetings_app_link_desc', 'tiny_teamsmeeting');
     $default = 'https://enomsteams.z16.web.core.windows.net';
-    $setting = new admin_setting_configtext('tiny_teamsmeeting/meetingapplink', $name, $desc, $default);
+    $setting = new admin_setting_configtext('tiny_teamsmeeting/meetingapplink', $name, $desc, $default, PARAM_URL);
     $settings->add($setting);
 }
