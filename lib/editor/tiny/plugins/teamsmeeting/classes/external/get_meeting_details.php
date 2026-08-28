@@ -62,8 +62,6 @@ class get_meeting_details extends external_api {
      * @throws required_capability_exception
      */
     public static function execute(string $url): array {
-        global $USER;
-
         $params = self::validate_parameters(self::execute_parameters(), ['url' => $url]);
 
         self::validate_context(context_system::instance());
@@ -76,14 +74,14 @@ class get_meeting_details extends external_api {
             ];
         }
 
+        // Access is gated on holding the capability in the meeting's context,
+        // not on being the original creator: content containing a meeting link
+        // is routinely edited by more than one teacher, and every editor with
+        // the capability must be able to load its details.
         $context = !empty($record->contextid)
             ? context::instance_by_id($record->contextid)
             : context_system::instance();
         require_capability('tiny/teamsmeeting:add', $context);
-
-        if ((int) $record->userid !== (int) $USER->id) {
-            throw new moodle_exception('nopermissions', 'error', '', get_string('pluginname', 'tiny_teamsmeeting'));
-        }
 
         $resulturl = new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/result.php', [
             'title' => $record->title,
