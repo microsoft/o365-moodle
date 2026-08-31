@@ -1042,6 +1042,32 @@ function auth_oidc_mask_secret($secret) {
 }
 
 /**
+ * Validate the "secret expiry notification recipients" setting value.
+ *
+ * The value is a comma-separated list of email addresses that the local_o365 notifysecretexpiry
+ * task sends notifications to. Empty entries and surrounding whitespace are ignored, and an empty
+ * list is valid (notifications then fall back to the site administrator). Only the syntax of each
+ * address is checked; the domain is not resolved.
+ *
+ * @param string $value The raw setting value.
+ * @return array List of entries that are not valid email addresses. Empty when every entry is valid.
+ */
+function auth_oidc_validate_secret_expiry_recipients(string $value): array {
+    $invalidemails = [];
+    foreach (explode(',', $value) as $email) {
+        $email = trim($email);
+        if ($email === '') {
+            continue;
+        }
+        if (!validate_email($email)) {
+            $invalidemails[] = $email;
+        }
+    }
+
+    return $invalidemails;
+}
+
+/**
  * Check if a value appears to be a masked secret.
  *
  * @param string $value The value to check
