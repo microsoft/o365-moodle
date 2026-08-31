@@ -38,6 +38,12 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
  * Notify secret expiry task.
  */
 class notifysecretexpiry extends scheduled_task {
+    /** @var array|null Cached list of deliverable recipient email addresses, or null until first resolved. */
+    private ?array $deliverablerecipientemails = null;
+
+    /** @var array Configured recipient addresses that cannot receive mail (invalid syntax or unresolvable domain). */
+    private array $undeliverablerecipients = [];
+
     /**
      * Return a descriptive name of the task.
      *
@@ -76,6 +82,11 @@ class notifysecretexpiry extends scheduled_task {
             // Currently only support client secret authentication method.
             throw new moodle_exception('errorunsupportedsecretauthenticationmethod', 'local_o365');
         }
+
+        // Resolve and DNS-check the configured notification recipients up front, so that a
+        // misconfigured recipient is reported through the task status (see the check before the
+        // final return) even when no notification is due on this run.
+        $this->get_notification_recipient_emails_from_configuration();
 
         $appid = get_config('auth_oidc', 'clientid');
         $appsecret = get_config('auth_oidc', 'clientsecret');
@@ -151,29 +162,101 @@ class notifysecretexpiry extends scheduled_task {
             }
         }
 
+        if (!empty($this->undeliverablerecipients)) {
+            // One or more configured recipients cannot receive mail. Any notification due on this
+            // run has already been sent to the deliverable recipients (or the site administrator),
+            // but the task is marked as failed so the misconfiguration is visible to admins.
+            throw new moodle_exception(
+                'errorsecretexpiryrecipientundeliverable',
+                'local_o365',
+                '',
+                implode(', ', $this->undeliverablerecipients)
+            );
+        }
+
         return true;
     }
 
     /**
-     * Get notification recipient emails.
+     * Get the deliverable notification recipient email addresses from the plugin configuration.
      *
-     * @return array
+     * Only syntactically valid addresses whose domain resolves to a usable DNS record (an MX
+     * record, or an A / AAAA record acting as an implicit mail exchanger) are returned. Any
+     * configured entry that fails either check is recorded in {@see self::$undeliverablerecipients}
+     * and skipped, so a misconfigured recipient causes the task to be marked as failed rather than
+     * being silently dropped at send time. The result is resolved once and cached for the run.
+     *
+     * @return array List of deliverable recipient email addresses.
      */
     private function get_notification_recipient_emails_from_configuration(): array {
+        if ($this->deliverablerecipientemails !== null) {
+            return $this->deliverablerecipientemails;
+        }
+
         $recipientemails = [];
+        $this->undeliverablerecipients = [];
 
         $recipientssetting = get_config('auth_oidc', 'secretexpiryrecipients');
         if (!empty($recipientssetting)) {
             $emailinsetting = explode(',', $recipientssetting);
             foreach ($emailinsetting as $email) {
-                $email = trim(filter_var($email, FILTER_SANITIZE_EMAIL));
-                if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    $recipientemails[] = $email;
+                $email = trim($email);
+                if ($email === '') {
+                    continue;
                 }
+
+                $sanitisedemail = trim(filter_var($email, FILTER_SANITIZE_EMAIL));
+                if (!filter_var($sanitisedemail, FILTER_VALIDATE_EMAIL)) {
+                    mtrace('Skipping recipient "' . $email . '": not a valid email address.');
+                    $this->undeliverablerecipients[] = $email;
+                    continue;
+                }
+
+                if (!$this->recipient_domain_can_receive_mail($sanitisedemail)) {
+                    mtrace('Skipping recipient "' . $sanitisedemail . '": domain has no MX or A record.');
+                    $this->undeliverablerecipients[] = $sanitisedemail;
+                    continue;
+                }
+
+                $recipientemails[] = $sanitisedemail;
             }
         }
 
+        $this->deliverablerecipientemails = $recipientemails;
+
         return $recipientemails;
+    }
+
+    /**
+     * Check whether the domain of an email address is able to receive mail.
+     *
+     * Looks for an MX record, falling back to A / AAAA records (which act as an implicit mail
+     * exchanger), mirroring how an SMTP client resolves a destination. This catches recipients
+     * configured with a non-existent or misspelled domain before delivery is attempted.
+     *
+     * @param string $email The email address whose domain should be checked.
+     * @return bool True if the domain resolves to a usable record, false otherwise.
+     */
+    private function recipient_domain_can_receive_mail(string $email): bool {
+        $atpos = strrpos($email, '@');
+        if ($atpos === false) {
+            return false;
+        }
+
+        $domain = substr($email, $atpos + 1);
+        if ($domain === '') {
+            return false;
+        }
+
+        // Convert an internationalised domain name to its ASCII (punycode) form for the DNS lookup.
+        if (function_exists('idn_to_ascii')) {
+            $asciidomain = idn_to_ascii($domain);
+            if ($asciidomain !== false) {
+                $domain = $asciidomain;
+            }
+        }
+
+        return checkdnsrr($domain, 'MX') || checkdnsrr($domain, 'A') || checkdnsrr($domain, 'AAAA');
     }
 
     /**
