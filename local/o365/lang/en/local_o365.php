@@ -836,6 +836,7 @@ $string['erroro365nophoto'] = 'This user does not have a photo in Microsoft 365.
 $string['errorcannotgetapiclient'] = 'Cannot get Graph API client.';
 $string['errorfailedtogetsecrets'] = 'Failed to get secrets.';
 $string['errorfailedtosendnotification'] = 'Failed to send notification email to one or more recipients.';
+$string['errorsecretexpiryrecipientundeliverable'] = 'One or more configured secret expiry notification recipients cannot receive email (invalid address, or a domain with no MX/A record): {$a}. Update the notification recipients in the OpenID Connect settings.';
 $string['errorunsupportedsecretauthenticationmethod'] = 'This task only supports the client secret authentication method.';
 
 // Privacy API.

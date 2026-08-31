@@ -30,6 +30,7 @@ use auth_oidc\adminsetting\auth_oidc_admin_setting_endpoint;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_iconselect;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_loginflow;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_redirecturi;
+use auth_oidc\adminsetting\auth_oidc_admin_setting_secretexpiryrecipients;
 use auth_oidc\utils;
 use core\url;
 
@@ -287,7 +288,7 @@ if ($hassiteconfig) {
             ''
         ));
 
-        $applicationsettings->add(new admin_setting_configtext(
+        $applicationsettings->add(new auth_oidc_admin_setting_secretexpiryrecipients(
             'auth_oidc/secretexpiryrecipients',
             get_string('secretexpiryrecipients', 'auth_oidc'),
             get_string('secretexpiryrecipients_help', 'auth_oidc'),
