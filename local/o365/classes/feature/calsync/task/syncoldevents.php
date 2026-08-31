@@ -74,36 +74,6 @@ class syncoldevents extends \core\task\adhoc_task {
     }
 
     /**
-     * Delete every Outlook event synced for an assignment "due to be graded" reminder.
-     *
-     * These reminders are teacher-facing and must never be synced (see
-     * \local_o365\feature\calsync\main::create_outlook_event_from_moodle_event()). This cleans up any
-     * mappings left behind by an older version that synced them before the exclusion existed.
-     *
-     * @param int $eventid The Moodle event ID.
-     * @param \local_o365\feature\calsync\main $calsync The calendar sync helper.
-     */
-    protected function remove_grading_due_event($eventid, \local_o365\feature\calsync\main $calsync) {
-        global $DB;
-
-        $idmaprecs = $DB->get_records('local_o365_calidmap', ['eventid' => $eventid]);
-        if (empty($idmaprecs)) {
-            return;
-        }
-
-        mtrace('Removing due-to-be-graded reminder event #' . $eventid . ' from Outlook.');
-        try {
-            // Only id/courseid/groupid/userid are read off the snapshot by delete_outlook_event()
-            // (for group-event routing and calendar-context lookups), so skip the large fields, and
-            // hand it the mappings already loaded here so it doesn't re-query them.
-            $snapshot = $DB->get_record('event', ['id' => $eventid], 'id, courseid, groupid, userid') ?: null;
-            $calsync->delete_outlook_event($eventid, $snapshot, $idmaprecs);
-        } catch (moodle_exception $e) {
-            mtrace('ERROR: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * Sync all site events with Outlook.
      *
      * @param int $timecreated The time the task was created.
@@ -153,8 +123,6 @@ class syncoldevents extends \core\task\adhoc_task {
                        ev.description AS eventdescription,
                        ev.timestart AS eventtimestart,
                        ev.timeduration AS eventtimeduration,
-                       ev.modulename,
-                       ev.eventtype,
                        idmap.outlookeventid,
                        ev.userid AS eventuserid,
                        idmap.id AS idmapid
@@ -166,14 +134,6 @@ class syncoldevents extends \core\task\adhoc_task {
         foreach ($events as $event) {
             try {
                 mtrace('Syncing site event #' . $event->eventid);
-
-                if ($calsync->is_grading_due_event($event)) {
-                    // Due-to-be-graded reminders are teacher-facing and must never be synced to Outlook,
-                    // matching \local_o365\feature\calsync\main::create_outlook_event_from_moodle_event().
-                    // Remove any that an older version synced before this exclusion existed.
-                    $this->remove_grading_due_event($event->eventid, $calsync);
-                    continue;
-                }
 
                 $subject = $event->eventname;
                 $body = $event->eventdescription;
@@ -347,10 +307,12 @@ class syncoldevents extends \core\task\adhoc_task {
                 mtrace('Syncing course event #' . $event->eventid);
 
                 if ($calsync->is_grading_due_event($event)) {
-                    // Due-to-be-graded reminders are teacher-facing and must never be synced to Outlook,
-                    // matching \local_o365\feature\calsync\main::create_outlook_event_from_moodle_event().
-                    // Remove any that an older version synced before this exclusion existed.
-                    $this->remove_grading_due_event($event->eventid, $calsync);
+                    // An assignment "due to be graded" reminder goes only to users who can grade it, and
+                    // never via the course's shared group calendar. Reconcile it through main's shared
+                    // attendee logic (which applies the mod/assign:grade filter and creates, updates, or
+                    // removes per-user mappings as needed) rather than this task's whole-course-subscriber
+                    // attendee model.
+                    $calsync->reconcile_course_event_attendees($event->eventid);
                     continue;
                 }
 

@@ -285,12 +285,6 @@ class main {
         // Assemble basic event data.
         $event = $DB->get_record('event', ['id' => $moodleventid]);
 
-        if ($this->is_grading_due_event($event)) {
-            // Due-to-be-graded reminders are for teachers/graders, not the whole subscribed-course
-            // attendee list that due-date events use - never sync them to Outlook.
-            return true;
-        }
-
         $subject = $this->get_event_subject($event);
         $body = $event->description;
         $timestart = $event->timestart;
@@ -458,12 +452,7 @@ class main {
             $params = ['course', 'out', 'both', $event->courseid];
             $attendees = $DB->get_records_sql($sql, $params);
 
-            // DB::get_record() returns false (not null) when nothing matches - normalise here so downstream
-            // code can rely on it being either a real record or null, never false.
-            $groupobject = $DB->get_record(
-                'local_o365_objects',
-                ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
-            ) ?: null;
+            $groupobject = $this->get_course_group_object($event);
         }
 
         // Drop attendees who can't actually see the module this event belongs to (e.g. excluded by a
@@ -646,17 +635,6 @@ class main {
         }
 
         $idmaprecs = $DB->get_records('local_o365_calidmap', ['eventid' => $moodleeventid]);
-
-        if ($this->is_grading_due_event($event)) {
-            // Should never be synced (see create_outlook_event_from_moodle_event()) - clean up any
-            // mappings left over from before this exclusion existed, rather than leaving them orphaned.
-            if (!empty($idmaprecs)) {
-                $discovery = $this->get_course_event_attendees($event);
-                $this->delete_calidmap_rows($event, $idmaprecs, $discovery['groupobject']);
-            }
-
-            return true;
-        }
 
         $discovery = $this->get_course_event_attendees($event);
 
@@ -862,20 +840,8 @@ class main {
         $isgroupevent = false;
 
         if ($event->courseid !== SITEID && $event->courseid !== 0 && empty($event->groupid)) {
-            // DB::get_record() returns false (not null) when nothing matches - normalise here so
-            // delete_calidmap_rows()'s ?stdClass parameter doesn't get handed a bare false.
-            $groupobject = $DB->get_record(
-                'local_o365_objects',
-                ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
-            ) ?: null;
+            $groupobject = $this->get_course_group_object($event);
             $isgroupevent = !empty($groupobject) && !empty($groupobject->objectid);
-        }
-
-        if ($this->is_grading_due_event($event)) {
-            // Should never be synced (see create_outlook_event_from_moodle_event()) - clean up any
-            // mappings left over from before this exclusion existed, rather than pushing a stale update.
-            $this->delete_calidmap_rows($event, $idmaprecs, $groupobject);
-            return true;
         }
 
         foreach ($idmaprecs as $idmaprec) {
@@ -1003,12 +969,7 @@ class main {
         $groupobject = null;
 
         if (!empty($event) && $event->courseid !== SITEID && $event->courseid !== 0 && empty($event->groupid)) {
-            // DB::get_record() returns false (not null) when nothing matches - normalise here so
-            // delete_calidmap_rows()'s ?stdClass parameter doesn't get handed a bare false.
-            $groupobject = $DB->get_record(
-                'local_o365_objects',
-                ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
-            ) ?: null;
+            $groupobject = $this->get_course_group_object($event);
         }
 
         $this->delete_calidmap_rows($event, $idmaprecs, $groupobject);
@@ -1136,15 +1097,42 @@ class main {
     /**
      * Check whether a calendar event is an assignment's "due to be graded" reminder.
      *
-     * mod_assign creates this as a plain course-level event (ASSIGN_EVENT_TYPE_GRADINGDUE), so without
-     * this check it would end up in the same subscribed-course attendee list that due-date events use -
-     * but it's a teacher/grader-facing reminder, not something students should get an Outlook event for.
+     * mod_assign creates this as a plain course-level event (ASSIGN_EVENT_TYPE_GRADINGDUE), which Moodle
+     * itself only shows to users who can grade the assignment (mod_assign_core_calendar_is_event_visible()
+     * -> assign::can_grade() -> mod/assign:grade). is_event_module_visible_to_user() applies the same
+     * capability check so only those users get an Outlook event, and this method is used to keep the
+     * reminder off the shared Microsoft 365 group calendar (visible to every group member).
      *
      * @param \stdClass $event The Moodle event object.
-     * @return bool True if this is a "due to be graded" reminder that should never be synced.
+     * @return bool True if this is an assignment "due to be graded" reminder.
      */
     public function is_grading_due_event(\stdClass $event): bool {
-        return $event->modulename === 'assign' && $event->eventtype === 'gradingdue';
+        return ($event->modulename ?? '') === 'assign' && ($event->eventtype ?? '') === 'gradingdue';
+    }
+
+    /**
+     * Look up the Microsoft 365 group object linked to a course-level event's course, if any.
+     *
+     * Returns null for "due to be graded" reminders: those go only to users who can grade the
+     * assignment, so they must never be pushed to the course's group calendar, which every group
+     * member can see. All other course events keep using the group calendar when one is linked.
+     *
+     * @param \stdClass $event The Moodle event object (courseid must be a real, non-site course id).
+     * @return \stdClass|null The linked group object, or null if there isn't one (or this is a
+     *                        grading-due reminder). Normalised from DB::get_record()'s false to null so
+     *                        callers' ?stdClass parameters never receive a bare false.
+     */
+    protected function get_course_group_object(\stdClass $event): ?\stdClass {
+        global $DB;
+
+        if ($this->is_grading_due_event($event)) {
+            return null;
+        }
+
+        return $DB->get_record(
+            'local_o365_objects',
+            ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
+        ) ?: null;
     }
 
     /**
@@ -1338,6 +1326,10 @@ class main {
      * Events that aren't tied to a specific course module (e.g. manually-created course/site events)
      * are always considered visible, since there's no module-level restriction to check.
      *
+     * Assignment "due to be graded" reminders (eventtype 'gradingdue') carry an extra restriction: Moodle
+     * only shows them to users who can grade the assignment, so this additionally requires the
+     * mod/assign:grade capability for those, matching mod_assign_core_calendar_is_event_visible().
+     *
      * As a cheap pre-check, if the course module is visible and has no availability restrictions
      * configured at all, it's visible to every user, so the far more expensive per-user modinfo lookup
      * (which builds a full course_modinfo and evaluates the availability tree) is skipped entirely. That
@@ -1364,7 +1356,7 @@ class main {
         $cachekey = $event->modulename . ':' . $event->instance;
 
         if (!array_key_exists($cachekey, $cmcache)) {
-            $sql = "SELECT cm.course, cm.visible, cm.availability
+            $sql = "SELECT cm.id, cm.course, cm.visible, cm.availability
                       FROM {course_modules} cm
                       JOIN {modules} m ON m.id = cm.module
                      WHERE m.name = :modulename AND cm.instance = :instance";
@@ -1392,6 +1384,17 @@ class main {
             // No matching course module - it's most likely been deleted. Default to "not visible" so we
             // don't keep syncing (or create) an Outlook event for something that no longer exists.
             return false;
+        }
+
+        if ($this->is_grading_due_event($event)) {
+            // Moodle only shows an assignment's "due to be graded" reminder to users who can grade it
+            // (mod_assign_core_calendar_is_event_visible() -> assign::can_grade() -> mod/assign:grade).
+            // Apply the same check so only those users get an Outlook event; the module-visibility checks
+            // below still apply on top of it.
+            $gradecontext = \context_module::instance((int) $cm->id, IGNORE_MISSING);
+            if (empty($gradecontext) || !has_capability('mod/assign:grade', $gradecontext, $userid)) {
+                return false;
+            }
         }
 
         if ((int) $cm->visible === 1 && empty($cm->availability)) {
