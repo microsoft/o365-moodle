@@ -397,6 +397,15 @@ class application extends moodleform {
             }
         }
 
+        // Validate secret expiry notification recipients (only relevant with secret auth).
+        if (isset($data['secretexpiryrecipients']) && $data['clientauthmethod'] == AUTH_OIDC_AUTH_METHOD_SECRET) {
+            $invalidemails = auth_oidc_validate_secret_expiry_recipients((string) $data['secretexpiryrecipients']);
+            if ($invalidemails) {
+                $errors['secretexpiryrecipients'] =
+                    get_string('error_secretexpiryrecipients_invalid', 'auth_oidc', implode(', ', $invalidemails));
+            }
+        }
+
         return $errors;
     }
 
