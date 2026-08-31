@@ -30,6 +30,7 @@ use auth_oidc\adminsetting\auth_oidc_admin_setting_endpoint;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_iconselect;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_loginflow;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_redirecturi;
+use auth_oidc\adminsetting\auth_oidc_admin_setting_section_heading;
 use auth_oidc\utils;
 use core\url;
 
@@ -281,7 +282,7 @@ if ($hassiteconfig) {
 
     // Secret expiry notification (only when local_o365 is installed).
     if (auth_oidc_is_local_365_installed()) {
-        $applicationsettings->add(new admin_setting_heading(
+        $applicationsettings->add(new auth_oidc_admin_setting_section_heading(
             'auth_oidc/application_secretexpiry_heading',
             get_string('settings_section_secret_expiry_notification', 'auth_oidc'),
             ''
