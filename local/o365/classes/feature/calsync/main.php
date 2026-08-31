@@ -982,13 +982,18 @@ class main {
      *
      * @param int $moodleeventid The ID of a Moodle event.
      * @param stdClass|null $eventsnapshot Snapshot of the Moodle event.
+     * @param array|null $idmaprecs Pre-fetched local_o365_calidmap rows for this event; pass these when
+     *                              the caller has already loaded them to save a re-query. Fetched here
+     *                              if null.
      * @return bool Always true - see above for how per-recipient failures are handled.
      */
-    public function delete_outlook_event($moodleeventid, ?\stdClass $eventsnapshot) {
+    public function delete_outlook_event($moodleeventid, ?\stdClass $eventsnapshot, ?array $idmaprecs = null) {
         global $DB;
 
         // Get o365 event ids (and determine if we can sync this event).
-        $idmaprecs = $DB->get_records('local_o365_calidmap', ['eventid' => $moodleeventid]);
+        if ($idmaprecs === null) {
+            $idmaprecs = $DB->get_records('local_o365_calidmap', ['eventid' => $moodleeventid]);
+        }
         if (empty($idmaprecs)) {
             return true;
         }
@@ -1138,7 +1143,7 @@ class main {
      * @param \stdClass $event The Moodle event object.
      * @return bool True if this is a "due to be graded" reminder that should never be synced.
      */
-    protected function is_grading_due_event(\stdClass $event): bool {
+    public function is_grading_due_event(\stdClass $event): bool {
         return $event->modulename === 'assign' && $event->eventtype === 'gradingdue';
     }
 
