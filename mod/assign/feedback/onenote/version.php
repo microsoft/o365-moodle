@@ -25,9 +25,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2025040830;
+$plugin->version = 2025040835;
 $plugin->requires = 2025040800;
-$plugin->release = '5.0.6';
+$plugin->release = '5.0.7';
 $plugin->component = 'assignfeedback_onenote';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = [
