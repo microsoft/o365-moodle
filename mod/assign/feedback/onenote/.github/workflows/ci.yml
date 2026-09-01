@@ -1,4 +1,4 @@
-name: Moodle Plugin CI for auth_oidc
+name: Moodle Plugin CI for assignfeedback_onenote
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -40,9 +40,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        moodle-branch: ['MOODLE_405_STABLE']
-        php: [8.1, 8.2, 8.3]
-        database: [pgsql, mariadb]
+        moodle-branch: [ 'MOODLE_405_STABLE' ]
+        php: [ 8.1, 8.2, 8.3 ]
+        database: [ pgsql, mariadb ]
 
     steps:
       - name: Check out repository code
