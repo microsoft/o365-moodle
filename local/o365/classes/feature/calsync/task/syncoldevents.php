@@ -194,10 +194,16 @@ class syncoldevents extends \core\task\adhoc_task {
                 $sql = 'SELECT userid, id, eventid, outlookeventid FROM {local_o365_calidmap} WHERE eventid = ? AND origin = ?';
                 $idmapnosub = $DB->get_records_sql($sql, [$event->eventid, 'moodle']);
                 $idmapnosub = array_diff_key($idmapnosub, $subscribersnotprimary, $subscribersprimary);
-                if (isset($idmapnosub[$event->eventuserid])) {
-                    // If the user who created the event is included, remove them. THIS IS VERY IMPORTANT. Otherwise any event
-                    // in a calendar that the creator is not subscribed to will be removed, negating the work we did above with
-                    // attendees.
+                if (!empty($subscribersprimary) && isset($idmapnosub[$event->eventuserid])) {
+                    // The combined event lives in the creator's calendar with the primary-calendar
+                    // subscribers as its attendees, and the block above has just refreshed that attendee
+                    // list - so keep its mapping even when the creator themselves isn't subscribed,
+                    // otherwise it would be deleted here and every attendee would lose the event.
+                    //
+                    // When there are no primary subscribers, though, nothing above maintains a combined
+                    // event, so a leftover mapping under the creator's id is just an orphan (e.g. the last
+                    // subscriber has now unsubscribed). Don't protect it - let it fall through to the
+                    // deletion loop like any other stale mapping.
                     unset($idmapnosub[$event->eventuserid]);
                 }
 
@@ -393,10 +399,16 @@ class syncoldevents extends \core\task\adhoc_task {
                 $sql = 'SELECT userid, id, eventid, outlookeventid FROM {local_o365_calidmap} WHERE eventid = ? AND origin = ?';
                 $idmapnosub = $DB->get_records_sql($sql, [$event->eventid, 'moodle']);
                 $idmapnosub = array_diff_key($idmapnosub, $subscribersnotprimary, $subscribersprimary);
-                if (isset($idmapnosub[$event->eventuserid])) {
-                    // If the user who created the event is included, remove them. THIS IS VERY IMPORTANT. Otherwise any event
-                    // in a calendar that the creator is not subscribed to will be removed, negating the work we did above with
-                    // attendees.
+                if (!empty($subscribersprimary) && isset($idmapnosub[$event->eventuserid])) {
+                    // The combined event lives in the creator's calendar with the primary-calendar
+                    // subscribers as its attendees, and the block above has just refreshed that attendee
+                    // list - so keep its mapping even when the creator themselves isn't subscribed,
+                    // otherwise it would be deleted here and every attendee would lose the event.
+                    //
+                    // When there are no primary subscribers, though, nothing above maintains a combined
+                    // event, so a leftover mapping under the creator's id is just an orphan (e.g. the last
+                    // subscriber has now unsubscribed). Don't protect it - let it fall through to the
+                    // deletion loop like any other stale mapping.
                     unset($idmapnosub[$event->eventuserid]);
                 }
 
