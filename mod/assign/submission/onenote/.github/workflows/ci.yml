@@ -1,4 +1,4 @@
-name: Moodle Plugin CI for assigsubmission_onenote
+name: Moodle Plugin CI for assignsubmission_onenote
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -40,9 +40,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        moodle-branch: ['MOODLE_502_STABLE']
-        php: [8.3, 8.4]
-        database: [pgsql, mariadb]
+        moodle-branch: [ 'MOODLE_502_STABLE' ]
+        php: [ 8.3, 8.4 ]
+        database: [ pgsql, mariadb ]
 
     steps:
       - name: Check out repository code
