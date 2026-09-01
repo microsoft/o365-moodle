@@ -4,7 +4,7 @@ updates:
     directory: "/"
     groups:
       github-actions:
-        patterns: ["*"]
+        patterns: [ "*" ]
     schedule:
       interval: "weekly"
     cooldown:
