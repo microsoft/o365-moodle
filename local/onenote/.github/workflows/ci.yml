@@ -40,9 +40,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        moodle-branch: ['MOODLE_500_STABLE']
-        php: [8.2, 8.3, 8.4]
-        database: [pgsql, mariadb]
+        moodle-branch: [ 'MOODLE_500_STABLE' ]
+        php: [ 8.2, 8.3, 8.4 ]
+        database: [ pgsql, mariadb ]
 
     steps:
       - name: Check out repository code
