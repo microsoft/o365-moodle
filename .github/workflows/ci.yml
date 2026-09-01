@@ -12,6 +12,9 @@ on:
       - 'MOODLE_*_STABLE'
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -27,14 +30,9 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 3
 
       mariadb:
-        image: mariadb:10
+        image: mariadb:10.11
         env:
-          MYSQL_USER: 'root'
           MYSQL_ALLOW_EMPTY_PASSWORD: "true"
-          MYSQL_CHARACTER_SET_SERVER: "utf8mb4"
-          MYSQL_COLLATION_SERVER: "utf8mb4_unicode_ci"
-          MYSQL_INNODB_FILE_PER_TABLE: "1"
-          MYSQL_INNODB_FILE_FORMAT: "Barracuda"
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 3
@@ -46,27 +44,42 @@ jobs:
         moodle-branch: ['MOODLE_405_STABLE']
         php: [8.1, 8.2, 8.3]
         database: [pgsql, mariadb]
+        # Only folders whose plugin has in-tree dependencies need an entry here.
+        # List every dependency, including transitive ones, as space-separated
+        # folder paths (see each plugin's version.php $plugin->dependencies).
         include:
-          - folder: auth/oidc
           - folder: blocks/microsoft
+            internal-deps: "auth/oidc local/o365"
           - folder: local/o365
             internal-deps: "auth/oidc"
           - folder: local/office365
+            internal-deps: "auth/oidc local/o365 blocks/microsoft repository/office365 theme/boost_o365teams"
           - folder: local/onenote
+            internal-deps: "auth/oidc local/o365"
           - folder: repository/office365
+            internal-deps: "auth/oidc local/o365"
           - folder: theme/boost_o365teams
+            internal-deps: "auth/oidc local/o365"
           - folder: mod/assign/feedback/onenote
-            internal-deps: "local/onenote"
+            internal-deps: "auth/oidc local/o365 local/onenote"
           - folder: mod/assign/submission/onenote
-            internal-deps: "local/onenote"
+            internal-deps: "auth/oidc local/o365 local/onenote"
 
     steps:
     - name: Check out sub repository code
       uses: actions/checkout@v6
       with:
+        # matrix.internal-deps is space-separated and cannot be a single
+        # sparse pattern, so check out every folder that is a dependency of
+        # any plugin; the install step below moves the ones this job needs.
         sparse-checkout: |
           ${{ matrix.folder }}
-          ${{ matrix.internal-deps }}
+          auth/oidc
+          blocks/microsoft
+          local/o365
+          local/onenote
+          repository/office365
+          theme/boost_o365teams
         path: plugin
 
     - name: Setup PHP ${{ matrix.php }}
@@ -94,10 +107,10 @@ jobs:
         mkdir -p ./extra-plugins
         for dep in ${{ matrix.internal-deps }}; do
           if [ -d "./plugin/$dep" ]; then
-            mkdir -p ./extra-plugins/${dep/\//_}
-            mv -v ./plugin/$dep/* ./extra-plugins/${dep/\//_}/
+            mv -v "./plugin/$dep" "./extra-plugins/${dep/\//_}"
           else
-            echo "Directory ./plugin/$dep does not exist"
+            echo "Dependency directory ./plugin/$dep does not exist" >&2
+            exit 1
           fi
         done
         moodle-plugin-ci install --plugin ./plugin/${{ matrix.folder }} --db-host=127.0.0.1 --extra-plugins ./extra-plugins
