@@ -591,6 +591,11 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024100735.05, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2024100735.08) {
+        \auth_oidc\utils::migrate_removed_icon_choices();
+        upgrade_plugin_savepoint(true, 2024100735.08, 'auth', 'oidc');
+    }
+
     return true;
 }
 

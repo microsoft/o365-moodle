@@ -684,16 +684,6 @@ if ($hassiteconfig) {
             'component' => 'auth_oidc',
         ],
         [
-            'pix' => 'microsoft',
-            'alt' => new lang_string('cfg_iconalt_microsoft', 'auth_oidc'),
-            'component' => 'auth_oidc',
-        ],
-        [
-            'pix' => 'microsoft_365_copilot',
-            'alt' => new lang_string('cfg_iconalt_microsoft365copilot', 'auth_oidc'),
-            'component' => 'auth_oidc',
-        ],
-        [
             'pix' => 'office_365',
             'alt' => new lang_string('cfg_iconalt_o365', 'auth_oidc'),
             'component' => 'auth_oidc',
