@@ -284,16 +284,21 @@ class utils {
             return;
         }
 
-        // The old default icon has simply been replaced with a new image under a new pix name.
-        if ($currenticon === 'auth_oidc:o365') {
-            set_config('icon', 'auth_oidc:office_365', 'auth_oidc');
+        // Icons that have simply been replaced with another stock icon: the choice was removed
+        // from the selector but a suitable replacement exists, so just point the setting at it.
+        $remappedicons = [
+            'auth_oidc:o365' => 'auth_oidc:office_365',
+            // The Microsoft 365 logo is now the single icon used for both Microsoft and Microsoft 365.
+            'auth_oidc:microsoft' => 'auth_oidc:microsoft_365',
+            'auth_oidc:microsoft_365_copilot' => 'auth_oidc:microsoft_365',
+        ];
+        if (isset($remappedicons[$currenticon])) {
+            set_config('icon', $remappedicons[$currenticon], 'auth_oidc');
             return;
         }
 
         $keepicons = [
             'auth_oidc:microsoft_365',
-            'auth_oidc:microsoft',
-            'auth_oidc:microsoft_365_copilot',
             'auth_oidc:office_365',
             'auth_oidc:openid',
             'auth_oidc:keycloak',
