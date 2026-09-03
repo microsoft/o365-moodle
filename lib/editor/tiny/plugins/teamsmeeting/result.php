@@ -39,6 +39,7 @@ send_headers('text/html; charset=utf-8', false);
 
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $viewexisting = optional_param('viewexisting', 0, PARAM_INT);
+$newwindow = optional_param('newwindow', false, PARAM_BOOL);
 $meetinglink = optional_param('link', null, PARAM_URL);
 // Normalise percent-encoding to uppercase (RFC 3986) so the SHA1 hash is
 // stable regardless of whether Moodle has re-saved the HTML (which uppercases
@@ -193,9 +194,10 @@ $headerattributes = [
 ];
 // Neither html_writer::tag() (contents) nor get_string() ($a placeholder)
 // escapes its input, so the title must be escaped before it is used here.
+$headerkey = $viewexisting ? 'iframe_meeting_details' : 'iframe_meeting_created';
 $headermessage = html_writer::tag(
     'span',
-    get_string('iframe_meeting_created', 'tiny_teamsmeeting', s($title ?? '')),
+    get_string($headerkey, 'tiny_teamsmeeting', s($title ?? '')),
     $headerattributes
 );
 
@@ -237,6 +239,33 @@ if (!empty($meetingoptions)) {
     $content .= html_writer::tag('span', $button, $spanattributes);
 }
 
+// Build the "add link" controls. These post an 'insertMeeting' message back to
+// the TinyMCE dialog, which inserts or updates the link in the content. Keeping
+// them here rather than as dialog footer buttons means one consistent screen for
+// both new meetings and edits (a URL dialog cannot host form fields, and its
+// footer buttons cannot be enabled once a new meeting has been created).
+if (!empty($meetinglink)) {
+    $checkboxattributes = ['type' => 'checkbox', 'id' => 'tiny_teamsmeeting-newwindow', 'style' => 'margin: 0 .4rem 0 0;'];
+    if ($newwindow) {
+        $checkboxattributes['checked'] = 'checked';
+    }
+    $checkboxlabel = html_writer::tag(
+        'label',
+        html_writer::empty_tag('input', $checkboxattributes) . get_string('iframe_new_window_label', 'tiny_teamsmeeting'),
+        ['for' => 'tiny_teamsmeeting-newwindow', 'style' => 'display: inline-flex; align-items: center; font-size: .875rem;']
+    );
+    $content .= html_writer::div($checkboxlabel, '', ['style' => 'text-align: center; margin-top: 1.5rem;']);
+
+    $addbutton = html_writer::tag('button', get_string('iframe_add_link', 'tiny_teamsmeeting'), [
+        'type' => 'button',
+        'id' => 'tiny_teamsmeeting-addlink',
+        'style' => 'display: inline-block; font-weight: 600; text-align: center; vertical-align: middle; ' .
+           'border: 1px solid hsla(0,0%,100%,.04); user-select: none; font-size: .875rem; line-height: 1.5; border-radius: 3px; ' .
+           'color: #fff; background-color: #1a73e8; margin-top: .75rem; padding: .375rem 1rem; cursor: pointer;',
+    ]);
+    $content .= html_writer::div($addbutton, '', ['style' => 'text-align: center;']);
+}
+
 // Build container div.
 $divattributes = [
     'style' => 'display: flex; flex-direction: column; margin-top: 2rem; padding: 2rem; font-family: sans-serif;',
@@ -250,12 +279,13 @@ if (!empty($parsed['port'])) {
 }
 
 $jsonflags = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP;
-$payload = json_encode(['action' => 'meetingUrl', 'url' => $meetinglink ?? ''], $jsonflags);
+$linkpayload = json_encode($meetinglink ?? '', $jsonflags);
 $encodedorigin = json_encode($origin, $jsonflags);
 $scriptcontent = <<<JS
 (function() {
     var moodleOrigin = {$encodedorigin};
-    if (window.parent === window) {
+    var addButton = document.getElementById('tiny_teamsmeeting-addlink');
+    if (!addButton || window.parent === window) {
         return;
     }
     try {
@@ -263,10 +293,17 @@ $scriptcontent = <<<JS
             return;
         }
     } catch (e) {
-        // Cross-origin parent: suppress the postMessage call.
+        // Cross-origin parent: never post.
         return;
     }
-    window.parent.postMessage({$payload}, moodleOrigin);
+    addButton.addEventListener('click', function() {
+        var checkbox = document.getElementById('tiny_teamsmeeting-newwindow');
+        window.parent.postMessage({
+            action: 'insertMeeting',
+            url: {$linkpayload},
+            newWindow: !!(checkbox && checkbox.checked)
+        }, moodleOrigin);
+    });
 }());
 JS;
 echo html_writer::script($scriptcontent);
