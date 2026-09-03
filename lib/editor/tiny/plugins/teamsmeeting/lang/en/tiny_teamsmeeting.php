@@ -38,19 +38,18 @@ $string['settings_meetings_app_link_desc'] = 'This is the URL of the Meetings ap
 $string['teamsmeeting:add'] = 'Add Teams Meeting';
 
 // IFrame.
-$string['iframe_meeting_options'] = 'Meeting Options';
+$string['iframe_meeting_options'] = 'Meeting options';
 $string['iframe_meeting_created'] = 'Meeting "{$a}" was created successfully!';
+$string['iframe_meeting_details'] = 'Meeting "{$a}"';
 $string['iframe_go_to_meeting'] = 'Go to meeting';
+$string['iframe_add_link'] = 'Add link';
+$string['iframe_new_window_label'] = 'Open meeting in new window';
 $string['iframe_not_found'] = 'Meeting not found';
 $string['invalidtoken'] = 'The meeting callback token is missing, invalid or has expired. Close this window and try creating the meeting again.';
 
 // TinyMCE strings.
 $string['tiny_modal_title'] = 'Create Teams meeting';
-$string['tiny_button_primary_label'] = 'Add link';
-$string['tiny_button_secondary_label'] = 'Cancel';
-$string['tiny_input_url_label'] = 'Your meeting URL:';
-$string['tiny_input_url_placeholder'] = 'Link will be generated after you create the meeting.';
-$string['tiny_checkbox_new_window_label'] = 'Open meeting in new window';
+$string['tiny_edit_modal_title'] = 'Teams meeting';
 
 // Privacy subsystem.
 $string['privacy:metadata'] = 'The Tiny Teams Meeting plugin stores meeting records created by users, including the user ID and the context in which each meeting was created.';
