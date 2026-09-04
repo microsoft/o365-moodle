@@ -30,6 +30,8 @@ $title = optional_param('title', null, PARAM_TEXT);
 $preview = optional_param('preview', null, PARAM_RAW);
 $optionslink = optional_param('options', null, PARAM_RAW);
 $session = optional_param('session', '', PARAM_ALPHANUM);
+$viewexisting = optional_param('viewexisting', 0, PARAM_INT);
+$newwindow = optional_param('newwindow', false, PARAM_BOOL);
 
 $context = context_system::instance();
 
@@ -116,7 +118,7 @@ echo '<div style="display: flex; flex-direction: column; margin-top: 2rem;paddin
         0 .6.2 1.2.7 1.6l4.6 4.6c.4.4 1 .7 1.6.7.6 0 1.2-.2 1.6-.7l10.1-10.1c.4-.5.7-1
         .7-1.6 0-.3-.1-.6-.2-.8-.1-.3-.3-.5-.5-.7s-.4-.4-.7-.5c-.4-.2-.7-.2-1-.2z" fill="#599c00"></path></svg>
         <span class="meetingcreatedheader" style="font-size: 20px; font-weight: 600; display: block; text-align: center;">' .
-    get_string('meetingcreatedsuccess', 'atto_teamsmeeting', s($title)) .
+    get_string($viewexisting ? 'meetingdetails' : 'meetingcreatedsuccess', 'atto_teamsmeeting', s($title ?? '')) .
     '</span>';
 if (!empty($meetinglink)) {
     echo '<span class="meetinglink" style="display: block; text-align: center;"><a class="btn btn-primary" href="' .
@@ -134,6 +136,61 @@ if (!empty($meetingoptions)) {
         padding: .375rem .75rem; text-decoration: none;" target="_blank">' .
         get_string('meetingoptions', 'atto_teamsmeeting') . '</a></span>';
 }
+
+// Build the "add link" controls. These post an 'insertMeeting' message back to
+// the Atto dialogue, which inserts or updates the link in the content. Keeping
+// them here rather than in the dialogue's own (non-iframe) form means keyboard
+// users who tab into the iframe to sign in / configure the meeting can also
+// reach "add link" without ever having to tab back out of it.
+if (!empty($meetinglink)) {
+    $checkedattribute = $newwindow ? ' checked="checked"' : '';
+    echo '<div style="text-align: center; margin-top: 1.5rem;">
+        <label for="atto_teamsmeeting-newwindow" style="display: inline-flex; align-items: center; font-size: .875rem;">
+        <input type="checkbox" id="atto_teamsmeeting-newwindow" style="margin: 0 .4rem 0 0;"' . $checkedattribute . '/>' .
+        get_string('openinnewwindow', 'atto_teamsmeeting') . '</label></div>
+    <div style="text-align: center;"><button type="button" id="atto_teamsmeeting-addlink" style="display: inline-block;
+        font-weight: 600; text-align: center; vertical-align: middle; border: 1px solid hsla(0,0%,100%,.04);
+        user-select: none; font-size: .875rem; line-height: 1.5; border-radius: 3px; color: #fff;
+        background-color: #1a73e8; margin-top: .75rem; padding: .375rem 1rem; cursor: pointer;">' .
+        get_string('addlink', 'atto_teamsmeeting') . '</button></div>';
+}
+
 echo '</div>';
+
+$parsed = parse_url($CFG->wwwroot);
+$origin = $parsed['scheme'] . '://' . $parsed['host'];
+if (!empty($parsed['port'])) {
+    $origin .= ':' . $parsed['port'];
+}
+
+$jsonflags = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP;
+$linkpayload = json_encode($meetinglink ?? '', $jsonflags);
+$encodedorigin = json_encode($origin, $jsonflags);
+$scriptcontent = <<<JS
+(function() {
+    var moodleOrigin = {$encodedorigin};
+    var addButton = document.getElementById('atto_teamsmeeting-addlink');
+    if (!addButton || window.parent === window) {
+        return;
+    }
+    try {
+        if (window.parent.location.origin !== moodleOrigin) {
+            return;
+        }
+    } catch (e) {
+        // Cross-origin parent: never post.
+        return;
+    }
+    addButton.addEventListener('click', function() {
+        var checkbox = document.getElementById('atto_teamsmeeting-newwindow');
+        window.parent.postMessage({
+            action: 'insertMeeting',
+            url: {$linkpayload},
+            newWindow: !!(checkbox && checkbox.checked)
+        }, moodleOrigin);
+    });
+}());
+JS;
+echo html_writer::script($scriptcontent);
 
 exit;

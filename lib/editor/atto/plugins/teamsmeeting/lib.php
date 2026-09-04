@@ -30,17 +30,16 @@
  * @param stdClass $fpoptions - unused.
  */
 function atto_teamsmeeting_params_for_js($elementid, $options, $fpoptions) {
-    global $CFG, $USER;
+    global $CFG;
 
-    // The result.php script always resolves its own context as the system context,
-    // so the token must be scoped to that same context to be accepted there.
-    $resultcontext = \context_system::instance();
-
+    // The token that authenticates the app's return trip to result.php is not
+    // included here: it is single-use, so one generated at page load would
+    // only be good for the first meeting created on the page. The dialogue
+    // fetches a fresh one from token.php for every meeting it creates instead.
     $params = [
         'clientdomain' => rawurlencode($CFG->wwwroot),
         'appurl' => get_config('atto_teamsmeeting', 'meetingapplink'),
         'locale' => current_language(),
-        'msession' => \atto_teamsmeeting\result_token::generate((int) $USER->id, $resultcontext->id),
         'editor' => 'atto',
     ];
 
@@ -53,5 +52,8 @@ function atto_teamsmeeting_params_for_js($elementid, $options, $fpoptions) {
 function atto_teamsmeeting_strings_for_js() {
     global $PAGE;
 
-    $PAGE->requires->strings_for_js(['addlink', 'createteamsmeeting', 'meetingurl', 'openinnewwindow'], 'atto_teamsmeeting');
+    $PAGE->requires->strings_for_js(
+        ['createteamsmeeting', 'dialogueend', 'dialoguestart', 'editteamsmeeting', 'pluginname'],
+        'atto_teamsmeeting'
+    );
 }

@@ -30,10 +30,11 @@ require_once(__DIR__ . '/locallib.php');
 require_login();
 
 $url = required_param('url', PARAM_URL);
+$newwindow = optional_param('newwindow', false, PARAM_BOOL);
 $result = '';
 if (!empty($url)) {
     $record = atto_teamsmeeting_get_meeting($url);
-    $result = atto_teamsmeeting_meeting_url($record);
+    $result = atto_teamsmeeting_meeting_url($record, $newwindow);
 }
 
 echo $result;

@@ -50,15 +50,19 @@ function atto_teamsmeeting_get_meeting($url) {
  * Build the JSON payload returned to the editor for a meeting record.
  *
  * @param stdClass|null $record The meeting record, or null when the meeting was not found.
- * @return string JSON: [result-page url, title, link, options].
+ * @param bool $newwindow Whether the selected link currently opens in a new window.
+ * @return string JSON: [result-page url, title, link, options, newwindow].
  */
-function atto_teamsmeeting_meeting_url($record) {
+function atto_teamsmeeting_meeting_url($record, bool $newwindow = false) {
     if (is_null($record)) {
-        return json_encode([(new moodle_url('/lib/editor/atto/plugins/teamsmeeting/error.php'))->out(), '', '', '']);
+        // Unescaped: the caller appends further query parameters to this URL as
+        // plain text, so ampersands must stay raw, not be HTML-escaped to &amp;.
+        return json_encode([(new moodle_url('/lib/editor/atto/plugins/teamsmeeting/error.php'))->out(false), '', '', '', 0]);
     }
 
-    return json_encode([(new moodle_url('/lib/editor/atto/plugins/teamsmeeting/result.php'))->out(), $record->title,
-        $record->link, $record->options]);
+    // Unescaped for the same reason.
+    return json_encode([(new moodle_url('/lib/editor/atto/plugins/teamsmeeting/result.php'))->out(false), $record->title,
+        $record->link, $record->options, $newwindow ? 1 : 0]);
 }
 
 /**
