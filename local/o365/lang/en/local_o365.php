@@ -735,6 +735,7 @@ $string['settings_sds_school_disabled_action'] = 'School sync disabled action';
 $string['settings_sds_school_disabled_action_desc'] = 'Action to the already connected Moodle courses when sync is disabled on an SDS school.';
 $string['settings_sds_school_disabled_action_keep_connected'] = 'Keep the Moodle course connected to the Team';
 $string['settings_sds_school_disabled_action_disconnect'] = 'Disconnect the Moodle course with the Team';
+$string['settings_sds_school_unavailable'] = '{$a} (SDS school list currently unavailable)';
 
 // Settings in the "Teams Settings" tab.
 $string['settings_teams_banner'] = 'The Moodle app for <a href="https://aka.ms/MoodleLearnTeams" target="_blank">Microsoft Teams</a> allows you to easily access and collaborate around your Moodle courses in Teams.';
