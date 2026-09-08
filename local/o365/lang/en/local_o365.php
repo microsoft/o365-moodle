@@ -976,6 +976,7 @@ $string['ucp_o365accountconnected'] = 'This Microsoft 365 account is already con
 $string['task_calendarsyncin'] = 'Sync Microsoft 365 events in to Moodle';
 $string['task_coursesync'] = 'Sync Moodle courses to Microsoft Teams';
 $string['task_coursemembershipsync'] = 'Sync Microsoft Teams owners and members to Moodle courses';
+$string['task_groupmembershipsync'] = 'Sync Moodle course owners and members to Microsoft 365 groups';
 $string['task_sds_sync'] = 'Sync with SDS';
 $string['task_syncusers'] = 'Sync users from Microsoft Entra ID';
 $string['task_syncusersphotostimezones'] = 'Sync user photos and timezones from Microsoft Entra ID';

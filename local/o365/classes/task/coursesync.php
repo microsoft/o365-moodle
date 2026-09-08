@@ -50,12 +50,6 @@ class coursesync extends scheduled_task {
      * @return bool|void
      */
     public function execute() {
-        global $SESSION;
-
-        $SESSION->o365_groups_not_exist = [];
-        $SESSION->o365_newly_created_groups = [];
-        $SESSION->o365_users_not_exist = [];
-
         // Raise memory and time limits to handle large numbers of teams/groups.
         raise_memory_limit(MEMORY_HUGE);
         @set_time_limit(0);
