@@ -741,12 +741,18 @@ class utils {
 
         $coursecontext = course::instance($courseid);
 
-        // Get user roles in the course.
-        $userroles = get_user_roles($coursecontext, $userid, false);
+        // Get the user's role assignments that apply in the course context, including those inherited from parent
+        // contexts (category / system). This matches the capability resolution used by get_enrolled_users() in
+        // get_team_owner_user_ids_by_course_id() / get_team_member_user_ids_by_course_id(), so that the per-user
+        // sync and the bulk sync agree on who should be an owner or a member.
+        $userroles = get_user_roles($coursecontext, $userid, true);
         $userroleids = array_column($userroles, 'roleid');
         if ($excluderoleid) {
-            unset($userroleids[$excluderoleid]);
+            // Disregard the excluded role (used when handling a role_unassigned event). $userroleids is a
+            // sequentially indexed list of role IDs, so the excluded role must be filtered out by value.
+            $userroleids = array_diff($userroleids, [$excluderoleid]);
         }
+        $userroleids = array_unique($userroleids);
 
         // Get group owner and member roles.
         $ownerroles = get_roles_with_capability('local/o365:teamowner', CAP_ALLOW, $coursecontext);
