@@ -518,6 +518,26 @@ $string['acp_userconnections_column_o365user'] = 'Microsoft 365 User';
 $string['acp_userconnections_column_status'] = 'Connection Status';
 $string['acp_userconnections_column_actions'] = 'Actions';
 $string['acp_userconnections_column_usinglogin'] = 'Using Login';
+$string['acp_userconnections_column_status_help'] = 'The connection status shows how a Moodle account is linked to a Microsoft 365 (Microsoft Entra ID) account.
+
+* **Connected** – The user has completed the connection by logging in to Moodle with their Microsoft 365 account, or an administrator has actively connected the account. Features such as calendar sync and OneDrive work for this user.
+* **Matched** – An administrator (or the bulk user matching tool) has recorded which Microsoft 365 account this Moodle user belongs to, but the connection is not active yet. It completes the first time the user logs in with Microsoft 365. Nothing syncs while a user is only matched.
+* **Synced** – The Moodle account was created from Microsoft Entra ID by the user sync task, but the user has not logged in yet. The account activates on first login.
+* **No connection** – The Moodle account is not linked to any Microsoft 365 account.';
+$string['acp_userconnections_column_actions_help'] = 'The actions available for a row depend on its connection status.
+
+* **Disconnect** – Removes the link between the Moodle account and the Microsoft 365 account. The person keeps their Moodle account but can no longer use Microsoft 365 features or log in with Microsoft 365 until they connect again. Shown for connected users.
+* **Resync** – Runs the Microsoft 365 data sync for this user straight away (profile fields, photo, calendar and so on) instead of waiting for the scheduled task, and shows the result. Shown for connected and synced users.
+* **Match** – Records which Microsoft 365 account this Moodle user belongs to. The connection is not active until the person logs in with Microsoft 365. Shown for users with no connection.
+* **Unmatch** – Removes a match that has not been completed yet. Shown for matched users.';
+$string['acp_userconnections_accountstatus_active'] = 'Active';
+$string['acp_userconnections_accountstatus_suspended'] = 'Suspended';
+$string['acp_userconnections_connectionstatus_connected'] = 'Connected';
+$string['acp_userconnections_connectionstatus_matched'] = 'Matched';
+$string['acp_userconnections_connectionstatus_noconnection'] = 'No connection';
+$string['acp_userconnections_connectionstatus_synced'] = 'Synced';
+$string['acp_userconnections_filtering_accountstatus'] = 'Account status';
+$string['acp_userconnections_filtering_connectionstatus'] = 'Connection status';
 $string['acp_userconnections_filtering_muserfullname'] = 'Moodle user full name';
 $string['acp_userconnections_filtering_musername'] = 'Moodle username';
 $string['acp_userconnections_filtering_o365username'] = 'Microsoft 365 username';
@@ -533,6 +553,8 @@ $string['acp_userconnections_manualmatch_error_o365usermatched'] = 'The Microsof
 $string['acp_userconnections_manualmatch_error_o365userconnected'] = 'The Microsoft 365 user is already connected to another Moodle user';
 $string['acp_userconnections_resync_notconnected'] = 'This user is not connected to Microsoft 365';
 $string['acp_userconnections_resync_nodata'] = 'Could not find stored Microsoft 365 information for this user.';
+$string['acp_userconnections_resync_notfound'] = 'No data was synced. The account "{$a->username}" is linked to Microsoft Entra ID object {$a->objectid}, but that object could not be found. The user has most likely been deleted or disabled in Microsoft 365, or the stored object ID is stale.';
+$string['acp_userconnections_resync_nooutput'] = 'The resync finished without reporting any changes.';
 $string['acp_userconnections_table_connected'] = 'Connected';
 $string['acp_userconnections_table_disconnect'] = 'Disconnect';
 $string['acp_userconnections_table_disconnect_confirmmsg'] = 'This will disconnect the Moodle user "{$a}" from Microsoft 365. Click the link below to proceed.';
