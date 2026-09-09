@@ -1650,7 +1650,7 @@ class main {
                 !isset($existingusers[$entraiduser['convertedidentifier']])
             ) {
                 // Check if the user has been renamed.
-                $syncnewuser = array_key_exists('create', $usersyncsettings);
+                $renamewashandled = false;
                 if (
                     isset($entraiduser['id']) && $entraiduser['id'] &&
                     $existingusermatching = ($this->o365objectsbyobjectid[$entraiduser['id']] ?? null)
@@ -1660,8 +1660,8 @@ class main {
 
                     $renamedmoodleuser = $this->fullusersbymoodleid[$existingusermatching->moodleid] ?? null;
                     if ($renamedmoodleuser) {
+                        $renamewashandled = true;
                         $this->mtrace('The user has been renamed in Microsoft...');
-                        $syncnewuser = false;
 
                         if ($supportuseridentifierchangeconfig == 1) {
                             // Check if manually matched users, who shouldn't be renamed.
@@ -1744,7 +1744,11 @@ class main {
                     }
                 }
 
-                if ($syncnewuser) {
+                if (!$renamewashandled) {
+                    // Not handled as a rename of a previously connected user. Hand off to sync_new_user(), which
+                    // creates the Moodle account when "Create accounts in Moodle" is enabled and otherwise logs why
+                    // the user is skipped. Previously this branch was skipped entirely when account creation was
+                    // disabled, leaving the sync output silent for Entra ID users with no linked Moodle account.
                     $this->sync_new_user(
                         $usersyncsettings,
                         $entraiduser,
