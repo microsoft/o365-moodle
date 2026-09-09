@@ -697,12 +697,13 @@ class main {
      * process_users_batched() with the appropriate callback instead.
      *
      * @param callable $callback Function to call for each batch of users. Receives array of users as parameter.
+     * @param array $extraselect Additional Graph user resource fields to include in the query's $select.
      * @return int Total number of users processed
      * @throws moodle_exception
      */
-    public function process_users_minimal_batched(callable $callback): int {
+    public function process_users_minimal_batched(callable $callback, array $extraselect = []): int {
         $apiclient = $this->construct_user_api();
-        return $apiclient->process_users_minimal_batched($callback);
+        return $apiclient->process_users_minimal_batched($callback, $extraselect);
     }
 
     /**
@@ -1342,6 +1343,35 @@ class main {
     public static function sync_option_enabled($option) {
         $options = static::get_sync_options();
         return isset($options[$option]);
+    }
+
+    /**
+     * Get the Microsoft Graph user resource field whose value is stored as the Moodle username, based on the configured
+     * auth_oidc binding username claim.
+     *
+     * Only returns a field when the Moodle username can be matched reliably against a single Graph user attribute, i.e.
+     * when the admin has explicitly selected one of upn, oid, email or samaccountname. Returns null for:
+     *  - "auto" - the effective claim is decided per token at login time and can differ between users;
+     *  - sub, unique_name, preferred_username - not Graph user resource fields;
+     *  - a custom claim name.
+     * In those cases the Moodle username cannot be resolved back to a single Entra ID account.
+     *
+     * @return string|null The Graph field name, or null if the binding claim cannot be mapped to one.
+     */
+    public static function get_binding_graph_field(): ?string {
+        $claim = auth_oidc_get_binding_username_claim();
+        switch ($claim) {
+            case 'upn':
+                return 'userPrincipalName';
+            case 'oid':
+                return 'id';
+            case 'email':
+                return 'mail';
+            case 'samaccountname':
+                return 'onPremisesSamAccountName';
+            default:
+                return null;
+        }
     }
 
     /**
@@ -2361,11 +2391,14 @@ class main {
             $dbman->drop_table($table);
         }
 
-        // Create temp table with objectid and accountenabled status.
+        // Create temp table with objectid, accountenabled status, and the binding username claim value (used to match
+        // Moodle accounts that have no local_o365_objects record - see suspend_unlinked_users_from_temp_table()).
         $table = new \xmldb_table($tempname);
         $table->add_field('objectid', XMLDB_TYPE_CHAR, 255, null, XMLDB_NOTNULL, null, null);
         $table->add_field('accountenabled', XMLDB_TYPE_INTEGER, 1, null, XMLDB_NOTNULL, null, 0);
+        $table->add_field('bindingvalue', XMLDB_TYPE_CHAR, 255, null, null, null, null);
         $table->add_index('objectid', XMLDB_INDEX_UNIQUE, ['objectid']);
+        $table->add_index('bindingvalue', XMLDB_INDEX_NOTUNIQUE, ['bindingvalue']);
 
         $dbman->create_temp_table($table);
 
@@ -2408,26 +2441,45 @@ class main {
 
         $apiclient = $this->construct_user_api();
         $insertcount = 0;
+        $bindingcount = 0;
+
+        // Also fetch the field that maps to the Moodle username, so accounts without a local_o365_objects record can be
+        // matched to Entra. Null means the configured binding claim is not a queryable Graph field.
+        $bindingfield = self::get_binding_graph_field();
+        $extraselect = ($bindingfield !== null && $bindingfield !== 'id') ? [$bindingfield] : [];
 
         // Intentionally unfiltered — see method docblock for rationale.
-        $apiclient->process_users_minimal_batched(function (array $entrabatch) use ($DB, $temptablename, &$insertcount) {
-            $records = [];
-            foreach ($entrabatch as $user) {
-                if (!empty($user['id'])) {
-                    $record = new \stdClass();
-                    $record->objectid = $user['id'];
-                    $record->accountenabled = ($user['accountEnabled'] ?? false) ? 1 : 0;
-                    $records[] = $record;
+        $apiclient->process_users_minimal_batched(
+            function (array $entrabatch) use ($DB, $temptablename, &$insertcount, &$bindingcount, $bindingfield) {
+                $records = [];
+                foreach ($entrabatch as $user) {
+                    if (!empty($user['id'])) {
+                        $record = new \stdClass();
+                        $record->objectid = $user['id'];
+                        $record->accountenabled = ($user['accountEnabled'] ?? false) ? 1 : 0;
+                        $record->bindingvalue = null;
+                        if ($bindingfield === 'id') {
+                            $record->bindingvalue = core_text::strtolower($user['id']);
+                        } else if ($bindingfield !== null && !empty($user[$bindingfield])) {
+                            $record->bindingvalue = core_text::strtolower($user[$bindingfield]);
+                        }
+                        if ($record->bindingvalue !== null) {
+                            $bindingcount++;
+                        }
+                        $records[] = $record;
+                    }
                 }
-            }
 
-            if (!empty($records)) {
-                $DB->insert_records($temptablename, $records);
-                $insertcount += count($records);
-            }
-        });
+                if (!empty($records)) {
+                    $DB->insert_records($temptablename, $records);
+                    $insertcount += count($records);
+                }
+            },
+            $extraselect
+        );
 
-        $this->mtrace('Inserted ' . $insertcount . ' Entra users into temp table.');
+        $this->mtrace('Inserted ' . $insertcount . ' Entra users into temp table (' . $bindingcount .
+            ' with a usable binding value).');
     }
 
     /**
@@ -2443,6 +2495,8 @@ class main {
      * @param bool $dodisabledsyncsuspend Whether to suspend users whose Entra account is disabled.
      * @param bool $dodisabledsyncreenable Whether to reenable users whose Entra account is (re-)enabled, and whether
      *                                     to require accountEnabled=true before reenabling via $doreenable.
+     * @param bool $dosuspendunlinked Whether to also suspend oidc accounts that have no local_o365_objects record,
+     *                                matched to Entra by the binding username claim. Suspend only, never delete.
      *
      * @return array [$reenabled, $suspended, $deleted] counts.
      */
@@ -2452,7 +2506,8 @@ class main {
         bool $dosuspend,
         bool $dodelete,
         bool $dodisabledsyncsuspend,
-        bool $dodisabledsyncreenable
+        bool $dodisabledsyncreenable,
+        bool $dosuspendunlinked = false
     ): array {
         global $CFG, $DB;
 
@@ -2556,7 +2611,128 @@ class main {
             $this->update_users_suspended(1, $userstosuspend);
         }
 
+        // Handle oidc accounts that have no local_o365_objects record (never synced, or the record was removed). These
+        // are invisible to the query above because it inner-joins local_o365_objects. Suspend only - never delete.
+        if ($dosuspendunlinked && ($dosuspend || $dodisabledsyncsuspend)) {
+            $suspended += $this->suspend_unlinked_users_from_temp_table($temptablename, $dosuspend, $dodisabledsyncsuspend);
+        }
+
         return [$reenabled, $suspended, $deleted];
+    }
+
+    /**
+     * Suspend oidc Moodle accounts that have no local_o365_objects record, by matching the Moodle username against the
+     * Entra binding username claim value stored in the temp table.
+     *
+     * These accounts carry no stored Entra object id, so this method never deletes (the soft-delete retention check in
+     * process_user_status_from_temp_table() cannot be performed) and never re-enables. It only suspends:
+     *  - accounts whose binding value is not present in Entra at all (treated as deleted), when $dosuspend is on;
+     *  - accounts found in Entra but with accountEnabled = false, when $dodisabledsyncsuspend is on.
+     *
+     * Matching accounts that are already suspended are reported separately (no action taken) so the admin gets a full
+     * picture of the unlinked accounts that are gone from / disabled in Entra ID.
+     *
+     * Guest-style usernames are skipped. If the configured binding claim cannot be mapped to a Graph field, or the temp
+     * table holds no binding values at all, this is a no-op (protects against mass suspension from a misconfiguration).
+     *
+     * @param string $temptablename The name of the temporary table with Entra users.
+     * @param bool $dosuspend Whether to suspend accounts not found in Entra.
+     * @param bool $dodisabledsyncsuspend Whether to suspend accounts found in Entra but disabled.
+     * @return int Number of accounts newly suspended.
+     */
+    private function suspend_unlinked_users_from_temp_table(
+        string $temptablename,
+        bool $dosuspend,
+        bool $dodisabledsyncsuspend
+    ): int {
+        global $CFG, $DB;
+
+        if (self::get_binding_graph_field() === null) {
+            $this->mtrace('Skipping accounts with no Microsoft link: the binding username claim is not a Graph field.');
+            return 0;
+        }
+
+        if (!$DB->record_exists_select($temptablename, 'bindingvalue IS NOT NULL')) {
+            $this->mtrace('Skipping accounts with no Microsoft link: no binding values were returned from Entra ID.');
+            return 0;
+        }
+
+        // Group by user: a binding value can (rarely) match more than one Entra account. Treat the user as present in
+        // Entra if any row matched, and as enabled if any matching account is enabled (conservative - avoids suspending
+        // someone who still has an active account).
+        $sql = 'SELECT u.id, u.username, u.suspended,
+                       MAX(CASE WHEN etmp.bindingvalue IS NOT NULL THEN 1 ELSE 0 END) AS isinentra,
+                       MAX(COALESCE(etmp.accountenabled, 0)) AS accountenabled
+                  FROM {user} u
+             LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
+             LEFT JOIN {' . $temptablename . '} etmp ON etmp.bindingvalue = LOWER(u.username)
+                 WHERE u.mnethostid = ?
+                   AND u.deleted = ?
+                   AND u.auth = ?
+                   AND obj.id IS NULL
+              GROUP BY u.id, u.username, u.suspended';
+        $params = ['user', $CFG->mnet_localhost_id, '0', 'oidc'];
+
+        $rs = $DB->get_recordset_sql($sql, $params);
+
+        $count = 0;
+        $tosuspend = [];
+        $alreadysuspendedcount = 0;
+        $alreadysuspendedsample = [];
+        $samplecap = 50;
+        foreach ($rs as $user) {
+            // Skip guest-style accounts - their username rarely maps cleanly to a binding value.
+            if (stripos($user->username, '_ext_') !== false || stripos($user->username, '#ext#') !== false) {
+                continue;
+            }
+
+            $reason = null;
+            if (!$user->isinentra && $dosuspend) {
+                $reason = 'not found in Entra ID';
+            } else if ($user->isinentra && !$user->accountenabled && $dodisabledsyncsuspend) {
+                $reason = 'disabled in Entra ID';
+            }
+
+            if ($reason === null) {
+                continue;
+            }
+
+            if ($user->suspended) {
+                // Already suspended - report only, do not touch. Keep a capped sample rather than the whole list.
+                $alreadysuspendedcount++;
+                if (count($alreadysuspendedsample) < $samplecap) {
+                    $alreadysuspendedsample[] = $user->username . ' (' . $reason . ')';
+                }
+                continue;
+            }
+
+            $tosuspend[] = $user->id;
+            $this->mtrace('Suspended ' . $user->username . ' (' . $reason . '; no stored Microsoft link)');
+            $count++;
+
+            if (count($tosuspend) >= 500) {
+                $this->update_users_suspended(1, $tosuspend);
+                $tosuspend = [];
+            }
+        }
+        $rs->close();
+
+        if (!empty($tosuspend)) {
+            $this->update_users_suspended(1, $tosuspend);
+        }
+
+        if ($alreadysuspendedcount > 0) {
+            $this->mtrace($alreadysuspendedcount . ' account(s) with no stored Microsoft link are missing from or ' .
+                'disabled in Entra ID but are already suspended (no action taken):');
+            foreach ($alreadysuspendedsample as $line) {
+                $this->mtrace('  ' . $line);
+            }
+            if ($alreadysuspendedcount > count($alreadysuspendedsample)) {
+                $this->mtrace('  ... and ' . ($alreadysuspendedcount - count($alreadysuspendedsample)) . ' more.');
+            }
+        }
+
+        return $count;
     }
 
     /**
