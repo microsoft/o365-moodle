@@ -675,6 +675,191 @@ final class usersync_test extends advanced_testcase {
     }
 
     /**
+     * Test that 'suspendnolink' suspends oidc accounts with no local_o365_objects record, matching by username, and
+     * leaves alone accounts that are still present and enabled in Entra as well as non-oidc accounts.
+     *
+     * @covers \local_o365\feature\usersync\main::process_user_status_from_temp_table
+     * @covers \local_o365\feature\usersync\main::suspend_unlinked_users_from_temp_table
+     */
+    public function test_process_user_status_suspend_unlinked(): void {
+        global $DB;
+
+        // Binding username claim must be a specific resolvable field for unlinked matching to run.
+        set_config('bindingusernameclaim', 'upn', 'auth_oidc');
+
+        $generator = $this->getDataGenerator();
+        // Orphan oidc account (no local_o365_objects record) that is missing from Entra.
+        $deletedorphan = $generator->create_user(['auth' => 'oidc', 'suspended' => 0]);
+        // Orphan oidc account still present and enabled in Entra - must be left alone.
+        $liveorphan = $generator->create_user(['auth' => 'oidc', 'suspended' => 0]);
+        // Non-oidc account whose username matches an Entra account - must never be touched.
+        $manualuser = $generator->create_user(['auth' => 'manual', 'suspended' => 0]);
+        // Orphan missing from Entra but already suspended - reported only, not re-counted.
+        $suspendedorphan = $generator->create_user(['auth' => 'oidc', 'suspended' => 1]);
+
+        $usersync = new main();
+        $temptablename = $usersync->create_entra_users_temp_table();
+
+        try {
+            $DB->insert_records($temptablename, [
+                (object) ['objectid' => 'obj-live', 'accountenabled' => 1, 'bindingvalue' => $liveorphan->username],
+                (object) ['objectid' => 'obj-manual', 'accountenabled' => 1, 'bindingvalue' => $manualuser->username],
+            ]);
+
+            [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                false, // Do not re-enable.
+                true, // Suspend deleted users.
+                false, // Do not delete.
+                false, // Do not suspend on disabled accounts.
+                false, // Do not re-enable users enabled in Entra.
+                true   // Suspend unlinked accounts.
+            );
+
+            $this->assertEquals(0, $reenabled);
+            $this->assertEquals(1, $suspended, 'Only the not-yet-suspended orphan should be counted.');
+            $this->assertEquals(0, $deleted);
+
+            $this->assertEquals(
+                1,
+                $DB->get_field('user', 'suspended', ['id' => $deletedorphan->id]),
+                'Unlinked oidc account missing from Entra should be suspended.'
+            );
+            $this->assertEquals(
+                0,
+                $DB->get_field('user', 'suspended', ['id' => $liveorphan->id]),
+                'Unlinked oidc account still present and enabled in Entra should be left alone.'
+            );
+            $this->assertEquals(
+                0,
+                $DB->get_field('user', 'suspended', ['id' => $manualuser->id]),
+                'Non-oidc account should never be touched.'
+            );
+            $this->assertEquals(
+                1,
+                $DB->get_field('user', 'suspended', ['id' => $suspendedorphan->id]),
+                'Already-suspended orphan stays suspended and is not re-counted.'
+            );
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
+     * Test the guards on 'suspendnolink': it does nothing when the option is off, skips guest-style usernames, and
+     * only suspends matched-but-disabled accounts when 'disabledsyncsuspend' is on.
+     *
+     * @covers \local_o365\feature\usersync\main::process_user_status_from_temp_table
+     * @covers \local_o365\feature\usersync\main::suspend_unlinked_users_from_temp_table
+     */
+    public function test_process_user_status_suspend_unlinked_guards(): void {
+        global $DB;
+
+        set_config('bindingusernameclaim', 'upn', 'auth_oidc');
+
+        $generator = $this->getDataGenerator();
+        $orphan = $generator->create_user(['auth' => 'oidc', 'suspended' => 0]);
+        $guestorphan = $generator->create_user(['auth' => 'oidc', 'suspended' => 0, 'username' => 'guest_ext_1']);
+        $disabledorphan = $generator->create_user(['auth' => 'oidc', 'suspended' => 0]);
+
+        $usersync = new main();
+
+        // Option off - nothing happens even though the orphan is missing from Entra.
+        $temptablename = $usersync->create_entra_users_temp_table();
+        try {
+            $DB->insert_records($temptablename, [
+                (object) ['objectid' => 'obj-x', 'accountenabled' => 1, 'bindingvalue' => 'someone-else'],
+            ]);
+            $usersync->process_user_status_from_temp_table($temptablename, false, true, false, false, false, false);
+            $this->assertEquals(
+                0,
+                $DB->get_field('user', 'suspended', ['id' => $orphan->id]),
+                'Nothing should happen while suspendnolink is off.'
+            );
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+
+        // Option on: guest-style username is skipped; disabled match only suspended with disabledsyncsuspend.
+        $temptablename = $usersync->create_entra_users_temp_table();
+        try {
+            $DB->insert_records($temptablename, [
+                (object) ['objectid' => 'obj-disabled', 'accountenabled' => 0, 'bindingvalue' => $disabledorphan->username],
+                (object) ['objectid' => 'obj-guest', 'accountenabled' => 0, 'bindingvalue' => 'guest_ext_1'],
+            ]);
+            [, $suspended] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                false,
+                true,
+                false,
+                true,
+                false,
+                true
+            );
+
+            $this->assertEquals(2, $suspended);
+            $this->assertEquals(
+                1,
+                $DB->get_field('user', 'suspended', ['id' => $orphan->id]),
+                'Orphan missing from Entra should be suspended.'
+            );
+            $this->assertEquals(
+                1,
+                $DB->get_field('user', 'suspended', ['id' => $disabledorphan->id]),
+                'Orphan disabled in Entra should be suspended when disabledsyncsuspend is on.'
+            );
+            $this->assertEquals(
+                0,
+                $DB->get_field('user', 'suspended', ['id' => $guestorphan->id]),
+                'Guest-style username should be skipped.'
+            );
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
+     * Test that 'suspendnolink' does nothing when the binding username claim is "auto" (its effective claim is decided
+     * per login and can differ between users, so the Moodle username cannot be reliably matched to one Entra account).
+     *
+     * @covers \local_o365\feature\usersync\main::suspend_unlinked_users_from_temp_table
+     * @covers \local_o365\feature\usersync\main::get_binding_graph_field
+     */
+    public function test_process_user_status_suspend_unlinked_requires_specific_claim(): void {
+        global $DB;
+
+        set_config('bindingusernameclaim', 'auto', 'auth_oidc');
+
+        $orphan = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 0]);
+
+        $usersync = new main();
+        $temptablename = $usersync->create_entra_users_temp_table();
+        try {
+            $DB->insert_records($temptablename, [
+                (object) ['objectid' => 'obj-x', 'accountenabled' => 1, 'bindingvalue' => 'someone-else'],
+            ]);
+            [, $suspended] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                false,
+                true,
+                false,
+                false,
+                false,
+                true
+            );
+
+            $this->assertEquals(0, $suspended);
+            $this->assertEquals(
+                0,
+                $DB->get_field('user', 'suspended', ['id' => $orphan->id]),
+                'Unlinked matching must not run when the binding claim is "auto".'
+            );
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
      * Test that 'disabledsyncreenable' independently re-enables a suspended user present in Entra with
      * accountEnabled=true, without needing 'reenable' enabled, and leaves a still-disabled user suspended.
      *
