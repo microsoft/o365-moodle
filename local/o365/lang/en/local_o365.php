@@ -148,6 +148,7 @@ $string['settings_usersync_delete'] = 'Delete previously synced accounts in Mood
 $string['settings_usersync_reenable'] = 'Re-enable suspended accounts for users in Microsoft Entra ID';
 $string['settings_usersync_disabledsyncsuspend'] = 'Suspend accounts in Moodle when disabled in Microsoft Entra ID';
 $string['settings_usersync_disabledsyncreenable'] = 'Re-enable accounts in Moodle when re-enabled in Microsoft Entra ID';
+$string['settings_usersync_suspendnolink'] = 'Suspend connected accounts that have no stored Microsoft link when they are deleted from or disabled in Microsoft Entra ID';
 $string['settings_usersync_match'] = 'Match preexisting Moodle users with same-named accounts in Microsoft Entra ID';
 $string['settings_usersync_matchswitchauth'] = 'Switch matched users to Microsoft 365 (OpenID Connect) authentication';
 $string['settings_usersync_appassign'] = 'Assign users to application during sync';
@@ -1025,6 +1026,14 @@ $string['help_user_disabledsyncsuspend'] = 'Suspend Accounts On Disable Help';
 $string['help_user_disabledsyncsuspend_help'] = 'This will suspend users in Moodle if their connected accounts in Microsoft Entra ID are prevented from logging in (disabled), without changing whether they are automatically re-enabled if their Microsoft Entra ID account is enabled again. Use the "Re-enable accounts in Moodle when re-enabled in Microsoft Entra ID" option below to control that separately.';
 $string['help_user_disabledsyncreenable'] = 'Re-enable Accounts On Enable Help';
 $string['help_user_disabledsyncreenable_help'] = 'This will unsuspend suspended users in Moodle if their connected accounts in Microsoft Entra ID are allowed to log in (enabled) again.';
+$string['help_user_suspendnolink'] = 'Suspend Accounts With No Microsoft Link Help';
+$string['help_user_suspendnolink_help'] = 'Normally the suspend/disable options above only act on accounts that have a stored Microsoft Entra ID object record (created when the account was synced or connected). Some OpenID Connect accounts have no such record - for example they connected before the Microsoft Graph API was configured, or the record was removed by a disconnect or a "clear matched users" action. This option makes the status task also check those accounts, matching the Moodle username against the configured binding username claim value in Entra ID.
+
+Matched accounts that are missing from Entra ID, or disabled there, are <strong>suspended only</strong>: they are never deleted (without a stored object ID, the Entra ID soft-delete retention period cannot be checked) and are never automatically re-enabled. Guest accounts are skipped.
+
+This option only works when the OpenID Connect binding username claim is set to a specific field that can be looked up in Entra ID - "upn", "oid", "email" or "samaccountname". With "auto" (where the effective claim is chosen per login and can differ between users) or any other claim, the Moodle username cannot be reliably matched to a single account, and this option does nothing.
+
+Review your suspended users after the first run: an account manually switched to this authentication method that was never a real Entra ID user will be suspended by this option.';
 $string['help_user_match'] = 'Match Accounts Help';
 $string['help_user_match_help'] = 'This will look at each user in the linked Microsoft Entra ID and try to match them with a user in Moodle. This match is based on Microsoft Entra ID UPN and Moodle username. Matches are case-insensitive and ignore the domain part of Microsoft Entra ID UPN. For example, "BoB.SmiTh" in Moodle would match "bob.smith@example.onmicrosoft.com". Users who are matched will have their Moodle and Microsoft Entra ID accounts connected and will be able to use all Microsoft 365 and Moodle integration features. The user\'s authentication method will not change unless the setting below is enabled.';
 $string['help_user_matchswitchauth'] = 'Switch Matched Accounts Help';

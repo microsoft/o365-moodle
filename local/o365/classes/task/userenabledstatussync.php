@@ -62,6 +62,7 @@ class userenabledstatussync extends scheduled_task {
         $dodelete = main::sync_option_enabled('delete');
         $dodisabledsyncsuspend = main::sync_option_enabled('disabledsyncsuspend');
         $dodisabledsyncreenable = main::sync_option_enabled('disabledsyncreenable');
+        $dosuspendunlinked = main::sync_option_enabled('suspendnolink');
 
         $this->mtrace('Status sync options:');
         $this->mtrace('Suspend (deleted from Entra ID): ' . ($dosuspend ? 'enabled' : 'disabled'), 1);
@@ -69,6 +70,8 @@ class userenabledstatussync extends scheduled_task {
         $this->mtrace('Delete: ' . ($dodelete ? 'enabled' : 'disabled'), 1);
         $this->mtrace('Suspend (disabled in Entra ID): ' . ($dodisabledsyncsuspend ? 'enabled' : 'disabled'), 1);
         $this->mtrace('Re-enable (enabled in Entra ID): ' . ($dodisabledsyncreenable ? 'enabled' : 'disabled'), 1);
+        $this->mtrace('Suspend accounts with no stored Microsoft link: ' .
+            ($dosuspendunlinked ? 'enabled' : 'disabled'), 1);
     }
 
     /**
@@ -86,6 +89,7 @@ class userenabledstatussync extends scheduled_task {
         $dodelete = main::sync_option_enabled('delete');
         $dodisabledsyncsuspend = main::sync_option_enabled('disabledsyncsuspend');
         $dodisabledsyncreenable = main::sync_option_enabled('disabledsyncreenable');
+        $dosuspendunlinked = main::sync_option_enabled('suspendnolink');
 
         if (!$dosuspend && !$doreenable && !$dodisabledsyncsuspend && !$dodisabledsyncreenable) {
             $this->mtrace('User suspension and re-enable disabled. Nothing to do.');
@@ -174,7 +178,8 @@ class userenabledstatussync extends scheduled_task {
                 $dosuspend,
                 $dodelete,
                 $dodisabledsyncsuspend,
-                $dodisabledsyncreenable
+                $dodisabledsyncreenable,
+                $dosuspendunlinked
             );
 
             if ($totalreenabled > 0) {
