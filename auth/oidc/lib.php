@@ -276,6 +276,9 @@ function auth_oidc_initialize_customicon($filefullname) {
             // Unexpected/empty extension: don't create a weird or unvalidated file under
             // pix_plugins. The stale files for previously-valid extensions were already
             // removed above, so this leaves no custom icon in place.
+            debugging('auth_oidc: custom icon "' . $file->get_filename() . '" has unsupported extension "' . $extension .
+                '" and will not be shown on the login page. Supported extensions: ' .
+                implode(', ', AUTH_OIDC_CUSTOMICON_ALLOWED_EXTENSIONS) . '.', DEBUG_DEVELOPER);
             return false;
         }
 
