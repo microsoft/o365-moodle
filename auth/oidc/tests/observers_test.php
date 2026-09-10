@@ -18,6 +18,7 @@ namespace auth_oidc;
 
 use advanced_testcase;
 use core\context\system;
+use core\event\config_log_created;
 use core\event\user_deleted;
 
 /**
@@ -134,5 +135,86 @@ final class observers_test extends advanced_testcase {
 
         // Verify still no token exists (nothing changed).
         $this->assertFalse($DB->record_exists('auth_oidc_token', ['userid' => $user->id]));
+    }
+
+    /**
+     * Insert an auth_oidc_token record for the given user, filling the required fields.
+     *
+     * @param int $userid The Moodle user id to attach the token to.
+     * @return int The id of the inserted record.
+     */
+    private function create_token(int $userid): int {
+        global $DB;
+        return $DB->insert_record('auth_oidc_token', [
+            'userid' => $userid,
+            'oidcuniqid' => 'oidcuniqid' . $userid,
+            'username' => 'username' . $userid,
+            'oidcusername' => 'oidcusername' . $userid,
+            'scope' => 'scope',
+            'tokenresource' => 'tokenresource',
+            'authcode' => 'authcode',
+            'token' => 'token',
+            'expiry' => time(),
+            'refreshtoken' => 'refreshtoken',
+            'idtoken' => 'idtoken',
+        ]);
+    }
+
+    /**
+     * Build a config_log_created event describing a changed configuration setting.
+     *
+     * @param string $name The config setting name.
+     * @param string $plugin The plugin the setting belongs to.
+     * @return config_log_created
+     */
+    private function make_config_event(string $name, string $plugin = 'auth_oidc'): config_log_created {
+        return config_log_created::create([
+            'objectid' => 1,
+            'context' => system::instance(),
+            'other' => [
+                'name' => $name,
+                'oldvalue' => 'oldvalue',
+                'value' => 'newvalue',
+                'plugin' => $plugin,
+            ],
+        ]);
+    }
+
+    /**
+     * All stored OIDC tokens are cleared when the client ID setting changes.
+     *
+     * @return void
+     * @covers ::handle_config_log_created
+     */
+    public function test_tokens_are_cleared_when_clientid_changes(): void {
+        global $DB;
+        $userone = $this->getDataGenerator()->create_user();
+        $usertwo = $this->getDataGenerator()->create_user();
+        $this->create_token($userone->id);
+        $this->create_token($usertwo->id);
+        $this->assertEquals(2, $DB->count_records('auth_oidc_token'));
+
+        $result = observers::handle_config_log_created($this->make_config_event('clientid'));
+
+        $this->assertTrue($result);
+        $this->assertEquals(0, $DB->count_records('auth_oidc_token'));
+    }
+
+    /**
+     * Stored OIDC tokens are left untouched when a setting other than auth_oidc's client ID changes.
+     *
+     * @return void
+     * @covers ::handle_config_log_created
+     */
+    public function test_tokens_are_kept_when_other_settings_change(): void {
+        global $DB;
+        $user = $this->getDataGenerator()->create_user();
+        $this->create_token($user->id);
+
+        // A different auth_oidc setting, and the client ID of a different plugin.
+        $this->assertTrue(observers::handle_config_log_created($this->make_config_event('clientsecret')));
+        $this->assertTrue(observers::handle_config_log_created($this->make_config_event('clientid', 'local_o365')));
+
+        $this->assertEquals(1, $DB->count_records('auth_oidc_token'));
     }
 }

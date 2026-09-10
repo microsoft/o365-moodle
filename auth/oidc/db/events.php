@@ -38,4 +38,10 @@ $observers = [
         'priority' => 200,
         'internal' => false,
     ],
+    [
+        'eventname' => '\core\event\config_log_created',
+        'callback' => '\auth_oidc\observers::handle_config_log_created',
+        'priority' => 200,
+        'internal' => true,
+    ],
 ];
