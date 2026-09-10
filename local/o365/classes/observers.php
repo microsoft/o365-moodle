@@ -846,8 +846,7 @@ class observers {
                     // Clear local_o365_token table.
                     $DB->delete_records('local_o365_token');
 
-                    // Clear auth_oidc_token table.
-                    $DB->delete_records('auth_oidc_token');
+                    // The auth_oidc_token table is cleared by auth_oidc's own observer on this event.
 
                     // Clear local_o365_connections table.
                     $DB->delete_records('local_o365_connections');
