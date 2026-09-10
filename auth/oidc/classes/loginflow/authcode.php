@@ -159,7 +159,14 @@ class authcode extends base {
         $errordescription = optional_param('error_description', '', PARAM_TEXT);
         $silentloginmode = get_config('auth_oidc', 'silentloginmode');
         $selectaccount = false;
+        $restoredwantsurl = null;
         if ($silentloginmode) {
+            if ($error == 'login_required' || $error == 'interaction_required') {
+                $restoredwantsurl = $this->restore_wantsurl_from_state();
+                if ($restoredwantsurl !== null) {
+                    $SESSION->wantsurl = $restoredwantsurl;
+                }
+            }
             if ($error == 'login_required') {
                 // If silent login mode is enabled and the error is 'login_required', redirect to the login page.
                 $loginpageurl = new url('/login/index.php', ['noredirect' => 1]);
@@ -217,6 +224,10 @@ class authcode extends base {
             // Handle guest account session termination.
             if (isguestuser()) {
                 \core\session\manager::terminate_current();
+            }
+            // Re-assign because terminate_current() above replaces $SESSION with a new object.
+            if ($restoredwantsurl !== null) {
+                $SESSION->wantsurl = $restoredwantsurl;
             }
             // Initial login request.
             $stateparams = ['forceflow' => 'authcode'];
@@ -348,6 +359,41 @@ class authcode extends base {
 
         echo $OUTPUT->redirect_message($url->out(), $message, $delay, false, notification::NOTIFY_ERROR);
         exit;
+    }
+
+    /**
+     * Recover the wantsurl carried in the state record when a silent login attempt fails.
+     *
+     * The IdP response arrives as a cross-site form_post, which browsers drop the SameSite=Lax
+     * session cookie on (MDL-83526), leaving the state record as the only surviving carrier.
+     * Returns rather than assigns: terminate_current() can replace $SESSION before the caller uses it.
+     *
+     * @return string|null The originally requested local URL, or null if there is none to restore.
+     */
+    protected function restore_wantsurl_from_state(): ?string {
+        global $DB;
+
+        // Not getoidcparam(): it throws, and this path must still reach the login page.
+        $state = optional_param('state', '', PARAM_ALPHANUM);
+        if (empty($state)) {
+            return null;
+        }
+
+        $staterec = $DB->get_record('auth_oidc_state', ['state' => $state]);
+        if (empty($staterec) || empty($staterec->additionaldata)) {
+            return null;
+        }
+
+        $additionaldata = @unserialize($staterec->additionaldata);
+        if (!is_array($additionaldata) || empty($additionaldata['wantsurl'])) {
+            return null;
+        }
+
+        $wantsurl = ($additionaldata['wantsurl'] instanceof url)
+            ? $additionaldata['wantsurl']->out()
+            : (string) $additionaldata['wantsurl'];
+
+        return $this->is_valid_local_url($wantsurl) ? $wantsurl : null;
     }
 
     /**
