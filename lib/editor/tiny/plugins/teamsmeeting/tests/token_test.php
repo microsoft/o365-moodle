@@ -157,4 +157,37 @@ final class token_test extends \advanced_testcase {
 
         $this->assertSame((int) $user->id, $result);
     }
+
+    /**
+     * A token embeds the language the issuing user was shown at the time,
+     * not their profile default, since that is routinely overridden per-session
+     * (e.g. by the language menu) and is what current_language() resolves to.
+     */
+    public function test_validate_lang_returns_the_language_active_when_the_token_was_issued(): void {
+        $user = $this->getDataGenerator()->create_user(['lang' => 'xx']);
+        $this->setUser($user);
+
+        $result = token::validate_lang(token::generate());
+
+        $this->assertSame('xx', $result);
+    }
+
+    /**
+     * A structurally older token with no language segment in its payload is
+     * still accepted by validate(), and validate_lang() degrades to ''.
+     */
+    public function test_validate_lang_returns_empty_string_for_a_token_without_a_language(): void {
+        $user = $this->getDataGenerator()->create_user();
+        $token = $this->sign((int) $user->id, time() + 60);
+
+        $this->assertSame((int) $user->id, token::validate($token));
+        $this->assertSame('', token::validate_lang($token));
+    }
+
+    /**
+     * An invalid token has no language to report.
+     */
+    public function test_validate_lang_returns_empty_string_for_an_invalid_token(): void {
+        $this->assertSame('', token::validate_lang(''));
+    }
 }

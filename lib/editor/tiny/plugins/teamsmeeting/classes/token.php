@@ -47,11 +47,20 @@ class token {
     /**
      * Issue a token for the current user.
      *
+     * The user's effective language (session override, course-forced language,
+     * and so on all already resolved by current_language()) is embedded in the
+     * signed payload. result.php runs with NO_MOODLE_COOKIES and so has no
+     * session of its own to resolve this from; carrying it through the token
+     * lets result.php show its messages in the same language the user saw when
+     * they opened the dialog, without having to guess at it from the user's
+     * profile language (mdl_user.lang), which is only a fallback default and is
+     * routinely overridden per-session.
+     *
      * @return string Hexadecimal token, safe to pass as a URL parameter.
      */
     public static function generate(): string {
         global $USER;
-        $payload = $USER->id . ':' . (time() + self::LIFETIME);
+        $payload = $USER->id . ':' . (time() + self::LIFETIME) . ':' . current_language();
         return hash_hmac('sha256', $payload, self::secret()) . bin2hex($payload);
     }
 
@@ -63,12 +72,36 @@ class token {
      *                  tampered with or expired.
      */
     public static function validate(string $token): ?int {
+        $matches = self::verify($token);
+        return $matches === null ? null : (int) $matches[1];
+    }
+
+    /**
+     * Return the language the token's issuing user was shown when it was issued.
+     *
+     * @param string $token The token received from the callback request.
+     * @return string The language code (e.g. 'en', 'pl'), or '' when the token
+     *                is invalid or was issued before this field existed.
+     */
+    public static function validate_lang(string $token): string {
+        $matches = self::verify($token);
+        return $matches[3] ?? '';
+    }
+
+    /**
+     * Verify a token's signature and expiry and return its parsed payload.
+     *
+     * @param string $token The token received from the callback request.
+     * @return array|null The regex match groups for the payload, or null when
+     *                    the token is missing, malformed, tampered with or expired.
+     */
+    private static function verify(string $token): ?array {
         if (strlen($token) <= 64 || !ctype_xdigit($token)) {
             return null;
         }
         $signature = substr($token, 0, 64);
         $payload = @hex2bin(substr($token, 64));
-        if ($payload === false || !preg_match('/^(\d+):(\d+)$/', $payload, $matches)) {
+        if ($payload === false || !preg_match('/^(\d+):(\d+)(?::([a-zA-Z0-9_]*))?$/', $payload, $matches)) {
             return null;
         }
         if (!hash_equals(hash_hmac('sha256', $payload, self::secret()), $signature)) {
@@ -77,7 +110,7 @@ class token {
         if ((int) $matches[2] < time()) {
             return null;
         }
-        return (int) $matches[1];
+        return $matches;
     }
 
     /**
