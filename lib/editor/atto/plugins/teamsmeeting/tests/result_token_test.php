@@ -25,8 +25,6 @@
 
 namespace atto_teamsmeeting;
 
-defined('MOODLE_INTERNAL') || die();
-
 use advanced_testcase;
 
 /**
@@ -97,7 +95,9 @@ final class result_token_test extends advanced_testcase {
      * An unrecognised token has no cached language to report.
      */
     public function test_validate_lang_returns_empty_string_for_an_unknown_token(): void {
-        $this->assertSame('', result_token::validate_lang('not-a-real-token'));
+        // Alphanumeric, matching what PARAM_ALPHANUM would actually let through
+        // to result.php, unlike a value containing punctuation such as '-'.
+        $this->assertSame('', result_token::validate_lang('notarealtoken1234567890'));
     }
 
     /**

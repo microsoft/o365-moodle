@@ -111,7 +111,11 @@ class result_token {
      *                 no cached language for this token.
      */
     public static function validate_lang(string $token): string {
-        if ($token === '') {
+        // The cache definition requires simple ([a-zA-Z0-9_]) keys, and
+        // result.php reads $token via PARAM_ALPHANUM, so reject anything
+        // that filter would not have let through before it ever reaches the
+        // cache layer's own (fatal) key format check.
+        if (!ctype_alnum($token)) {
             return '';
         }
 
