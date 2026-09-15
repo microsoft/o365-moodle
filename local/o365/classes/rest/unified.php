@@ -53,6 +53,14 @@ class unified extends o365api {
     const GRAPH_API_BATCH_SIZE = 999;
 
     /**
+     * Number of groups to fetch member and owner data for in a single Microsoft Graph $batch call.
+     * Graph allows 20 requests per batch and each group costs 2 (transitive members + owners).
+     *
+     * @var int
+     */
+    const GROUPS_PER_BATCH_REQUEST = 10;
+
+    /**
      * @var string The general API area of the class.
      */
     public $apiarea = 'graph';
@@ -3120,6 +3128,107 @@ class unified extends o365api {
                 // Batch call itself failed; pre-initialisation above already set all
                 // UPNs in this chunk to batch_error status.
                 debugging('Batch photo request failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Get transitive members and owners for multiple groups using batch requests.
+     *
+     * Groups whose member or owner list doesn't fit in a single page fall back to the
+     * paginated single-group calls.
+     *
+     * @param array $groupoids Array of Microsoft group object IDs.
+     * @return array Associative array keyed by group object ID, each value:
+     *         - 'members' (array|null): transitive user members (id only), or null if not fetched.
+     *         - 'owners' (array|null): group owners, or null if not fetched.
+     *         - 'error' (string|null): error message if the group's data could not be fetched.
+     */
+    public function get_groups_owners_and_members_batch(array $groupoids): array {
+        if (empty($groupoids)) {
+            return [];
+        }
+
+        $results = [];
+        foreach ($groupoids as $groupoid) {
+            $results[$groupoid] = ['members' => null, 'owners' => null, 'error' => null];
+        }
+
+        $chunks = array_chunk($groupoids, self::GROUPS_PER_BATCH_REQUEST);
+
+        foreach ($chunks as $chunk) {
+            $batchrequests = [];
+            $requestmap = [];
+
+            // Build batch request.
+            foreach ($chunk as $index => $groupoid) {
+                $membersrequestid = 'members_' . $index;
+                $ownersrequestid = 'owners_' . $index;
+                $requestmap[$membersrequestid] = ['groupoid' => $groupoid, 'type' => 'members'];
+                $requestmap[$ownersrequestid] = ['groupoid' => $groupoid, 'type' => 'owners'];
+
+                $batchrequests[] = [
+                    'id' => $membersrequestid,
+                    'method' => 'GET',
+                    'url' => '/groups/' . $groupoid . '/transitiveMembers/microsoft.graph.user?$select=id&$top=999',
+                ];
+                $batchrequests[] = [
+                    'id' => $ownersrequestid,
+                    'method' => 'GET',
+                    'url' => '/groups/' . $groupoid . '/owners?$top=999',
+                ];
+            }
+
+            // Make batch request.
+            try {
+                $batchpayload = ['requests' => $batchrequests];
+                $response = $this->betaapicall('post', '/$batch', json_encode($batchpayload));
+                $batchresponse = $this->process_apicall_response($response, ['responses' => null]);
+
+                if (!empty($batchresponse['responses']) && is_array($batchresponse['responses'])) {
+                    foreach ($batchresponse['responses'] as $individualresponse) {
+                        $requestid = $individualresponse['id'] ?? null;
+                        if (!isset($requestmap[$requestid])) {
+                            continue;
+                        }
+
+                        $groupoid = $requestmap[$requestid]['groupoid'];
+                        $type = $requestmap[$requestid]['type'];
+                        $httpstatus = $individualresponse['status'] ?? null;
+                        $body = $individualresponse['body'] ?? [];
+
+                        if ($httpstatus === 200) {
+                            $values = (!empty($body['value']) && is_array($body['value'])) ? $body['value'] : [];
+
+                            // The page is incomplete, so discard it and refetch with paging. The refetch
+                            // gets its own try so that one group's failure doesn't abort the rest of the batch.
+                            if (!empty($body['@odata.nextLink'])) {
+                                try {
+                                    $values = ($type === 'members')
+                                        ? $this->get_transitive_group_members($groupoid)
+                                        : $this->get_group_owners($groupoid);
+                                } catch (moodle_exception $e) {
+                                    $results[$groupoid]['error'] = $e->getMessage();
+                                    continue;
+                                }
+                            }
+
+                            $results[$groupoid][$type] = $values;
+                        } else {
+                            $errormessage = $body['error']['message'] ?? "HTTP $httpstatus";
+                            $results[$groupoid]['error'] = $errormessage;
+                        }
+                    }
+                }
+            } catch (moodle_exception $e) {
+                // Batch call itself failed; mark every group in this chunk as errored so callers
+                // don't mistake a transient failure for an empty group.
+                foreach ($chunk as $groupoid) {
+                    $results[$groupoid]['error'] = $e->getMessage();
+                }
+                utils::debug('Batch group owners/members request failed: ' . $e->getMessage(), __METHOD__, $e);
             }
         }
 
