@@ -45,13 +45,33 @@ class token {
     private const LIFETIME = 7200;
 
     /**
+     * @var int Maximum plausible token length: the fixed 64-character
+     * signature plus a generously-bounded hex-encoded "userid:expiry:lang"
+     * payload (real tokens are a small fraction of this). This endpoint is
+     * reached with NO_MOODLE_COOKIES, before any authentication check, so
+     * the cap is checked before ctype_xdigit(), hex2bin() or preg_match()
+     * - which otherwise all do work proportional to the input length -
+     * ever run on it.
+     */
+    private const MAX_LENGTH = 512;
+
+    /**
      * Issue a token for the current user.
+     *
+     * The user's effective language (session override, course-forced language,
+     * and so on all already resolved by current_language()) is embedded in the
+     * signed payload. result.php runs with NO_MOODLE_COOKIES and so has no
+     * session of its own to resolve this from; carrying it through the token
+     * lets result.php show its messages in the same language the user saw when
+     * they opened the dialog, without having to guess at it from the user's
+     * profile language (mdl_user.lang), which is only a fallback default and is
+     * routinely overridden per-session.
      *
      * @return string Hexadecimal token, safe to pass as a URL parameter.
      */
     public static function generate(): string {
         global $USER;
-        $payload = $USER->id . ':' . (time() + self::LIFETIME);
+        $payload = $USER->id . ':' . (time() + self::LIFETIME) . ':' . current_language();
         return hash_hmac('sha256', $payload, self::secret()) . bin2hex($payload);
     }
 
@@ -63,12 +83,36 @@ class token {
      *                  tampered with or expired.
      */
     public static function validate(string $token): ?int {
-        if (strlen($token) <= 64 || !ctype_xdigit($token)) {
+        $matches = self::verify($token);
+        return $matches === null ? null : (int) $matches[1];
+    }
+
+    /**
+     * Return the language the token's issuing user was shown when it was issued.
+     *
+     * @param string $token The token received from the callback request.
+     * @return string The language code (e.g. 'en', 'pl'), or '' when the token
+     *                is invalid or was issued before this field existed.
+     */
+    public static function validate_lang(string $token): string {
+        $matches = self::verify($token);
+        return $matches[3] ?? '';
+    }
+
+    /**
+     * Verify a token's signature and expiry and return its parsed payload.
+     *
+     * @param string $token The token received from the callback request.
+     * @return array|null The regex match groups for the payload, or null when
+     *                    the token is missing, malformed, tampered with or expired.
+     */
+    private static function verify(string $token): ?array {
+        if (strlen($token) <= 64 || strlen($token) > self::MAX_LENGTH || !ctype_xdigit($token)) {
             return null;
         }
         $signature = substr($token, 0, 64);
         $payload = @hex2bin(substr($token, 64));
-        if ($payload === false || !preg_match('/^(\d+):(\d+)$/', $payload, $matches)) {
+        if ($payload === false || !preg_match('/^(\d+):(\d+)(?::([a-zA-Z0-9_]*))?$/', $payload, $matches)) {
             return null;
         }
         if (!hash_equals(hash_hmac('sha256', $payload, self::secret()), $signature)) {
@@ -77,7 +121,7 @@ class token {
         if ((int) $matches[2] < time()) {
             return null;
         }
-        return (int) $matches[1];
+        return $matches;
     }
 
     /**
