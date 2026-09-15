@@ -45,6 +45,17 @@ class token {
     private const LIFETIME = 7200;
 
     /**
+     * @var int Maximum plausible token length: the fixed 64-character
+     * signature plus a generously-bounded hex-encoded "userid:expiry:lang"
+     * payload (real tokens are a small fraction of this). This endpoint is
+     * reached with NO_MOODLE_COOKIES, before any authentication check, so
+     * the cap is checked before ctype_xdigit(), hex2bin() or preg_match()
+     * - which otherwise all do work proportional to the input length -
+     * ever run on it.
+     */
+    private const MAX_LENGTH = 512;
+
+    /**
      * Issue a token for the current user.
      *
      * The user's effective language (session override, course-forced language,
@@ -96,7 +107,7 @@ class token {
      *                    the token is missing, malformed, tampered with or expired.
      */
     private static function verify(string $token): ?array {
-        if (strlen($token) <= 64 || !ctype_xdigit($token)) {
+        if (strlen($token) <= 64 || strlen($token) > self::MAX_LENGTH || !ctype_xdigit($token)) {
             return null;
         }
         $signature = substr($token, 0, 64);
