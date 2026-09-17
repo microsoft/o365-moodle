@@ -1240,11 +1240,11 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $this->standard_header();
 
         // Cache status.
-        $teamscacheupdated = get_config('local_o365', 'teamscacheupdated');
+        $cachelastupdated = get_config('local_o365', 'groups_cache_last_update');
         $updatecacheurl = new url('/local/o365/acp.php', ['mode' => 'teamconnections_update_cache', 'sesskey' => sesskey()]);
         $linkparams = ['updateurl' => $updatecacheurl->out()];
-        if ($teamscacheupdated) {
-            $linkparams['lastupdated'] = userdate($teamscacheupdated);
+        if ($cachelastupdated) {
+            $linkparams['lastupdated'] = userdate($cachelastupdated);
             echo html_writer::div(get_string('acp_teamconnections_cache_last_updated', 'local_o365', $linkparams));
         } else {
             echo html_writer::div(get_string('acp_teamconnections_cache_never_updated', 'local_o365', $linkparams));
