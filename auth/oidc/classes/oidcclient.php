@@ -193,7 +193,8 @@ class oidcclient {
             'redirect_uri' => $this->redirecturi,
         ];
 
-        if (get_config('auth_oidc', 'idptype') != AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+        $idptype = get_config('auth_oidc', 'idptype');
+        if (!in_array($idptype, [AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, AUTH_OIDC_IDP_TYPE_OTHER])) {
             $params['resource'] = $this->tokenresource;
         }
 
