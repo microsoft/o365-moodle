@@ -1051,7 +1051,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
      * Teams connections.
      */
     public function mode_teamconnections() {
-        global $DB, $OUTPUT, $PAGE;
+        global $OUTPUT, $PAGE;
 
         $this->set_title(get_string('acp_teamconnections', 'local_o365'));
 
@@ -1067,200 +1067,28 @@ var local_o365_coursesync_all_set_feature = function(state) {
             redirect($redirecturl, get_string('acp_teamconnections_sync_disabled', 'local_o365'));
         }
 
-        $totalcount = 0;
-        $perpage = 20;
-
-        $curpage = optional_param('page', 0, PARAM_INT);
-        $sort = optional_param('sort', '', PARAM_ALPHA);
-        $search = optional_param('search', '', PARAM_TEXT);
-        $sortdir = strtolower(optional_param('sortdir', 'asc', PARAM_ALPHA));
-
-        $headers = ['fullname' => get_string('fullnamecourse'), 'shortname' => get_string('shortnamecourse')];
-        if (empty($sort) || !isset($headers[$sort])) {
-            $sort = 'fullname';
-        }
-
-        if (!in_array($sortdir, ['asc', 'desc'], true)) {
-            $sortdir = 'asc';
-        }
-
+        // Build empty table for DataTables server-side mode.
         $table = new html_table();
-        foreach ($headers as $hkey => $desc) {
-            $diffsortdir = ($sort === $hkey && $sortdir === 'asc') ? 'desc' : 'asc';
-            $linkattrs = ['mode' => 'teamconnections', 'sort' => $hkey, 'sortdir' => $diffsortdir];
-            $link = new url('/local/o365/acp.php', $linkattrs);
-
-            if ($sort === $hkey) {
-                $desc .= ' ' . $OUTPUT->pix_icon('t/sort_' . $sortdir, 'sort');
-            }
-
-            $table->head[] = html_writer::link($link, $desc);
-        }
-
-        $table->head[] = get_string('acp_teamconnections_connected_team', 'local_o365');
-        $table->head[] = get_string('acp_teamconnections_actions', 'local_o365');
-
-        $limitfrom = $curpage * $perpage;
-
-        if (empty($search)) {
-            $sortdir = 1;
-            if ($sortdir == 'desc') {
-                $sortdir = -1;
-            }
-
-            $options = ['recursive' => true, 'sort' => [$sort => $sortdir], 'offset' => $limitfrom, 'limit' => $perpage];
-            $topcat = core_course_category::get(0);
-            $courses = $topcat->get_courses($options);
-            $totalcount = $topcat->get_courses_count($options);
-        } else {
-            $searchar = explode(' ', $search);
-            $courses = get_courses_search($searchar, 'c.' . $sort . ' ' . $sortdir, $curpage, $perpage, $totalcount);
-        }
-
-        foreach ($courses as $course) {
-            $actions = [];
-
-            if ($course->id == SITEID) {
-                continue;
-            }
-
-            if (
-                $grouprecord = $DB->get_record(
-                    'local_o365_objects',
-                    ['moodleid' => $course->id, 'type' => 'group', 'subtype' => 'course']
-                )
-            ) {
-                $teamscachedata = ['objectid' => $grouprecord->objectid, 'has_team' => 1];
-
-                if (
-                    $DB->record_exists(
-                        'local_o365_objects',
-                        ['moodleid' => $course->id, 'type' => 'group', 'subtype' => 'courseteam']
-                    ) ||
-                    $DB->record_exists(
-                        'local_o365_objects',
-                        ['moodleid' => $course->id, 'type' => 'group', 'subtype' => 'teamfromgroup']
-                    )
-                ) {
-                    // Connected to both group and team.
-                    if ($teamscache = $DB->get_record('local_o365_groups_cache', $teamscachedata)) {
-                        // Team record can be found in cache.
-                        $existingconnection = html_writer::link($teamscache->url, s($teamscache->name));
-                        if (
-                            !$DB->record_exists(
-                                'local_o365_objects',
-                                ['type' => 'sdssection', 'subtype' => 'course', 'moodleid' => $course->id]
-                            )
-                        ) {
-                            $updateurl = new url(
-                                '/local/o365/acp.php',
-                                ['mode' => 'teamconnections_update', 'course' => $course->id, 'sesskey' => sesskey()]
-                            );
-                            $updatelabel = get_string('acp_teamconnections_table_update', 'local_o365');
-
-                            $actions = [html_writer::link($updateurl, $updatelabel)];
-                        } else {
-                            $actions = [get_string('acp_coursesynccustom_sds_course', 'local_o365')];
-                        }
-                    } else {
-                        // A matching record exists in local_o365_objects, but the team cannot be found.
-                        $existingconnection = s($grouprecord->o365name) .
-                            get_string('acp_teamconnections_team_missing', 'local_o365');
-
-                        $actions = [html_writer::span(get_string('acp_teamconnections_table_missing_team', 'local_o365'))];
-                    }
-                } else {
-                    // Connected to group only.
-                    $metadata = (!empty($grouprecord->metadata)) ? json_decode($grouprecord->metadata, true) : [];
-                    if (is_array($metadata) && !empty($metadata['softdelete'])) {
-                        // Deleted group connection.
-                        $existingconnection = get_string('acp_teamconnections_not_connected', 'local_o365');
-                        $connecturl = new url(
-                            '/local/o365/acp.php',
-                            ['mode' => 'teamconnections_connect', 'course' => $course->id, 'sesskey' => sesskey()]
-                        );
-                        $connectlabel = get_string('acp_teamconnections_table_connect', 'local_o365');
-
-                        $actions = [html_writer::link($connecturl, $connectlabel)];
-                    } else if ($teamscache = $DB->get_record('local_o365_groups_cache', $teamscachedata)) {
-                        // Connect the course with the team.
-                        $teamobjectrecord = ['type' => 'group', 'subtype' => 'courseteam', 'objectid' => $teamscache->objectid,
-                            'moodleid' => $course->id, 'o365name' => $teamscache->name, 'timecreated' => time(),
-                            'timemodified' => time()];
-                        $teamobjectrecord['id'] = $DB->insert_record('local_o365_objects', (object) $teamobjectrecord);
-
-                        $existingconnection = html_writer::link($teamscache->url, s($teamscache->name));
-
-                        if (
-                            !$DB->record_exists(
-                                'local_o365_objects',
-                                ['type' => 'sdssection', 'subtype' => 'course', 'moodleid' => $course->id]
-                            )
-                        ) {
-                            $updateurl = new url(
-                                '/local/o365/acp.php',
-                                ['mode' => 'teamconnections_update', 'course' => $course->id, 'sesskey' => sesskey()]
-                            );
-                            $updatelabel = get_string('acp_teamconnections_table_update', 'local_o365');
-
-                            $actions = [html_writer::link($updateurl, $updatelabel)];
-                        }
-                    } else {
-                        // A team does not exist for the synced group.
-                        $existingconnection = s($grouprecord->o365name) .
-                            get_string('acp_teamconnections_group_only', 'local_o365');
-
-                        $actions = [html_writer::span(get_string(
-                            'acp_teamconnections_table_cannot_create_team_from_group',
-                            'local_o365'
-                        ))];
-
-                        if (
-                            !$DB->record_exists(
-                                'local_o365_objects',
-                                ['type' => 'sdssection', 'subtype' => 'course', 'moodleid' => $course->id]
-                            )
-                        ) {
-                            $connecturl = new url(
-                                '/local/o365/acp.php',
-                                ['mode' => 'teamconnections_connect', 'course' => $course->id, 'sesskey' => sesskey()]
-                            );
-                            $connectlabel = get_string('acp_teamconnections_table_connect_to_different_team', 'local_o365');
-                            $actions[] = html_writer::link($connecturl, $connectlabel);
-                        }
-                    }
-                }
-            } else {
-                $existingconnection = get_string('acp_teamconnections_not_connected', 'local_o365');
-
-                $teamownerids = \local_o365\feature\coursesync\utils::get_team_owner_user_ids_by_course_id($course->id);
-                if (!empty($teamownerids)) {
-                    $connecturl = new url(
-                        '/local/o365/acp.php',
-                        ['mode' => 'teamconnections_connect', 'course' => $course->id, 'sesskey' => sesskey()]
-                    );
-                    $connectlabel = get_string('acp_teamconnections_table_connect', 'local_o365');
-
-                    $actions = [html_writer::link($connecturl, $connectlabel)];
-                } else {
-                    $actions[] = get_string('acp_teamconnections_no_owner', 'local_o365');
-                }
-            }
-
-            $actionsfield = implode('<br/>', $actions);
-
-            $courseurl = new url('/course/view.php', ['id' => $course->id]);
-
-            $rowdata = [html_writer::link($courseurl, $course->fullname), $course->shortname, $existingconnection, $actionsfield];
-
-            $table->data[] = $rowdata;
-        }
+        $table->id = 'local_o365_teamconnections_table';
+        $table->attributes = ['class' => 'stripe hover', 'style' => 'width: 100%;'];
+        $table->head = [
+            get_string('fullnamecourse'),
+            get_string('shortnamecourse'),
+            get_string('idnumbercourse'),
+            get_string('acp_teamconnections_connected_team', 'local_o365'),
+            get_string('acp_teamconnections_actions', 'local_o365'),
+        ];
+        $table->data = [];
 
         $PAGE->requires->jquery();
-        $this->standard_header();
+        $PAGE->requires->css('/local/o365/lib/datatables/css/jquery.dataTables.min.css');
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
 
         // Cache status.
-        $teamscacheupdated = get_config('local_o365', 'teamscacheupdated');
+        // Note: 'groups_cache_last_update' (not the legacy 'teamscacheupdated', which is only ever set by the
+        // deprecated main::update_teams_cache() and is never refreshed by the current update path) is what
+        // \local_o365\utils::update_groups_cache() actually sets, via both the scheduled task and the "here" link below.
+        $teamscacheupdated = get_config('local_o365', 'groups_cache_last_update');
         $updatecacheurl = new url('/local/o365/acp.php', ['mode' => 'teamconnections_update_cache', 'sesskey' => sesskey()]);
         $linkparams = ['updateurl' => $updatecacheurl->out()];
         if ($teamscacheupdated) {
@@ -1270,44 +1098,357 @@ var local_o365_coursesync_all_set_feature = function(state) {
             echo html_writer::div(get_string('acp_teamconnections_cache_never_updated', 'local_o365', $linkparams));
         }
 
-        // Search form.
-        echo html_writer::tag('h5', get_string('search'));
-        echo html_writer::start_tag('form', ['id' => 'coursesearchform', 'method' => 'get']);
-        echo html_writer::start_tag('fieldset', ['class' => 'coursesearchbox invisiblefieldset']);
-        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'mode', 'value' => 'teamconnections']);
-        echo html_writer::empty_tag(
-            'input',
-            ['type' => 'text', 'id' => 'coursesearchbox', 'size' => 30, 'name' => 'search', 'value' => s($search)]
-        );
-        echo html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('go')]);
-        echo html_writer::div(html_writer::tag('strong', get_string('acp_coursesynccustom_searchwarning', 'local_o365')));
-        echo html_writer::end_tag('fieldset');
-        echo html_writer::end_tag('form');
-        echo html_writer::empty_tag('br');
-
         echo html_writer::tag('h5', get_string('courses'));
         echo html_writer::table($table);
 
-        $searchtext = optional_param('search', '', PARAM_TEXT);
-        $cururl = new url('/local/o365/acp.php', ['mode' => 'teamconnections', 'search' => $searchtext]);
-        echo $OUTPUT->paging_bar($totalcount, $curpage, $perpage, $cururl);
+        // Initialize DataTables via the AMD module.
+        $ajaxendpoint = new url('/local/o365/acp.php', ['mode' => 'teamconnections_ajax', 'sesskey' => sesskey()]);
+        $PAGE->requires->js_call_amd('local_o365/teamconnections_datatables', 'init', [$ajaxendpoint->out(false)]);
 
         $this->standard_footer();
+    }
+
+    /**
+     * Determine the connected-Team display, plain-text search value, and available actions for a course row on the
+     * Manage Team connections page.
+     *
+     * @param stdClass $course A course record with at least ->id.
+     * @return array [connected team display HTML, plain-text team name for search, actions HTML]
+     */
+    protected function get_teamconnections_row_data(stdClass $course): array {
+        global $DB;
+
+        $actions = [];
+        $connectedteamname = '';
+
+        if (
+            $grouprecord = $DB->get_record(
+                'local_o365_objects',
+                ['moodleid' => $course->id, 'type' => 'group', 'subtype' => 'course']
+            )
+        ) {
+            $teamscachedata = ['objectid' => $grouprecord->objectid, 'has_team' => 1];
+
+            if (
+                $DB->record_exists(
+                    'local_o365_objects',
+                    ['moodleid' => $course->id, 'type' => 'group', 'subtype' => 'courseteam']
+                ) ||
+                $DB->record_exists(
+                    'local_o365_objects',
+                    ['moodleid' => $course->id, 'type' => 'group', 'subtype' => 'teamfromgroup']
+                )
+            ) {
+                // Connected to both group and team.
+                if ($teamscache = $DB->get_record('local_o365_groups_cache', $teamscachedata)) {
+                    // Team record can be found in cache.
+                    $connectedteamname = $teamscache->name;
+                    $existingconnection = html_writer::link($teamscache->url, s($teamscache->name));
+                    if (
+                        !$DB->record_exists(
+                            'local_o365_objects',
+                            ['type' => 'sdssection', 'subtype' => 'course', 'moodleid' => $course->id]
+                        )
+                    ) {
+                        $updateurl = new url(
+                            '/local/o365/acp.php',
+                            ['mode' => 'teamconnections_update', 'course' => $course->id, 'sesskey' => sesskey()]
+                        );
+                        $updatelabel = get_string('acp_teamconnections_table_update', 'local_o365');
+
+                        $actions = [html_writer::link($updateurl, $updatelabel)];
+                    } else {
+                        $actions = [get_string('acp_coursesynccustom_sds_course', 'local_o365')];
+                    }
+                } else {
+                    // A matching record exists in local_o365_objects, but the team cannot be found.
+                    $connectedteamname = $grouprecord->o365name;
+                    $existingconnection = s($grouprecord->o365name) .
+                        get_string('acp_teamconnections_team_missing', 'local_o365');
+
+                    $actions = [html_writer::span(get_string('acp_teamconnections_table_missing_team', 'local_o365'))];
+                }
+            } else {
+                // Connected to group only.
+                $metadata = (!empty($grouprecord->metadata)) ? json_decode($grouprecord->metadata, true) : [];
+                if (is_array($metadata) && !empty($metadata['softdelete'])) {
+                    // Deleted group connection.
+                    $existingconnection = get_string('acp_teamconnections_not_connected', 'local_o365');
+                    $connecturl = new url(
+                        '/local/o365/acp.php',
+                        ['mode' => 'teamconnections_connect', 'course' => $course->id, 'sesskey' => sesskey()]
+                    );
+                    $connectlabel = get_string('acp_teamconnections_table_connect', 'local_o365');
+
+                    $actions = [html_writer::link($connecturl, $connectlabel)];
+                } else if ($teamscache = $DB->get_record('local_o365_groups_cache', $teamscachedata)) {
+                    // A Team matching the synced group's objectid has been found in the cache, but the course is not
+                    // yet linked to it. Linking creates a record, so it is offered as an explicit action here rather
+                    // than performed automatically while rendering this (repeatedly AJAX-polled) listing.
+                    $connectedteamname = $grouprecord->o365name;
+                    $existingconnection = s($grouprecord->o365name) .
+                        get_string('acp_teamconnections_group_only', 'local_o365');
+
+                    $linkurl = new url(
+                        '/local/o365/acp.php',
+                        ['mode' => 'teamconnections_link_team', 'course' => $course->id, 'sesskey' => sesskey()]
+                    );
+                    $linklabel = get_string('acp_teamconnections_table_link_team', 'local_o365', s($teamscache->name));
+
+                    $actions = [html_writer::link($linkurl, $linklabel)];
+                } else {
+                    // A team does not exist for the synced group.
+                    $connectedteamname = $grouprecord->o365name;
+                    $existingconnection = s($grouprecord->o365name) .
+                        get_string('acp_teamconnections_group_only', 'local_o365');
+
+                    $actions = [html_writer::span(get_string(
+                        'acp_teamconnections_table_cannot_create_team_from_group',
+                        'local_o365'
+                    ))];
+
+                    if (
+                        !$DB->record_exists(
+                            'local_o365_objects',
+                            ['type' => 'sdssection', 'subtype' => 'course', 'moodleid' => $course->id]
+                        )
+                    ) {
+                        $connecturl = new url(
+                            '/local/o365/acp.php',
+                            ['mode' => 'teamconnections_connect', 'course' => $course->id, 'sesskey' => sesskey()]
+                        );
+                        $connectlabel = get_string('acp_teamconnections_table_connect_to_different_team', 'local_o365');
+                        $actions[] = html_writer::link($connecturl, $connectlabel);
+                    }
+                }
+            }
+        } else {
+            $existingconnection = get_string('acp_teamconnections_not_connected', 'local_o365');
+
+            $teamownerids = \local_o365\feature\coursesync\utils::get_team_owner_user_ids_by_course_id($course->id);
+            if (!empty($teamownerids)) {
+                $connecturl = new url(
+                    '/local/o365/acp.php',
+                    ['mode' => 'teamconnections_connect', 'course' => $course->id, 'sesskey' => sesskey()]
+                );
+                $connectlabel = get_string('acp_teamconnections_table_connect', 'local_o365');
+
+                $actions = [html_writer::link($connecturl, $connectlabel)];
+            } else {
+                $actions[] = get_string('acp_teamconnections_no_owner', 'local_o365');
+            }
+        }
+
+        return [$existingconnection, $connectedteamname, implode('<br/>', $actions)];
+    }
+
+    /**
+     * AJAX endpoint for DataTables server-side loading of the Manage Team connections listing.
+     *
+     * Returns paginated, filtered, and sorted course data in DataTables format. Searching matches course full name,
+     * short name, ID number, and the connected Team's name.
+     */
+    public function mode_teamconnections_ajax() {
+        global $DB;
+
+        require_sesskey();
+
+        // Get DataTables parameters from $_GET (Moodle's optional_param doesn't handle nested arrays).
+        $draw = isset($_GET['draw']) ? (int) $_GET['draw'] : 1;
+        $start = isset($_GET['start']) ? max(0, (int) $_GET['start']) : 0;
+        // Bound the requested page size: it is client-controlled, and an unbounded value (or DataTables' "show all"
+        // convention of a negative length) would let a crafted request force the full course list into one response.
+        $length = isset($_GET['length']) ? (int) $_GET['length'] : 20;
+        $length = ($length <= 0) ? 20 : min($length, 100);
+        $searchvalue = isset($_GET['search']['value']) ? trim($_GET['search']['value']) : '';
+        $ordercolumn = isset($_GET['order'][0]['column']) ? (int) $_GET['order'][0]['column'] : 0;
+        $orderdir = isset($_GET['order'][0]['dir']) ? strtolower($_GET['order'][0]['dir']) : 'asc';
+        $orderdir = ($orderdir === 'desc') ? 'DESC' : 'ASC';
+
+        // Join in just enough to compute a "connected Team name" per course for the WHERE clause below, so search
+        // and paging run entirely in SQL instead of loading every course into PHP. This mirrors, but does not fully
+        // replicate, the richer branching in get_teamconnections_row_data() (which is only called below for the
+        // single page of rows actually being returned): in particular it does not special-case a soft-deleted group
+        // connection, so a soft-deleted course's stored group name can still match a search here even though the
+        // rendered row correctly shows it as "Not connected". That's an acceptable trade-off for keeping the SQL
+        // portable across database engines.
+        $fromsql = "
+              FROM {course} c
+              LEFT JOIN {local_o365_objects} go ON go.moodleid = c.id AND go.type = 'group' AND go.subtype = 'course'
+              LEFT JOIN {local_o365_groups_cache} tc ON tc.objectid = go.objectid AND tc.has_team = 1
+        ";
+        $linkedexistssql = "EXISTS (
+            SELECT 1
+              FROM {local_o365_objects} ct
+             WHERE ct.moodleid = c.id AND ct.type = 'group' AND ct.subtype IN ('courseteam', 'teamfromgroup')
+        )";
+        $connectedteamnamesql = "CASE
+            WHEN go.id IS NULL THEN ''
+            WHEN $linkedexistssql THEN COALESCE(tc.name, go.o365name)
+            ELSE go.o365name
+        END";
+
+        $params = ['siteid' => SITEID];
+        $wheresql = 'c.id <> :siteid';
+
+        if ($searchvalue !== '') {
+            $likefullname = $DB->sql_like('c.fullname', ':searchfullname', false, false);
+            $likeshortname = $DB->sql_like('c.shortname', ':searchshortname', false, false);
+            $likeidnumber = $DB->sql_like('c.idnumber', ':searchidnumber', false, false);
+            $likeconnectedteam = $DB->sql_like("($connectedteamnamesql)", ':searchconnectedteam', false, false);
+
+            $wheresql .= " AND ($likefullname OR $likeshortname OR $likeidnumber OR $likeconnectedteam)";
+
+            $searchparam = '%' . $DB->sql_like_escape($searchvalue) . '%';
+            $params['searchfullname'] = $searchparam;
+            $params['searchshortname'] = $searchparam;
+            $params['searchidnumber'] = $searchparam;
+            $params['searchconnectedteam'] = $searchparam;
+        }
+
+        $recordstotal = $DB->count_records_select('course', 'id <> ?', [SITEID]);
+        $recordsfiltered = $DB->count_records_sql("SELECT COUNT(1) $fromsql WHERE $wheresql", $params);
+
+        $orderbycolumns = [0 => 'c.fullname', 1 => 'c.shortname', 2 => 'c.idnumber'];
+        $orderbycolumn = $orderbycolumns[$ordercolumn] ?? 'c.fullname';
+
+        $datasql = "SELECT c.id, c.fullname, c.shortname, c.idnumber $fromsql WHERE $wheresql
+                     ORDER BY $orderbycolumn $orderdir";
+        $courses = $DB->get_records_sql($datasql, $params, $start, $length);
+
+        $data = [];
+        foreach ($courses as $course) {
+            [$connecteddisplay, , $actionsfield] = $this->get_teamconnections_row_data($course);
+            $courseurl = new url('/course/view.php', ['id' => $course->id]);
+            $data[] = [
+                html_writer::link($courseurl, $course->fullname),
+                $course->shortname,
+                s($course->idnumber),
+                $connecteddisplay,
+                $actionsfield,
+            ];
+        }
+
+        // Return DataTables format JSON.
+        header('Content-Type: application/json');
+        echo json_encode([
+            'draw' => $draw,
+            'recordsTotal' => $recordstotal,
+            'recordsFiltered' => $recordsfiltered,
+            'data' => $data,
+        ]);
+        die;
     }
 
     /**
      * Update Teams cache.
      */
     public function mode_teamconnections_update_cache() {
+        global $OUTPUT, $PAGE;
+
         require_sesskey();
 
+        $this->set_title(get_string('acp_teamconnections', 'local_o365'));
+
+        $PAGE->navbar->add(
+            get_string('acp_teamconnections', 'local_o365'),
+            new url($this->url, ['mode' => 'teamconnections'])
+        );
+
+        $returnurl = new url('/local/o365/acp.php', ['mode' => 'teamconnections']);
+
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
+
+        if (utils::is_connected() !== true) {
+            echo $OUTPUT->notification(get_string('acp_teamconnections_exception_not_configured', 'local_o365'), 'error');
+            echo $OUTPUT->continue_button($returnurl);
+            $this->standard_footer();
+            return;
+        }
+
         $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
+
+        // Run the update, capturing its trace output. update_groups_cache() writes progress with mtrace(), which
+        // echoes directly and calls flush(); capturing it lets us render the result as a normal part of the page
+        // instead of a half-flushed response that some browsers drop when the link is opened in a background tab.
+        ob_start();
         // Pass forceupdate=true so an explicit admin request is never silently skipped
         // by the 5-minute rate limit that applies to automated task runs.
-        \local_o365\utils::update_groups_cache($graphclient, 0, true);
+        try {
+            \local_o365\utils::update_groups_cache($graphclient, 0, true);
+        } finally {
+            $updateoutput = trim(ob_get_clean());
+        }
+
+        if ($updateoutput !== '') {
+            echo html_writer::tag('pre', s($updateoutput), ['class' => 'bg-light p-3']);
+        }
+        echo $OUTPUT->notification(get_string('acp_teamconnections_teams_cache_updated', 'local_o365'), 'success');
+        echo $OUTPUT->continue_button($returnurl);
+
+        $this->standard_footer();
+    }
+
+    /**
+     * Link a group-only course connection to a matching Team found in the Teams cache.
+     *
+     * Used when a course's synced Microsoft 365 group later gets a Team created for it (found in the cache by
+     * objectid) but the course is not yet linked to that Team. This is an explicit action so that discovering and
+     * linking such courses does not happen as a side effect of rendering the Manage Team connections listing.
+     */
+    public function mode_teamconnections_link_team() {
+        global $DB;
+
+        $courseid = required_param('course', PARAM_INT);
+        require_sesskey();
 
         $redirecturl = new url('/local/o365/acp.php', ['mode' => 'teamconnections']);
-        redirect($redirecturl, get_string('acp_teamconnections_teams_cache_updated', 'local_o365'));
+
+        if (
+            !$grouprecord = $DB->get_record(
+                'local_o365_objects',
+                ['moodleid' => $courseid, 'type' => 'group', 'subtype' => 'course']
+            )
+        ) {
+            // No group connection to link from.
+            redirect($redirecturl);
+        }
+
+        if (
+            $DB->record_exists(
+                'local_o365_objects',
+                ['moodleid' => $courseid, 'type' => 'group', 'subtype' => 'courseteam']
+            ) ||
+            $DB->record_exists(
+                'local_o365_objects',
+                ['moodleid' => $courseid, 'type' => 'group', 'subtype' => 'teamfromgroup']
+            )
+        ) {
+            // Already linked.
+            redirect($redirecturl);
+        }
+
+        if (
+            !$teamscache = $DB->get_record(
+                'local_o365_groups_cache',
+                ['objectid' => $grouprecord->objectid, 'has_team' => 1]
+            )
+        ) {
+            // No matching Team in the cache (any more) to link to.
+            redirect($redirecturl);
+        }
+
+        $teamobjectrecord = new stdClass();
+        $teamobjectrecord->type = 'group';
+        $teamobjectrecord->subtype = 'courseteam';
+        $teamobjectrecord->objectid = $teamscache->objectid;
+        $teamobjectrecord->moodleid = $courseid;
+        $teamobjectrecord->o365name = $teamscache->name;
+        $teamobjectrecord->timecreated = time();
+        $teamobjectrecord->timemodified = $teamobjectrecord->timecreated;
+        $DB->insert_record('local_o365_objects', $teamobjectrecord);
+
+        redirect($redirecturl, get_string('acp_teamconnections_team_linked', 'local_o365'));
     }
 
     /**
@@ -1316,7 +1457,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
      * @throws moodle_exception
      */
     public function mode_teamconnections_connect() {
-        global $DB, $PAGE;
+        global $DB, $OUTPUT, $PAGE;
 
         $this->set_title(get_string('acp_teamconnection', 'local_o365'));
 
@@ -1341,11 +1482,9 @@ var local_o365_coursesync_all_set_feature = function(state) {
             redirect($updateurl);
         }
 
-        [$teamsoptions, $unused] = \local_o365\feature\coursesync\utils::get_matching_team_options();
-
         $urlparams = ['mode' => 'teamconnections_connect', 'course' => $courseid];
         $connectteamsurl = new url('/local/o365/acp.php', $urlparams);
-        $customdata = ['course' => $courseid, 'teamsoptions' => $teamsoptions];
+        $customdata = ['course' => $courseid, 'teamsoptions' => []];
         $mform = new teamsconnection($connectteamsurl, $customdata);
 
         if ($mform->is_cancelled()) {
@@ -1437,13 +1576,9 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $url = new url($this->url, ['mode' => 'teamconnections']);
             $PAGE->navbar->add(get_string('acp_teamconnections', 'local_o365'), $url);
             $PAGE->requires->jquery();
-            $this->standard_header();
-            echo html_writer::tag('h4', get_string('acp_teamconnections_form_connect_course', 'local_o365', $course->fullname));
-            echo html_writer::tag(
-                'h5',
-                get_string('acp_teamconnections_form_sds_warning', 'local_o365'),
-                ['class' => 'warning red']
-            );
+            $subtitle = get_string('acp_teamconnections_form_connect_course', 'local_o365', $course->fullname);
+            $this->print_settings_page_header('local_o365_advanced', $subtitle);
+            echo $OUTPUT->notification(get_string('acp_teamconnections_form_sds_warning', 'local_o365'), 'warning');
             $mform->display();
             $this->standard_footer();
         }
@@ -1455,7 +1590,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
      * @throws moodle_exception
      */
     public function mode_teamconnections_update() {
-        global $DB, $PAGE;
+        global $DB, $OUTPUT, $PAGE;
 
         $this->set_title(get_string('acp_teamconnection', 'local_o365'));
 
@@ -1485,9 +1620,8 @@ var local_o365_coursesync_all_set_feature = function(state) {
             redirect($connecturl);
         }
 
-        [$teamsoptions, $connectedteamrecordid] = \local_o365\feature\coursesync\utils::get_matching_team_options(
-            $groupobject->objectid
-        );
+        $teamsoptions = \local_o365\feature\coursesync\utils::get_current_team_option($groupobject->objectid);
+        $connectedteamrecordid = $teamsoptions ? array_key_first($teamsoptions) : 0;
 
         $urlparams = ['mode' => 'teamconnections_update', 'course' => $courseid];
         $updateconnectionurl = new url('/local/o365/acp.php', $urlparams);
@@ -1501,7 +1635,14 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $teamid = $fromform->team;
 
             if (!$teamid) {
-                redirect($redirecturl);
+                // Clearing the field on this form disconnects the course from its currently connected Team.
+                \local_o365\feature\coursesync\utils::set_course_sync_enabled($courseid, false);
+                $DB->delete_records_select(
+                    'local_o365_objects',
+                    "type = 'group' AND subtype IN ('course', 'courseteam', 'teamfromgroup') AND moodleid = ?",
+                    [$courseid]
+                );
+                redirect($redirecturl, get_string('acp_teamconnections_course_disconnected', 'local_o365'));
             }
 
             if (!$teamcacherecord = $DB->get_record('local_o365_groups_cache', ['id' => $teamid, 'has_team' => 1])) {
@@ -1583,13 +1724,9 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $url = new url($this->url, ['mode' => 'teamconnections']);
             $PAGE->navbar->add(get_string('acp_teamconnections', 'local_o365'), $url);
             $PAGE->requires->jquery();
-            $this->standard_header();
-            echo html_writer::tag('h4', get_string('acp_teamconnections_form_connect_course', 'local_o365', $course->fullname));
-            echo html_writer::tag(
-                'h5',
-                get_string('acp_teamconnections_form_sds_warning', 'local_o365'),
-                ['class' => 'warning red']
-            );
+            $subtitle = get_string('acp_teamconnections_form_connect_course', 'local_o365', $course->fullname);
+            $this->print_settings_page_header('local_o365_advanced', $subtitle);
+            echo $OUTPUT->notification(get_string('acp_teamconnections_form_sds_warning', 'local_o365'), 'warning');
             $mform->display();
             $this->standard_footer();
         }
