@@ -1662,15 +1662,23 @@ var local_o365_coursesync_all_set_feature = function(state) {
                     $status = get_string('acp_maintenance_recreatedeletedgroups_status_sync_disabled', 'local_o365');
                 } else {
                     // Group should exist but not. Try to create the group.
-                    if ($coursesync->create_group_for_course($course)) {
+                    // Buffer mtrace() output from group creation so it doesn't print before the page header.
+                    ob_start();
+                    $created = $coursesync->create_group_for_course($course);
+                    $output = ob_get_clean();
+                    if ($created) {
                         $status = get_string('acp_maintenance_recreatedeletedgroups_status_created_success', 'local_o365');
                     } else {
                         $status = get_string('acp_maintenance_recreatedeletedgroups_status_created_fail', 'local_o365');
+                    }
+                    if ($output !== '') {
+                        $status .= html_writer::tag('pre', s($output));
                     }
                 }
             }
 
             if ($status) {
+                $groupcheckstatusitem[] = $status;
                 $groupcheckstatus[] = $groupcheckstatusitem;
             }
         }
