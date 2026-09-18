@@ -668,6 +668,47 @@ function auth_oidc_get_field_mappings() {
 }
 
 /**
+ * Trim a field mapping value so it fits within the database column of the local user field it will be assigned to.
+ *
+ * Data received from Microsoft Entra ID (e.g. a long phone number with extensions) can exceed the length allowed
+ * by the Moodle database schema for the mapped field, which would otherwise cause the user creation or update to
+ * fail with a database write error. Values for fields that are not plain character columns of the 'user' table,
+ * such as custom profile fields, are returned unchanged.
+ *
+ * @param string $localfield The local user field the value will be assigned to.
+ * @param mixed $value The value to be trimmed.
+ * @return mixed The value, trimmed to the column length if necessary.
+ */
+function auth_oidc_trim_user_field_value($localfield, $value) {
+    global $DB;
+
+    static $usercolumns = null;
+
+    if (!is_string($value)) {
+        return $value;
+    }
+
+    if ($usercolumns === null) {
+        $usercolumns = $DB->get_columns('user');
+    }
+
+    if (!array_key_exists($localfield, $usercolumns)) {
+        return $value;
+    }
+
+    $column = $usercolumns[$localfield];
+    if ($column->meta_type !== 'C' || empty($column->max_length) || $column->max_length <= 0) {
+        return $value;
+    }
+
+    if (core_text::strlen($value) > $column->max_length) {
+        return core_text::substr($value, 0, $column->max_length);
+    }
+
+    return $value;
+}
+
+/**
  * Apply default email mapping settings.
  *
  * @return array
