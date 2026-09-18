@@ -59,6 +59,10 @@ class authcode extends base {
         if (!auth_oidc_is_setup_complete()) {
             return [];
         }
+        $showbutton = isset($this->config->showbutton) ? $this->config->showbutton : true;
+        if (!$showbutton) {
+            return [];
+        }
         $showicon = isset($this->config->set_pix) ? $this->config->set_pix : true;
         $name = strip_tags(format_text($this->config->opname));
         $idpentry = [
