@@ -454,15 +454,21 @@ function local_o365_get_duplicate_emails() {
 }
 
 /**
- * Build Bootstrap nav-tabs HTML for navigating between local_o365 settings pages.
+ * Build the shared header HTML for local_o365 configuration pages: the plugin-wide heading, the Bootstrap
+ * nav-tabs bar for navigating between local_o365 settings pages, and the page-specific subtitle, plus a style
+ * tag hiding the surrounding Moodle breadcrumb and default page heading (which the plugin-wide heading and tab
+ * bar replace).
  *
- * Renders a row of tab links to each settings sub-page, with the current page
- * marked as active. The Moodle App tab is included only when its feature is enabled.
+ * Renders a row of tab links to each settings sub-page, with the current page marked as active. The Moodle App
+ * tab is included only when its feature is enabled.
  *
  * @param string $currentpage Section ID of the currently active page.
- * @return string HTML for the navigation bar.
+ * @param string|null $subtitle Page-specific subtitle to print below the tab navigation, for a page nested under
+ *     a tab (e.g. "Manage User Connections" under "Advanced"). The settings pages that map 1:1 to a tab (Setup,
+ *     User Sync, ...) already open with their own heading, so they leave this null and print no subtitle here.
+ * @return string HTML for the settings page header.
  */
-function local_o365_get_settings_nav_html(string $currentpage): string {
+function local_o365_get_settings_nav_html(string $currentpage, ?string $subtitle = null): string {
     $pages = [
         'local_o365' => get_string('settings_header_setup', 'local_o365'),
         'local_o365_usersync' => get_string('settings_header_usersync', 'local_o365'),
@@ -475,13 +481,24 @@ function local_o365_get_settings_nav_html(string $currentpage): string {
         $pages['local_o365_moodle_app'] = get_string('settings_header_moodle_app', 'local_o365');
     }
 
-    $html = html_writer::start_tag('ul', ['class' => 'nav nav-tabs mb-3']);
+    // Hide the breadcrumb, Moodle's own page heading, and (on admin_settingpage forms) the settings form's own
+    // "<h2>{$a->title}</h2>", a direct child of .settingsform printed by admin/templates/settings.mustache before
+    // this nav html: the plugin-wide heading and tab bar below replace all of them.
+    $html = html_writer::tag('style', '#page-navbar, .page-context-header, .settingsform > h2 { display: none; }');
+    $pageheading = get_string('settings_pageheading', 'local_o365', get_string('pluginname', 'local_o365'));
+    $html .= html_writer::tag('h2', $pageheading);
+
+    $html .= html_writer::start_tag('ul', ['class' => 'nav nav-tabs mb-3']);
     foreach ($pages as $section => $label) {
         $url = new moodle_url('/admin/settings.php', ['section' => $section]);
         $linkattrs = ['class' => 'nav-link' . ($section === $currentpage ? ' active' : '')];
         $html .= html_writer::tag('li', html_writer::link($url, $label, $linkattrs), ['class' => 'nav-item']);
     }
     $html .= html_writer::end_tag('ul');
+
+    if ($subtitle !== null) {
+        $html .= html_writer::tag('h4', $subtitle);
+    }
 
     return $html;
 }
