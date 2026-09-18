@@ -156,6 +156,26 @@ class acp extends base {
     }
 
     /**
+     * Print the header shared by the local_o365 configuration pages that are rendered directly by this controller
+     * (as opposed to the standard Moodle admin settings pages): the standard Moodle header, followed by the same
+     * plugin-wide heading, tab navigation, and page-specific subtitle used on the admin settings pages (see
+     * local_o365_get_settings_nav_html()), which also hides the now-redundant Moodle breadcrumb and page heading.
+     *
+     * @param string $section The settings tab section to mark active (see local_o365_get_settings_nav_html()).
+     * @param string $subtitle The page-specific subtitle to print below the tab navigation.
+     */
+    protected function print_settings_page_header(string $section, string $subtitle): void {
+        global $OUTPUT, $PAGE;
+
+        $PAGE->set_pagelayout('admin');
+        $PAGE->set_primary_active_tab('siteadminnode');
+        $PAGE->set_secondary_active_tab('modules');
+
+        echo $OUTPUT->header();
+        echo local_o365_get_settings_nav_html($section, $subtitle);
+    }
+
+    /**
      * Configure additional tenants.
      */
     public function mode_tenants() {
@@ -167,7 +187,7 @@ class acp extends base {
             new url($this->url, ['mode' => 'tenants'])
         );
 
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
 
         echo html_writer::div(get_string('acp_tenants_title_desc', 'local_o365'));
         echo html_writer::empty_tag('br');
@@ -267,8 +287,8 @@ class acp extends base {
      * Description page shown before adding a new tenant.
      */
     public function mode_tenantsadd() {
-        $this->standard_header();
-        echo html_writer::tag('h2', get_string('acp_tenants_title', 'local_o365'));
+        $this->set_title(get_string('acp_tenants_title', 'local_o365'));
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
         echo html_writer::div(get_string('acp_tenants_title_desc', 'local_o365'));
         echo html_writer::empty_tag('br');
         if ($this->checktenantsetup() !== true) {
@@ -342,7 +362,7 @@ class acp extends base {
             new url($this->url, ['mode' => 'healthcheck'])
         );
 
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
 
         $healthchecks = ['ratelimit'];
 
@@ -488,7 +508,7 @@ class acp extends base {
         }
 
         $PAGE->requires->jquery();
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
         echo html_writer::div(get_string('acp_usermatch_desc', 'local_o365'));
         echo html_writer::empty_tag('br');
         echo html_writer::empty_tag('br');
@@ -645,7 +665,7 @@ class acp extends base {
 
         $PAGE->requires->jquery();
         $PAGE->requires->css('/local/o365/lib/datatables/css/jquery.dataTables.min.css');
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_coursesync', $this->title);
 
         $endpoint = new url('/local/o365/acp.php', ['mode' => 'coursesynccustom_change', 'sesskey' => sesskey()]);
         $custompageurl = new url('/local/o365/acp.php', ['mode' => 'coursesynccustom']);
@@ -1592,7 +1612,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $coursesyncsetting = get_config('local_o365', 'coursesync');
         if ($coursesyncsetting === 'off') {
             $manageurl = new url('/admin/settings.php', ['section' => 'local_o365_coursesync']);
-            $this->standard_header();
+            $this->print_settings_page_header('local_o365_advanced', $this->title);
             echo html_writer::tag(
                 'h5',
                 get_string('acp_maintenance_coursesync_disabled', 'local_o365', $manageurl->out())
@@ -1603,7 +1623,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
         if (!($graphclient instanceof \local_o365\rest\unified)) {
-            $this->standard_header();
+            $this->print_settings_page_header('local_o365_advanced', $this->title);
             echo html_writer::tag('h5', get_string('error_not_connected', 'local_o365'));
             $this->standard_footer();
             return;
@@ -1675,7 +1695,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             }
         }
 
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
         if ($groupcheckstatus) {
             $groupstable = new html_table();
             $groupstable->head = $groupcheckstatushead;
@@ -1709,7 +1729,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $coursesyncsetting = get_config('local_o365', 'coursesync');
         if ($coursesyncsetting === 'off') {
             $manageurl = new url('/admin/settings.php', ['section' => 'local_o365_coursesync']);
-            $this->standard_header();
+            $this->print_settings_page_header('local_o365_advanced', $this->title);
             echo html_writer::tag(
                 'h5',
                 get_string('acp_maintenance_coursesync_disabled', 'local_o365', $manageurl->out())
@@ -1720,7 +1740,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
         if (!($graphclient instanceof \local_o365\rest\unified)) {
-            $this->standard_header();
+            $this->print_settings_page_header('local_o365_advanced', $this->title);
             echo html_writer::tag('h5', get_string('error_not_connected', 'local_o365'));
             $this->standard_footer();
             return;
@@ -1771,7 +1791,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $courses->close();
 
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
         if ($outputsbycourse) {
             $coursetables = new html_table();
             $coursetables->head = [
@@ -1962,7 +1982,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $PAGE->navbar->add(get_string('acp_maintenance', 'local_o365'), new url($this->url, ['mode' => 'maintenance']));
         $PAGE->requires->jquery();
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
 
         echo html_writer::div(get_string('acp_maintenance_desc', 'local_o365'));
         echo html_writer::empty_tag('br');
@@ -2023,7 +2043,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $url = new url($this->url, ['mode' => 'cleandeltatoken']);
         $PAGE->navbar->add(get_string('acp_maintenance_cleandeltatoken', 'local_o365'), $url);
         $PAGE->requires->jquery();
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
         echo html_writer::tag('h5', get_string('acp_maintenance_cleandeltatoken_completed', 'local_o365'));
         $this->standard_footer();
     }
