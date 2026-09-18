@@ -348,7 +348,7 @@ class base {
             }
 
             if (isset($userdata[$remotefield])) {
-                $user->$localfield = $userdata[$remotefield];
+                $user->$localfield = auth_oidc_trim_user_field_value($localfield, $userdata[$remotefield]);
             }
         }
 
