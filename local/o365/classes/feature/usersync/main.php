@@ -962,6 +962,11 @@ class main {
                         }
                 }
             }
+
+            if (isset($user->$localfield)) {
+                // Trim the value to fit the local field's database column, if applicable, to avoid database write errors.
+                $user->$localfield = auth_oidc_trim_user_field_value($localfield, $user->$localfield);
+            }
         }
 
         // Validate language sync.
