@@ -33,8 +33,10 @@ $string['pluginname'] = 'OpenID Connect';
 $string['auth_oidcdescription'] = 'The OpenID Connect authentication plugin provides single-sign-on functionality using configurable IdP.';
 
 // Configuration pages.
+$string['settings_pageheading'] = '{$a} configuration';
 $string['settings_page_other_settings'] = 'Other options';
 $string['settings_page_application'] = 'IdP and authentication';
+$string['settings_page_application_wizard'] = 'Application Configuration Wizard';
 $string['settings_page_binding_username_claim'] = 'Binding username claim';
 $string['settings_page_change_binding_username_claim_tool'] = 'Change binding username claim tool';
 $string['settings_page_cleanup_oidc_tokens'] = 'Cleanup OpenID Connect tokens';
@@ -416,7 +418,7 @@ $string['binding_username_claim_description'] = '<p class="warning_header">This 
 <ol>
 <li>Make sure you have a manual site administrator account, i.e. not using OpenID Connect authentication method.</li>
 <li>Schedule enough downtime and put the Moodle site into maintenance mode.</li>
-<li>Backup Moodle database, in particular <span class="code">user</span> and <span class="code">auth_oidc_tokens</span> tables. If local_o365 plugin is installed, backup <span class="code">local_o365_objects</span> table too.</li>
+<li>Backup Moodle database, in particular <span class="auth_oidc_code">user</span> and <span class="auth_oidc_code">auth_oidc_token</span> tables. If local_o365 plugin is installed, backup <span class="auth_oidc_code">local_o365_objects</span> table too.</li>
 <li>Use the <a href="{$a}" target="_blank">update binding username tool</a> to update Moodle username, auth_oidc token, and other connection records of the existing user to match the value of the claim to be changed to.</li>
 <li>Update the binding username token setting on this page.</li>
 <li>Purge caches.</li>
@@ -425,6 +427,7 @@ $string['binding_username_claim_description'] = '<p class="warning_header">This 
 <p>In most cases this setting should be set to the default option "Choose automatically", meaning the plugin will try to determine the token to use depending on IdP type. Misconfiguration or unexpected change of this setting will result in SSO failure.</p>';
 $string['binding_username_claim_description_existing_claims'] = 'The following claims are present in existing user ID tokens. Choose claims not on the list may results in SSO failure.<br/>
 <div class="existing_claims">{$a}</div>';
+$string['binding_username_claim_warning'] = 'This is an advanced feature. In most cases, it should remain set to "Choose automatically"; an incorrect configuration may affect user records and disrupt single sign-on (SSO).';
 $string['binding_username_auto'] = 'Choose automatically';
 $string['binding_username_custom'] = 'Custom';
 $string['bindingusernameclaim'] = 'Binding username claim';
@@ -485,8 +488,7 @@ $string['update_success_o365'] = 'Microsoft 365 connection record updated succes
 $string['update_error_nothing_updated'] = 'Nothing was updated.';
 $string['error_invalid_upload_file'] = 'Invalid upload file.';
 $string['csvline'] = 'CSV line';
-$string['change_binding_username_claim_tool'] = 'Change binding username claim tool';
-$string['change_binding_username_claim_tool_description'] = '<p class="warning_header">This is an advanced feature!</p>
+$string['change_binding_username_claim_tool_description'] = '<p class="warning_header">This is an advanced feature. Incorrect use may affect user records and disrupt single sign-on (SSO).</p>
 <p>This tool allows site administrators to bulk update the following records:</p>
 <ul>
 <li>Moodle account usernames,</li>
@@ -494,27 +496,26 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <li>Moodle and Microsoft account connection records.</li>
 </ul>
 <p>This should only be used when changing the <b>Binding username claim</b> settings.</p>
-<p class="warning">Be very cautious when using this feature, and follow the steps on the <a href="{$a}" target="_blank">Binding username claim configuration page</a>. Misuse of this tool will result in Moodle user records being damaged and/or SSO failure.</p>
 <p>The tool accepts a simple CSV file with two columns:</p>
 <ul>
-<li><b><span class="code">username</span></b>: The current username of the Moodle account to be updated, or if the current user is manually matched, this needs to be the current binding claim value.</li>
-<li><b><span class="code">new_username</span></b>: The case-sensitive value of the new token claim to be used as the binding username claim. If the user is automatically matched and uses the OpenID Connect authentication type, the lowercase of this value will be used as Moodle username.</li>
+<li><b><span class="auth_oidc_code">username</span></b>: The current username of the Moodle account to be updated, or if the current user is manually matched, this needs to be the current binding claim value.</li>
+<li><b><span class="auth_oidc_code">new_username</span></b>: The case-sensitive value of the new token claim to be used as the binding username claim. If the user is automatically matched and uses the OpenID Connect authentication type, the lowercase of this value will be used as Moodle username.</li>
 </ul>
 <p>When the file is uploaded, the tool will perform the following actions:</p>
 <ol>
-<li>Find an existing Moodle user with the given <span class="code">username</span> as either username or email address, and using the OpenID Connect authentication method, and if one is found, update the username of the user to be the lowercase of <span class="code">new_username</span>.</li>
+<li>Find an existing Moodle user with the given <span class="auth_oidc_code">username</span> as either username or email address, and using the OpenID Connect authentication method, and if one is found, update the username of the user to be the lowercase of <span class="auth_oidc_code">new_username</span>.</li>
 <li>Update OpenID Connect token record.
 <ul>
-<li>If a user is found in the step 1 above, then find the token record in the <span class="code">auth_oidc_token</span> table for the user, and update <span class="code">username</span> column to be the lowercase of <span class="code">new_username</span>, and <span class="code">oidcusername</span> column to be the same as <span class="code">new_username</span>.</li>
-<li>If no record is found above, it will try to find record in the <span class="code">auth_oidc_token</span> with <span class="code">oidcusername</span> column matching the old <span class="code">username</span>, and update it to be <span class="code">newusername</span>.</li>
+<li>If a user is found in the step 1 above, then find the token record in the <span class="auth_oidc_code">auth_oidc_token</span> table for the user, and update <span class="auth_oidc_code">username</span> column to be the lowercase of <span class="auth_oidc_code">new_username</span>, and <span class="auth_oidc_code">oidcusername</span> column to be the same as <span class="auth_oidc_code">new_username</span>.</li>
+<li>If no record is found above, it will try to find record in the <span class="auth_oidc_code">auth_oidc_token</span> with <span class="auth_oidc_code">oidcusername</span> column matching the old <span class="auth_oidc_code">username</span>, and update it to be <span class="auth_oidc_code">new_username</span>.</li>
 </ul>
-<li>Providing the <span class="code">local_365</span> plugin is installed, update user connection record.
+<li>Providing the <span class="auth_oidc_code">local_o365</span> plugin is installed, update user connection record.
 <ul>
-<li>If a user is found in stpe 1 above, then find the connection record of the user in the <span class="code">local_o365_objects</span> table, and update the <span class="code">o365name</span> column to be the same as <span class="code">new_username</span>.</li>
-<li>If no user is found in step 1, then it will try to find a record for a user in <span class="code">local_o365_objects</span> table with <span class="code">o365name</span> matching the <span class="code">username</span> value, and update it to be <span class="code">newusername</span> value.</li>
+<li>If a user is found in step 1 above, then find the connection record of the user in the <span class="auth_oidc_code">local_o365_objects</span> table, and update the <span class="auth_oidc_code">o365name</span> column to be the same as <span class="auth_oidc_code">new_username</span>.</li>
+<li>If no user is found in step 1, then it will try to find a record for a user in <span class="auth_oidc_code">local_o365_objects</span> table with <span class="auth_oidc_code">o365name</span> matching the <span class="auth_oidc_code">username</span> value, and update it to be <span class="auth_oidc_code">new_username</span> value.</li>
 </ul>
 </ol>
-<p>The example file below would change the binding username claim from <span class="code">upn</span> or <span class="code">email</span> to <span class="code">oid</span>.</p>';
+<p>The example file below would change the binding username claim from <span class="auth_oidc_code">upn</span> or <span class="auth_oidc_code">email</span> to <span class="auth_oidc_code">oid</span>.</p>';
 $string['change_binding_username_claim_tool_result'] = 'Update results';
 $string['update_username_results'] = 'Update username results';
 $string['new_username'] = 'New username';
