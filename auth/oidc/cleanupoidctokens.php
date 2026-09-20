@@ -101,6 +101,7 @@ if ($tokenstoclean) {
 }
 
 echo $OUTPUT->header();
+echo auth_oidc_get_settings_nav_html('auth_oidc_other_settings', get_string('settings_page_cleanup_oidc_tokens', 'auth_oidc'));
 
 if ($tokenstoclean) {
     echo html_writer::table($table);
