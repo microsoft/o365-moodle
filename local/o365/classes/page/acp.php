@@ -94,6 +94,7 @@ class acp extends base {
                 break;
             case 'healthcheck':
             case 'usermatch':
+            case 'userconnections':
             case 'teamconnections':
             case 'maintenance':
             case 'maintenance_recreatedeletedgroups':
@@ -156,6 +157,26 @@ class acp extends base {
     }
 
     /**
+     * Print the header shared by the local_o365 configuration pages that are rendered directly by this controller
+     * (as opposed to the standard Moodle admin settings pages): the standard Moodle header, followed by the same
+     * plugin-wide heading, tab navigation, and page-specific subtitle used on the admin settings pages (see
+     * local_o365_get_settings_nav_html()), which also hides the now-redundant Moodle breadcrumb and page heading.
+     *
+     * @param string $section The settings tab section to mark active (see local_o365_get_settings_nav_html()).
+     * @param string $subtitle The page-specific subtitle to print below the tab navigation.
+     */
+    protected function print_settings_page_header(string $section, string $subtitle): void {
+        global $OUTPUT, $PAGE;
+
+        $PAGE->set_pagelayout('admin');
+        $PAGE->set_primary_active_tab('siteadminnode');
+        $PAGE->set_secondary_active_tab('modules');
+
+        echo $OUTPUT->header();
+        echo local_o365_get_settings_nav_html($section, $subtitle);
+    }
+
+    /**
      * Configure additional tenants.
      */
     public function mode_tenants() {
@@ -167,7 +188,7 @@ class acp extends base {
             new url($this->url, ['mode' => 'tenants'])
         );
 
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
 
         echo html_writer::div(get_string('acp_tenants_title_desc', 'local_o365'));
         echo html_writer::empty_tag('br');
@@ -267,8 +288,8 @@ class acp extends base {
      * Description page shown before adding a new tenant.
      */
     public function mode_tenantsadd() {
-        $this->standard_header();
-        echo html_writer::tag('h2', get_string('acp_tenants_title', 'local_o365'));
+        $this->set_title(get_string('acp_tenants_title', 'local_o365'));
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
         echo html_writer::div(get_string('acp_tenants_title_desc', 'local_o365'));
         echo html_writer::empty_tag('br');
         if ($this->checktenantsetup() !== true) {
@@ -342,7 +363,7 @@ class acp extends base {
             new url($this->url, ['mode' => 'healthcheck'])
         );
 
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
 
         $healthchecks = ['ratelimit'];
 
@@ -488,7 +509,7 @@ class acp extends base {
         }
 
         $PAGE->requires->jquery();
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
         echo html_writer::div(get_string('acp_usermatch_desc', 'local_o365'));
         echo html_writer::empty_tag('br');
         echo html_writer::empty_tag('br');
@@ -645,7 +666,7 @@ class acp extends base {
 
         $PAGE->requires->jquery();
         $PAGE->requires->css('/local/o365/lib/datatables/css/jquery.dataTables.min.css');
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_coursesync', $this->title);
 
         $endpoint = new url('/local/o365/acp.php', ['mode' => 'coursesynccustom_change', 'sesskey' => sesskey()]);
         $custompageurl = new url('/local/o365/acp.php', ['mode' => 'coursesynccustom']);
@@ -1592,7 +1613,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $coursesyncsetting = get_config('local_o365', 'coursesync');
         if ($coursesyncsetting === 'off') {
             $manageurl = new url('/admin/settings.php', ['section' => 'local_o365_coursesync']);
-            $this->standard_header();
+            $this->print_settings_page_header('local_o365_advanced', $this->title);
             echo html_writer::tag(
                 'h5',
                 get_string('acp_maintenance_coursesync_disabled', 'local_o365', $manageurl->out())
@@ -1603,7 +1624,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
         if (!($graphclient instanceof \local_o365\rest\unified)) {
-            $this->standard_header();
+            $this->print_settings_page_header('local_o365_advanced', $this->title);
             echo html_writer::tag('h5', get_string('error_not_connected', 'local_o365'));
             $this->standard_footer();
             return;
@@ -1675,7 +1696,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             }
         }
 
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
         if ($groupcheckstatus) {
             $groupstable = new html_table();
             $groupstable->head = $groupcheckstatushead;
@@ -1709,7 +1730,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $coursesyncsetting = get_config('local_o365', 'coursesync');
         if ($coursesyncsetting === 'off') {
             $manageurl = new url('/admin/settings.php', ['section' => 'local_o365_coursesync']);
-            $this->standard_header();
+            $this->print_settings_page_header('local_o365_advanced', $this->title);
             echo html_writer::tag(
                 'h5',
                 get_string('acp_maintenance_coursesync_disabled', 'local_o365', $manageurl->out())
@@ -1720,7 +1741,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
         if (!($graphclient instanceof \local_o365\rest\unified)) {
-            $this->standard_header();
+            $this->print_settings_page_header('local_o365_advanced', $this->title);
             echo html_writer::tag('h5', get_string('error_not_connected', 'local_o365'));
             $this->standard_footer();
             return;
@@ -1771,7 +1792,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $courses->close();
 
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
         if ($outputsbycourse) {
             $coursetables = new html_table();
             $coursetables->head = [
@@ -1962,7 +1983,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $PAGE->navbar->add(get_string('acp_maintenance', 'local_o365'), new url($this->url, ['mode' => 'maintenance']));
         $PAGE->requires->jquery();
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
 
         echo html_writer::div(get_string('acp_maintenance_desc', 'local_o365'));
         echo html_writer::empty_tag('br');
@@ -2023,7 +2044,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $url = new url($this->url, ['mode' => 'cleandeltatoken']);
         $PAGE->navbar->add(get_string('acp_maintenance_cleandeltatoken', 'local_o365'), $url);
         $PAGE->requires->jquery();
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
         echo html_writer::tag('h5', get_string('acp_maintenance_cleandeltatoken_completed', 'local_o365'));
         $this->standard_footer();
     }
@@ -2032,7 +2053,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
      * User connection management.
      */
     public function mode_userconnections() {
-        global $PAGE, $CFG;
+        global $PAGE, $OUTPUT;
 
         $this->set_title(get_string('acp_userconnections', 'local_o365'));
 
@@ -2042,25 +2063,157 @@ var local_o365_coursesync_all_set_feature = function(state) {
         );
 
         $PAGE->requires->jquery();
-        $this->standard_header();
+        $PAGE->requires->css('/local/o365/lib/datatables/css/jquery.dataTables.min.css');
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
 
+        // Always-visible explanation of the different connection statuses. Rendered through the same helper Moodle uses
+        // for help popups so the wording and formatting match the "?" icon on the Connection Status column below.
+        $statushelp = get_formatted_help_string('acp_userconnections_column_status', 'local_o365', true);
+        echo html_writer::start_div('alert alert-info');
+        echo html_writer::tag('h5', $statushelp->heading);
+        echo $statushelp->text;
+        echo html_writer::end_div();
+
+        // Filters.
         $searchurl = new url('/local/o365/acp.php', ['mode' => 'userconnections']);
-        $filterfields = ['o365username' => 0, 'realname' => 0, 'username' => 0, 'idnumber' => 1, 'firstname' => 1, 'lastname' => 1,
-            'email' => 1];
-        $ufiltering = new filtering($filterfields, $searchurl);
-        [$extrasql, $params] = $ufiltering->get_sql_filter();
-        [$o365usernamesql, $o365usernameparams] = $ufiltering->get_filter_o365username();
-
+        $ufiltering = new filtering(self::get_userconnections_filterfields(), $searchurl);
         $ufiltering->display_add();
         $ufiltering->display_active();
 
-        $table = new table('local_o365_userconnections');
-        $table->define_baseurl($CFG->wwwroot . '/local/o365/acp.php?mode=userconnections');
-        $table->set_where($extrasql, $params);
-        $table->set_having($o365usernamesql, $o365usernameparams);
-        $table->out(25, true);
+        // Empty table for DataTables server-side mode.
+        $statusheader = get_string('acp_userconnections_column_status', 'local_o365') .
+            $OUTPUT->help_icon('acp_userconnections_column_status', 'local_o365');
+        $actionsheader = get_string('acp_userconnections_column_actions', 'local_o365') .
+            $OUTPUT->help_icon('acp_userconnections_column_actions', 'local_o365');
+        $headers = table::get_column_headers();
+        $headers['status'] = $statusheader;
+        $headers['actions'] = $actionsheader;
+
+        $htmltable = new html_table();
+        $htmltable->id = 'local_o365_userconnections_table';
+        $htmltable->attributes = ['class' => 'stripe hover', 'style' => 'width: 100%;'];
+        $htmltable->head = array_values($headers);
+        $htmltable->data = [];
+        echo html_writer::table($htmltable);
+
+        // Initialise DataTables via the AMD module.
+        $ajaxendpoint = new url('/local/o365/acp.php', ['mode' => 'userconnections_ajax', 'sesskey' => sesskey()]);
+        $PAGE->requires->js_call_amd('local_o365/userconnections_datatables', 'init', [$ajaxendpoint->out(false)]);
 
         $this->standard_footer();
+    }
+
+    /**
+     * Get the filter fields used on the manage user connections page.
+     *
+     * The value indicates whether the filter is shown in the "advanced" (collapsed) area of the filter form.
+     *
+     * @return array Map of filter field name => advanced flag.
+     */
+    protected static function get_userconnections_filterfields(): array {
+        return [
+            'connectionstatus' => 0,
+            'accountstatus' => 0,
+            'o365username' => 0,
+            'realname' => 0,
+            'username' => 0,
+            'idnumber' => 1,
+            'firstname' => 1,
+            'lastname' => 1,
+            'email' => 1,
+        ];
+    }
+
+    /**
+     * AJAX endpoint for DataTables server-side loading of user connections.
+     *
+     * Returns paginated, filtered and sorted user connection data in DataTables format. Filtering combines the Moodle
+     * filter form values stored in the session with the DataTables free-text search box.
+     */
+    public function mode_userconnections_ajax() {
+        global $DB;
+
+        require_sesskey();
+
+        // Read DataTables parameters from $_GET (Moodle's optional_param doesn't handle nested arrays).
+        $draw = isset($_GET['draw']) ? (int) $_GET['draw'] : 1;
+        $start = isset($_GET['start']) ? max(0, (int) $_GET['start']) : 0;
+        // Clamp the page length to a sane range so a crafted request cannot force a huge result set / JSON response.
+        $length = isset($_GET['length']) ? (int) $_GET['length'] : 25;
+        $length = ($length < 1) ? 25 : min($length, 200);
+        $searchvalue = isset($_GET['search']['value']) ? trim((string) $_GET['search']['value']) : '';
+        $ordercolumn = isset($_GET['order'][0]['column']) ? (int) $_GET['order'][0]['column'] : 0;
+        $orderdir = isset($_GET['order'][0]['dir']) && strtolower($_GET['order'][0]['dir']) === 'desc' ? 'DESC' : 'ASC';
+
+        $searchurl = new url('/local/o365/acp.php', ['mode' => 'userconnections']);
+        $ufiltering = new filtering(self::get_userconnections_filterfields(), $searchurl);
+        [$extrasql, $extraparams] = $ufiltering->get_sql_filter();
+        [$o365usernamesql, $o365usernameparams] = $ufiltering->get_filter_o365username();
+        [$statussql, $statusparams] = $ufiltering->get_filter_connectionstatus();
+        [$accountstatussql, $accountstatusparams] = $ufiltering->get_filter_accountstatus();
+
+        // Base query (ends with a WHERE clause using the aotok/o365match/objects aliases).
+        [$basesql, $params] = table::get_base_sql();
+        if ($extrasql !== '') {
+            $basesql .= ' AND ' . $extrasql;
+            $params += $extraparams;
+        }
+        if ($statussql !== '') {
+            $basesql .= ' AND ' . $statussql;
+            $params += $statusparams;
+        }
+        if ($accountstatussql !== '') {
+            $basesql .= ' AND ' . $accountstatussql;
+            $params += $accountstatusparams;
+        }
+
+        // The o365username filter and the free-text search operate on aliases, so wrap the base query as a sub-query.
+        $outerconditions = [];
+        if ($o365usernamesql !== '') {
+            $outerconditions[] = $o365usernamesql;
+            $params += $o365usernameparams;
+        }
+        [$searchsql, $searchparams] = table::get_search_sql($searchvalue);
+        if ($searchsql !== '') {
+            $outerconditions[] = $searchsql;
+            $params += $searchparams;
+        }
+        if (!empty($outerconditions)) {
+            $basesql = 'SELECT org.* FROM (' . $basesql . ') org WHERE ' . implode(' AND ', $outerconditions);
+        }
+
+        // Totals.
+        [$allsql, $allparams] = table::get_base_sql();
+        $recordstotal = $DB->count_records_sql('SELECT COUNT(1) FROM (' . $allsql . ') a', $allparams);
+        $recordsfiltered = $DB->count_records_sql('SELECT COUNT(1) FROM (' . $basesql . ') a', $params);
+
+        // Sorting - only the first two columns are sortable.
+        $ordermap = [
+            0 => "userlastname $orderdir, userfirstname $orderdir",
+            1 => "o365username $orderdir",
+        ];
+        $order = $ordermap[$ordercolumn] ?? $ordermap[0];
+        $rows = $DB->get_records_sql($basesql . ' ORDER BY ' . $order, $params, $start, $length);
+
+        $data = [];
+        foreach ($rows as $row) {
+            $data[] = [
+                table::render_muser($row),
+                table::render_o365user($row),
+                table::render_usinglogin($row),
+                table::render_status($row),
+                table::render_actions($row),
+            ];
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'draw' => $draw,
+            'recordsTotal' => $recordstotal,
+            'recordsFiltered' => $recordsfiltered,
+            'data' => $data,
+        ]);
+        die;
     }
 
     /**
@@ -2070,21 +2223,31 @@ var local_o365_coursesync_all_set_feature = function(state) {
      * @throws moodle_exception
      */
     public function mode_userconnections_resync(): bool {
-        global $DB;
+        global $DB, $OUTPUT, $PAGE;
+
         $userid = required_param('userid', PARAM_INT);
         require_sesskey();
 
+        $this->set_title(get_string('acp_userconnections', 'local_o365'));
+        $PAGE->navbar->add(
+            get_string('acp_userconnections', 'local_o365'),
+            new url($this->url, ['mode' => 'userconnections'])
+        );
+        $PAGE->navbar->add(get_string('acp_userconnections_table_resync', 'local_o365'));
+
+        $returnurl = new url('/local/o365/acp.php', ['mode' => 'userconnections']);
+
         if (utils::is_connected() !== true) {
-            mtrace('Microsoft 365 not configured');
+            $this->print_settings_page_header('local_o365_advanced', $this->title);
+            echo $OUTPUT->notification(get_string('acp_teamconnections_exception_not_configured', 'local_o365'), 'error');
+            echo $OUTPUT->continue_button($returnurl);
+            $this->standard_footer();
             return false;
         }
 
         // Perform prechecks.
         $userrecord = core_user::get_user($userid, '*', MUST_EXIST);
-        $isguestuser = false;
-        if (stripos($userrecord->username, '_ext_') !== false) {
-            $isguestuser = true;
-        }
+        $isguestuser = (stripos($userrecord->username, '_ext_') !== false);
 
         $params = ['type' => 'user', 'moodleid' => $userid];
         $objectrecord = $DB->get_record('local_o365_objects', $params);
@@ -2095,9 +2258,36 @@ var local_o365_coursesync_all_set_feature = function(state) {
         // Get Entra ID data.
         $usersync = new \local_o365\feature\usersync\main();
         $userdata = $usersync->get_user($objectrecord->objectid, $isguestuser);
-        echo '<pre>';
-        $usersync->sync_users([$userdata]);
-        echo '</pre>';
+
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
+        echo $OUTPUT->heading(get_string('acp_userconnections_table_resync', 'local_o365'), 5);
+
+        if (empty($userdata)) {
+            // The stored object ID no longer resolves to a Microsoft Entra ID account.
+            $a = (object) ['username' => s($userrecord->username), 'objectid' => s($objectrecord->objectid)];
+            echo $OUTPUT->notification(get_string('acp_userconnections_resync_notfound', 'local_o365', $a), 'error');
+            echo $OUTPUT->continue_button($returnurl);
+            $this->standard_footer();
+            return false;
+        }
+
+        // Run the sync, capturing its trace output. sync_users() writes progress with mtrace(), which echoes directly
+        // and calls flush(); capturing it lets us render the result as a normal part of the page instead of a
+        // half-flushed response that some browsers drop when the link is opened in a background tab.
+        ob_start();
+        try {
+            $usersync->sync_users([$userdata]);
+        } finally {
+            $syncoutput = trim(ob_get_clean());
+        }
+
+        if ($syncoutput !== '') {
+            echo html_writer::tag('pre', s($syncoutput), ['class' => 'bg-light p-3']);
+        } else {
+            echo $OUTPUT->notification(get_string('acp_userconnections_resync_nooutput', 'local_o365'), 'info');
+        }
+        echo $OUTPUT->continue_button($returnurl);
+        $this->standard_footer();
 
         return true;
     }
@@ -2164,10 +2354,11 @@ var local_o365_coursesync_all_set_feature = function(state) {
             die();
         }
 
+        $this->set_title(get_string('acp_userconnections', 'local_o365'));
         $url = new url($this->url, ['mode' => 'userconnections']);
         $PAGE->navbar->add(get_string('acp_userconnections', 'local_o365'), $url);
         $PAGE->requires->jquery();
-        $this->standard_header();
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
         $mform->display();
         $this->standard_footer();
     }
@@ -2187,10 +2378,11 @@ var local_o365_coursesync_all_set_feature = function(state) {
             redirect(new url('/local/o365/acp.php', ['mode' => 'userconnections']));
             die();
         } else {
+            $this->set_title(get_string('acp_userconnections', 'local_o365'));
             $url = new url($this->url, ['mode' => 'userconnections']);
             $PAGE->navbar->add(get_string('acp_userconnections', 'local_o365'), $url);
             $PAGE->requires->jquery();
-            $this->standard_header();
+            $this->print_settings_page_header('local_o365_advanced', $this->title);
             $message = get_string('acp_userconnections_table_unmatch_confirmmsg', 'local_o365', $user->username);
             $message .= '<br /><br />';
             $urlparams = ['mode' => 'userconnections_unmatch', 'userid' => $userid, 'confirmed' => 1, 'sesskey' => sesskey()];
@@ -2223,10 +2415,11 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $auth->disconnect($justtokens, false, $redirect, $selfurl, $userid);
             die();
         } else {
+            $this->set_title(get_string('acp_userconnections', 'local_o365'));
             $url = new url($this->url, ['mode' => 'userconnections']);
             $PAGE->navbar->add(get_string('acp_userconnections', 'local_o365'), $url);
             $PAGE->requires->jquery();
-            $this->standard_header();
+            $this->print_settings_page_header('local_o365_advanced', $this->title);
             $message = get_string('acp_userconnections_table_disconnect_confirmmsg', 'local_o365', $user->username);
             $message .= '<br /><br />';
             $urlparams = ['mode' => 'userconnections_disconnect', 'userid' => $userid, 'confirmed' => 1, 'sesskey' => sesskey()];
