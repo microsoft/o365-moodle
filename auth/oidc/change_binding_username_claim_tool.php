@@ -33,6 +33,7 @@ use core\url;
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/csvlib.class.php');
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 require_login();
 
@@ -70,17 +71,12 @@ if (empty($iid)) {
         }
     } else {
         echo $OUTPUT->header();
-
-        echo $OUTPUT->heading(get_string('change_binding_username_claim_tool', 'auth_oidc'));
-        $bindingusernameclaimurl = new url('/admin/settings.php', ['section' => 'auth_oidc_binding_username_claim']);
-        echo html_writer::tag(
-            'p',
-            get_string(
-                'change_binding_username_claim_tool_description',
-                'auth_oidc',
-                $bindingusernameclaimurl->out()
-            )
+        echo auth_oidc_get_settings_nav_html(
+            'auth_oidc_binding_username_claim',
+            get_string('settings_page_change_binding_username_claim_tool', 'auth_oidc')
         );
+
+        echo get_string('change_binding_username_claim_tool_description', 'auth_oidc');
 
         $form1->display();
 
@@ -107,7 +103,11 @@ if ($mform2->is_cancelled()) {
 } else if ($formdata = $mform2->get_data()) {
     // Print the header.
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('change_binding_username_claim_tool_result', 'auth_oidc'));
+    echo auth_oidc_get_settings_nav_html(
+        'auth_oidc_binding_username_claim',
+        get_string('settings_page_change_binding_username_claim_tool', 'auth_oidc')
+    );
+    echo $OUTPUT->heading(get_string('change_binding_username_claim_tool_result', 'auth_oidc'), 3);
 
     $process->set_form_data($formdata);
     $process->process();
@@ -122,8 +122,10 @@ if ($mform2->is_cancelled()) {
 
 // Print the header.
 echo $OUTPUT->header();
-
-echo $OUTPUT->heading(get_string('change_binding_username_claim_tool', 'auth_oidc'));
+echo auth_oidc_get_settings_nav_html(
+    'auth_oidc_binding_username_claim',
+    get_string('settings_page_change_binding_username_claim_tool', 'auth_oidc')
+);
 
 $table = new preview($cir, $filecolumns, $previewrows);
 

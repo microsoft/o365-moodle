@@ -60,19 +60,16 @@ if ($hassiteconfig) {
         get_string('settings_page_application', 'auth_oidc')
     );
 
-    // Add navigation tabs.
+    // Add navigation tabs, with an intro pointing to the guided Application Configuration Wizard.
+    $wizardurl = new url('/auth/oidc/manageapplication.php');
     $applicationsettings->add(new admin_setting_heading(
         'auth_oidc_application_nav',
         '',
-        auth_oidc_get_settings_nav_html('authsettingoidc')
-    ));
-
-    // Link to the guided Application Configuration Wizard.
-    $wizardurl = new url('/auth/oidc/manageapplication.php');
-    $applicationsettings->add(new admin_setting_description(
-        'auth_oidc/application_wizard_link',
-        '',
-        get_string('settings_application_wizard_desc', 'auth_oidc', $wizardurl->out())
+        auth_oidc_get_settings_nav_html(
+            'authsettingoidc',
+            null,
+            get_string('settings_application_wizard_desc', 'auth_oidc', $wizardurl->out())
+        )
     ));
 
     // Basic settings heading.
@@ -419,11 +416,15 @@ if ($hassiteconfig) {
             get_string('settings_page_binding_username_claim', 'auth_oidc')
         );
 
-        // Add navigation tabs.
+        // Add navigation tabs, with a warning that this is an advanced setting.
         $bindingusernamesettings->add(new admin_setting_heading(
             'auth_oidc_binding_username_claim_nav',
             '',
-            auth_oidc_get_settings_nav_html('auth_oidc_binding_username_claim')
+            auth_oidc_get_settings_nav_html(
+                'auth_oidc_binding_username_claim',
+                null,
+                auth_oidc_get_binding_username_claim_warning_html()
+            )
         ));
 
         // Determine options and description based on IdP type and user sync state.
