@@ -110,7 +110,7 @@ function auth_oidc_reset_app_tokens($settingname) {
     static $cachespurged = false;
     if (!$cachespurged) {
         unset_config('apptokens', 'local_o365');
-        unset_config('azuresetupresult', 'local_o365');
+        unset_config('verifysetupresult', 'local_o365');
         purge_all_caches();
         $cachespurged = true;
     }
@@ -450,6 +450,70 @@ function auth_oidc_delete_token(int $tokenid): void {
     }
 
     $DB->delete_records('auth_oidc_token', ['id' => $tokenid]);
+}
+
+/**
+ * Get the number of users having tokens stored in the auth_oidc_token table.
+ *
+ * @param array|null $userids IDs of the Moodle users to count, or null to count all users with tokens.
+ * @return int The number of users having tokens.
+ */
+function auth_oidc_count_users_with_tokens(?array $userids = null): int {
+    global $DB;
+
+    $where = 'userid <> 0';
+    $params = [];
+    if ($userids !== null) {
+        if (empty($userids)) {
+            return 0;
+        }
+        [$insql, $params] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+        $where .= " AND userid $insql";
+    }
+
+    return $DB->count_records_sql("SELECT COUNT(DISTINCT userid) FROM {auth_oidc_token} WHERE $where", $params);
+}
+
+/**
+ * Clear the stored tokens of users.
+ *
+ * Deletes the records in the auth_oidc_token table, and the matching records in the local_o365_token table if
+ * local_o365 is installed. The user's link to the Microsoft 365 account (local_o365_objects and
+ * local_o365_connections records) is kept, so users will get new tokens the next time they log in using
+ * OpenID Connect, or connect to Microsoft 365.
+ *
+ * Token records not matched to a Moodle user (with a user ID of 0) are never deleted, they are left to the
+ * cleanup OpenID Connect tokens tool.
+ *
+ * @param array|null $userids IDs of the Moodle users to clear the tokens of, or null to clear the tokens of all users.
+ * @return int The number of auth_oidc_token records deleted.
+ */
+function auth_oidc_clear_user_tokens(?array $userids = null): int {
+    global $DB;
+
+    if ($userids === null) {
+        $count = $DB->count_records_select('auth_oidc_token', 'userid <> 0');
+        $DB->delete_records_select('auth_oidc_token', 'userid <> 0');
+        if (auth_oidc_is_local_365_installed()) {
+            $DB->delete_records('local_o365_token');
+        }
+
+        return $count;
+    }
+
+    $userids = array_filter($userids);
+    if (empty($userids)) {
+        return 0;
+    }
+
+    [$insql, $params] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+    $count = $DB->count_records_select('auth_oidc_token', "userid $insql", $params);
+    $DB->delete_records_select('auth_oidc_token', "userid $insql", $params);
+    if (auth_oidc_is_local_365_installed()) {
+        $DB->delete_records_select('local_o365_token', "user_id $insql", $params);
+    }
+
+    return $count;
 }
 
 /**
@@ -1167,7 +1231,13 @@ function auth_oidc_get_settings_nav_html(string $currentpage, ?string $subtitle 
 
     $pages += [
         'auth_oidc_other_settings' => get_string('settings_page_other_settings', 'auth_oidc'),
+        'auth_oidc_clear_user_tokens' => get_string('settings_page_clear_user_tokens', 'auth_oidc'),
         'auth_oidc_field_mapping' => get_string('settings_page_field_mapping', 'auth_oidc'),
+    ];
+
+    // Tabs for admin_externalpage pages, which can't be opened through /admin/settings.php?section=.
+    $externalpageurls = [
+        'auth_oidc_clear_user_tokens' => new \core\url('/auth/oidc/clearusertokens.php'),
     ];
 
     // Hide the breadcrumb, Moodle's own page heading, and (on admin_settingpage forms) the settings form's own
@@ -1179,7 +1249,7 @@ function auth_oidc_get_settings_nav_html(string $currentpage, ?string $subtitle 
 
     $html .= html_writer::start_tag('ul', ['class' => 'nav nav-tabs mb-3']);
     foreach ($pages as $section => $label) {
-        $url = new \core\url('/admin/settings.php', ['section' => $section]);
+        $url = $externalpageurls[$section] ?? new \core\url('/admin/settings.php', ['section' => $section]);
         $linkattrs = ['class' => 'nav-link' . ($section === $currentpage ? ' active' : '')];
         $html .= html_writer::tag('li', html_writer::link($url, $label, $linkattrs), ['class' => 'nav-item']);
     }
