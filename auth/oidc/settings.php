@@ -831,11 +831,14 @@ if ($hassiteconfig) {
 
     // Tools heading.
     $cleanupurl = new \core\url('/auth/oidc/cleanupoidctokens.php');
+    $clearusertokensurl = new \core\url('/auth/oidc/clearusertokens.php');
     $settings->add(
         new admin_setting_heading(
             'auth_oidc/tools_heading',
             get_string('heading_tools', 'auth_oidc'),
-            get_string('cleanup_oidc_tokens_link_desc', 'auth_oidc', $cleanupurl->out())
+            get_string('cleanup_oidc_tokens_link_desc', 'auth_oidc', $cleanupurl->out()) .
+            html_writer::empty_tag('br') .
+            get_string('clear_user_tokens_link_desc', 'auth_oidc', $clearusertokensurl->out())
         )
     );
 
@@ -848,6 +851,16 @@ if ($hassiteconfig) {
             'auth_oidc_cleanup_oidc_tokens',
             get_string('settings_page_cleanup_oidc_tokens', 'auth_oidc'),
             new url('/auth/oidc/cleanupoidctokens.php')
+        )
+    );
+
+    // Clear user tokens page.
+    $ADMIN->add(
+        'oidcfolder',
+        new admin_externalpage(
+            'auth_oidc_clear_user_tokens',
+            get_string('settings_page_clear_user_tokens', 'auth_oidc'),
+            new url('/auth/oidc/clearusertokens.php')
         )
     );
 
