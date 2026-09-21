@@ -40,6 +40,7 @@ $string['settings_page_application_wizard'] = 'Application Configuration Wizard'
 $string['settings_page_binding_username_claim'] = 'Binding username claim';
 $string['settings_page_change_binding_username_claim_tool'] = 'Change binding username claim tool';
 $string['settings_page_cleanup_oidc_tokens'] = 'Cleanup OpenID Connect tokens';
+$string['settings_page_clear_user_tokens'] = 'Clear user tokens';
 $string['settings_page_field_mapping'] = 'Field mappings';
 $string['heading_basic'] = 'Basic settings';
 $string['heading_basic_desc'] = '';
@@ -435,6 +436,18 @@ $string['customclaimname'] = 'Custom claim name';
 $string['customclaimname_description'] = 'This field is used only when the <b>binding username claim</b> setting is set to <b>Custom</b>.';
 $string['binding_username_claim_tool_link_desc'] = 'To update the binding username claim for existing users, use the <a href="{$a}">Change binding username claim tool</a>.';
 $string['cleanup_oidc_tokens_link_desc'] = 'To clean up obsolete OpenID Connect tokens, use the <a href="{$a}">Cleanup OpenID Connect tokens</a> tool.';
+$string['clear_user_tokens_link_desc'] = 'To remove the stored tokens of all users, or of selected users, use the <a href="{$a}">Clear user tokens</a> tool.';
+$string['clear_user_tokens'] = 'Clear user tokens';
+$string['clear_user_tokens_desc'] = 'Removes the OpenID Connect and Microsoft 365 tokens stored for users. Affected users will get new tokens the next time they log in using OpenID Connect, or connect to Microsoft 365. Their links to Microsoft 365 accounts are kept. WARNING: This may interrupt logins in-process, so it\'s best to do this during downtime.';
+$string['clear_user_tokens_scope_selected'] = 'Selected users';
+$string['clear_user_tokens_scope_all'] = 'All users';
+$string['clear_user_tokens_users'] = 'Users';
+$string['clear_user_tokens_submit'] = 'Clear tokens';
+$string['clear_user_tokens_no_name'] = '(no name)';
+$string['clear_user_tokens_no_user_selected'] = 'Select at least one user.';
+$string['clear_user_tokens_confirm_all'] = 'Are you sure you want to clear the tokens of all users? {$a} user(s) currently have tokens.';
+$string['clear_user_tokens_confirm_selected'] = 'Are you sure you want to clear the tokens of the selected users? {$a} of the selected user(s) currently have tokens.';
+$string['clear_user_tokens_success'] = 'Cleared {$a} token record(s).';
 $string['binding_username_claim_help_ms_no_user_sync'] = 'The options for non Microsoft IdPs include:
 <ul>
 <li><b>Choose automatically</b>: Uses current logic, determining the token by IdP type and falling back to <b>sub</b> if no claim is found.</li>
