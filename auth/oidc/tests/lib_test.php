@@ -72,4 +72,69 @@ final class lib_test extends advanced_testcase {
 
         $this->assertSame($expected, auth_oidc_validate_secret_expiry_recipients($value));
     }
+
+    /**
+     * Create an auth_oidc_token record for a user.
+     *
+     * @param int $userid
+     * @return void
+     */
+    private function create_token_record(int $userid): void {
+        global $DB;
+
+        $DB->insert_record('auth_oidc_token', (object)[
+            'oidcuniqid' => 'uniqid' . $userid,
+            'username' => 'user' . $userid,
+            'userid' => $userid,
+            'oidcusername' => 'user' . $userid . '@example.com',
+            'scope' => 'openid',
+            'tokenresource' => 'resource',
+            'authcode' => 'authcode',
+            'token' => 'token',
+            'expiry' => time() + 3600,
+            'refreshtoken' => 'refreshtoken',
+            'idtoken' => 'idtoken',
+        ]);
+    }
+
+    /**
+     * Test auth_oidc_clear_user_tokens() and auth_oidc_count_users_with_tokens().
+     *
+     * @covers ::auth_oidc_clear_user_tokens
+     * @covers ::auth_oidc_count_users_with_tokens
+     * @return void
+     */
+    public function test_clear_user_tokens(): void {
+        global $DB;
+
+        $this->resetAfterTest(true);
+
+        require_once(__DIR__ . '/../lib.php');
+
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+        $user3 = $this->getDataGenerator()->create_user();
+        $this->create_token_record($user1->id);
+        $this->create_token_record($user2->id);
+        $this->create_token_record($user3->id);
+        // A token record not matched to a Moodle user must never be cleared.
+        $this->create_token_record(0);
+
+        $this->assertEquals(3, auth_oidc_count_users_with_tokens());
+        $this->assertEquals(2, auth_oidc_count_users_with_tokens([$user1->id, $user2->id]));
+        $this->assertEquals(0, auth_oidc_count_users_with_tokens([]));
+
+        // Clearing tokens of no user is a no-op.
+        $this->assertEquals(0, auth_oidc_clear_user_tokens([]));
+        $this->assertEquals(0, auth_oidc_clear_user_tokens([0]));
+        $this->assertEquals(4, $DB->count_records('auth_oidc_token'));
+
+        // Clear the tokens of selected users only.
+        $this->assertEquals(2, auth_oidc_clear_user_tokens([$user1->id, $user3->id]));
+        $this->assertEqualsCanonicalizing([$user2->id, 0], array_column($DB->get_records('auth_oidc_token'), 'userid'));
+
+        // Clear the tokens of all users, leaving the token record without a user.
+        $this->assertEquals(1, auth_oidc_clear_user_tokens());
+        $this->assertEquals([0], array_column($DB->get_records('auth_oidc_token'), 'userid'));
+    }
 }
