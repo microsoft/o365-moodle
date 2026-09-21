@@ -99,6 +99,7 @@ class acp extends base {
             case 'maintenance_recreatedeletedgroups':
             case 'maintenance_resyncgroupusers':
             case 'maintenance_cleandeltatoken':
+            case 'maintenance_cleanapptokens':
             case 'tenants':
                 $params['section'] = 'local_o365_advanced';
                 break;
@@ -110,6 +111,7 @@ class acp extends base {
             case 'maintenance_recreatedeletedgroups':
             case 'maintenance_resyncgroupusers':
             case 'maintenance_cleandeltatoken':
+            case 'maintenance_cleanapptokens':
                 $PAGE->navbar->add(
                     get_string('acp_maintenance', 'local_o365'),
                     new url('/local/o365/acp.php', ['mode' => 'maintenance'])
@@ -2020,6 +2022,13 @@ var local_o365_coursesync_all_set_feature = function(state) {
         echo html_writer::link($toolurl, $toolname);
         echo html_writer::div(get_string('acp_maintenance_cleandeltatoken_desc', 'local_o365'));
 
+        // Clear application tokens.
+        $toolurl = new url($this->url, ['mode' => 'maintenance_cleanapptokens', 'sesskey' => sesskey()]);
+        $toolname = get_string('acp_maintenance_cleanapptokens', 'local_o365');
+        echo html_writer::empty_tag('br');
+        echo html_writer::link($toolurl, $toolname);
+        echo html_writer::div(get_string('acp_maintenance_cleanapptokens_desc', 'local_o365'));
+
         $this->standard_footer();
     }
 
@@ -2045,6 +2054,50 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $PAGE->requires->jquery();
         $this->print_settings_page_header('local_o365_advanced', $this->title);
         echo html_writer::tag('h5', get_string('acp_maintenance_cleandeltatoken_completed', 'local_o365'));
+        $this->standard_footer();
+    }
+
+    /**
+     * Clean up application tokens.
+     *
+     * The tokens are removed with unset_config() without logging the change, so this tool does not add the old
+     * tokens, which are secrets, to the config log. The results of the last "Verify setup" check on the Setup tab are
+     * cleared as well, so the setup is verified again with new tokens.
+     */
+    public function mode_maintenance_cleanapptokens() {
+        global $OUTPUT, $PAGE;
+
+        $this->set_title(get_string('acp_maintenance_cleanapptokens', 'local_o365'));
+
+        $url = new url($this->url, ['mode' => 'maintenance_cleanapptokens']);
+        $PAGE->navbar->add(get_string('acp_maintenance_cleanapptokens', 'local_o365'), $url);
+        $PAGE->requires->jquery();
+
+        // Showing the confirmation needs no session key, so the breadcrumb link back to this mode works. The confirmation
+        // button submits a POST form, which includes the session key checked here before anything is deleted.
+        if (optional_param('confirm', 0, PARAM_BOOL)) {
+            require_sesskey();
+
+            unset_config('apptokens', 'local_o365');
+            unset_config('verifysetupresult', 'local_o365');
+
+            $this->print_settings_page_header('local_o365_advanced', $this->title);
+            echo html_writer::tag('h5', get_string('acp_maintenance_cleanapptokens_completed', 'local_o365'));
+            echo $OUTPUT->continue_button(new url($this->url, ['mode' => 'maintenance']));
+            $this->standard_footer();
+            return;
+        }
+
+        $apptokens = get_config('local_o365', 'apptokens');
+        $apptokens = $apptokens ? unserialize($apptokens, ['allowed_classes' => false]) : [];
+        $tokencount = is_array($apptokens) ? count($apptokens) : 0;
+
+        $this->print_settings_page_header('local_o365_advanced', $this->title);
+        echo $OUTPUT->confirm(
+            get_string('acp_maintenance_cleanapptokens_confirm', 'local_o365', $tokencount),
+            new url($url, ['confirm' => 1]),
+            new url($this->url, ['mode' => 'maintenance'])
+        );
         $this->standard_footer();
     }
 
