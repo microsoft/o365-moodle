@@ -721,10 +721,11 @@ function auth_oidc_display_auth_lock_options(
 ) {
     global $DB;
 
-    // Introductory explanation and help text.
+    // Introductory explanation and help text (no heading text, since the "Field mappings" tab title already
+    // identifies this page).
     if ($mapremotefields) {
         $settings->add(
-            new admin_setting_heading($auth . '/data_mapping', new lang_string('auth_data_mapping', 'auth'), $helptext)
+            new admin_setting_heading($auth . '/data_mapping', '', $helptext)
         );
     } else {
         $settings->add(
@@ -1133,16 +1134,27 @@ function auth_oidc_is_masked_secret($value) {
 }
 
 /**
- * Build Bootstrap nav-tabs HTML for navigating between auth_oidc settings pages.
+ * Build the shared header HTML for auth_oidc configuration pages: the plugin-wide heading, the Bootstrap
+ * nav-tabs bar for navigating between auth_oidc settings pages, and the page-specific subtitle, plus a style
+ * tag hiding the surrounding Moodle breadcrumb and default page heading (which the plugin-wide heading and tab
+ * bar replace).
  *
- * Renders a row of tab links to each settings sub-page, with the current page
- * marked as active. The "Binding username claim" tab is only included if IdP type
- * is configured, since the corresponding settings page is only registered in that case.
+ * Renders a row of tab links to each settings sub-page, with the current page marked as active. The "Binding
+ * username claim" tab is only included if IdP type is configured, since the corresponding settings page is
+ * only registered in that case.
  *
  * @param string $currentpage Section ID of the currently active page.
- * @return string HTML for the navigation bar.
+ * @param string|null $subtitle Page-specific subtitle to print below the tab navigation, for a page nested
+ *     under a tab (e.g. the change binding username claim tool, under "Binding username claim"). The settings
+ *     pages that map 1:1 to a tab (IdP and authentication, Binding username claim, ...) already open with
+ *     their own heading, so they leave this null and print no subtitle here.
+ * @param string|null $intro Page-specific introductory HTML to print below the tab navigation (and above the
+ *     subtitle, if any), for a page that needs a lead-in paragraph rather than a title (e.g. the "IdP and
+ *     authentication" page's link to the guided Application Configuration Wizard). Printed unescaped, so the
+ *     caller must only pass trusted, already-safe markup (e.g. from a lang string).
+ * @return string HTML for the settings page header.
  */
-function auth_oidc_get_settings_nav_html(string $currentpage): string {
+function auth_oidc_get_settings_nav_html(string $currentpage, ?string $subtitle = null, ?string $intro = null): string {
     $pages = [
         'authsettingoidc' => get_string('settings_page_application', 'auth_oidc'),
     ];
@@ -1158,7 +1170,14 @@ function auth_oidc_get_settings_nav_html(string $currentpage): string {
         'auth_oidc_field_mapping' => get_string('settings_page_field_mapping', 'auth_oidc'),
     ];
 
-    $html = html_writer::start_tag('ul', ['class' => 'nav nav-tabs mb-3']);
+    // Hide the breadcrumb, Moodle's own page heading, and (on admin_settingpage forms) the settings form's own
+    // "<h2>{$a->title}</h2>", a direct child of .settingsform printed by admin/templates/settings.mustache before
+    // this nav html: the plugin-wide heading and tab bar below replace all of them.
+    $html = html_writer::tag('style', '#page-navbar, .page-context-header, .settingsform > h2 { display: none; }');
+    $pageheading = get_string('settings_pageheading', 'auth_oidc', get_string('pluginname', 'auth_oidc'));
+    $html .= html_writer::tag('h1', $pageheading);
+
+    $html .= html_writer::start_tag('ul', ['class' => 'nav nav-tabs mb-3']);
     foreach ($pages as $section => $label) {
         $url = new \core\url('/admin/settings.php', ['section' => $section]);
         $linkattrs = ['class' => 'nav-link' . ($section === $currentpage ? ' active' : '')];
@@ -1166,5 +1185,27 @@ function auth_oidc_get_settings_nav_html(string $currentpage): string {
     }
     $html .= html_writer::end_tag('ul');
 
+    if ($intro !== null) {
+        $html .= html_writer::div($intro);
+    }
+
+    if ($subtitle !== null) {
+        $html .= html_writer::tag('h2', s($subtitle));
+    }
+
     return $html;
+}
+
+/**
+ * Build the HTML for the "advanced feature" warning shown on the binding username claim settings page.
+ *
+ * Uses the plugin's own .auth_oidc_warning style (see styles.css) rather than a core notification, since the
+ * settings page is an admin_settingpage (body class "path-admin-setting", not "path-admin-auth-oidc"), so the
+ * core "warning" notification style can't be scoped to it the way .warning_header is scoped to this plugin's
+ * admin_externalpage-based pages.
+ *
+ * @return string HTML for the warning box.
+ */
+function auth_oidc_get_binding_username_claim_warning_html(): string {
+    return html_writer::div(get_string('binding_username_claim_warning', 'auth_oidc'), 'auth_oidc_warning');
 }
