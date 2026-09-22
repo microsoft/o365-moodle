@@ -350,7 +350,7 @@ $string['acp_coursesynccustom'] = 'Course sync customization';
 $string['acp_coursesynccustom_enabled'] = 'Enabled';
 $string['acp_coursesynccustom_enable_all'] = 'Enable course sync on all courses';
 $string['acp_coursesynccustom_disable_all'] = 'Disable course sync on all courses';
-$string['acp_coursesynccustom_bulk'] = 'Bulk Operations';
+$string['acp_coursesynccustom_bulk'] = 'Bulk operations';
 $string['acp_coursesynccustom_bulk_enable'] = 'Enable course sync on courses on this page';
 $string['acp_coursesynccustom_bulk_disable'] = 'Disable course sync on courses on this page';
 $string['acp_coursesynccustom_settings_header'] = 'Sync options';
@@ -360,10 +360,15 @@ $string['acp_coursesynccustom_controlled_per_course'] = 'Allow configure course 
 $string['acp_coursesynccustom_controlled_per_course_desc'] = 'If enabled, enrolled users in Moodle courses who are eligible to act as Team owners (having "Team owner" [local/o365:teamowner] capability) will be able to control course sync from the Microsoft block in the course.';
 $string['acp_coursesynccustom_savemessage'] = 'Your changes have been saved.';
 $string['acp_coursesynccustom_searchwarning'] = 'Note: Searches will lose any unsaved progress. Press save changes to ensure your changes are saved.';
+$string['acp_coursesynccustom_regex_search'] = 'Regex search';
+$string['acp_coursesynccustom_regex_search_title'] = 'When checked, the search box above is matched as a PCRE regular expression (without delimiters) against the full name, short name and ID number, instead of a plain text search.';
 $string['acp_coursesynccustom_confirm_all_action'] = 'Are you sure you want to change sync status of all courses? The action cannot be undone.';
 $string['acp_coursesynccustom_sds_course'] = 'Locked for SDS course';
 $string['acp_coursesynccustom_all_enabled_notice'] = 'Course sync is currently enabled for all courses. Individual course customization is disabled because "All Features Enabled" mode is active.';
 $string['acp_coursesynccustom_disabled_notice'] = 'Course sync is currently disabled globally. Individual course customization is disabled because "Disabled" mode is active.';
+$string['acp_coursesynccustom_categories_header'] = 'Sync by course category';
+$string['acp_coursesynccustom_categories_desc'] = 'Select one or more course categories to automatically enable course sync for all courses in those categories, including their subcategories. This also applies to courses added to the selected categories later. Hold Ctrl (Cmd on Mac) to select multiple categories, or click again while holding it to deselect.';
+$string['acp_coursesynccustom_category_course'] = 'Locked: enabled by course category';
 
 // Settings in the "Cohort sync" section of the "Sync settings" tab.
 $string['settings_secthead_cohortsync'] = 'Cohort sync';
