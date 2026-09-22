@@ -2041,14 +2041,17 @@ class unified extends o365api {
      * @param string $parentid The parent id to use.
      * @param string $o365userid user's Office 365 account object ID
      * @param string $skiptoken
+     * @param string $driveid ID of the drive the parent item belongs to, when it is not the user's own drive (e.g. the target
+     *                        of a shortcut to a SharePoint folder). Empty for the user's own drive.
      * @return array|null Returned response, or null if error.
      * @throws moodle_exception
      */
-    public function get_user_files(string $parentid, string $o365userid, string $skiptoken = ''): ?array {
+    public function get_user_files(string $parentid, string $o365userid, string $skiptoken = '', string $driveid = ''): ?array {
+        $driveendpoint = $this->get_drive_endpoint($o365userid, $driveid);
         if (!empty($parentid) && $parentid !== '/') {
-            $endpoint = "/users/$o365userid/drive/items/$parentid/children";
+            $endpoint = "$driveendpoint/items/$parentid/children";
         } else {
-            $endpoint = "/users/$o365userid/drive/root/children";
+            $endpoint = "$driveendpoint/root/children";
         }
 
         $odataqueries = [];
@@ -2190,11 +2193,14 @@ class unified extends o365api {
      *
      * @param string $fileid The file's ID.
      * @param string $o365userid user's Microsoft 365 account object ID
+     * @param string $driveid ID of the drive the file belongs to, when it is not the user's own drive. Empty for the user's own
+     *                        drive.
      * @return array|null The file's metadata.
      * @throws moodle_exception
      */
-    public function get_file_metadata(string $fileid, string $o365userid): ?array {
-        $response = $this->apicall('get', "/users/$o365userid/drive/items/$fileid");
+    public function get_file_metadata(string $fileid, string $o365userid, string $driveid = ''): ?array {
+        $driveendpoint = $this->get_drive_endpoint($o365userid, $driveid);
+        $response = $this->apicall('get', "$driveendpoint/items/$fileid");
         $expectedparams = ['id' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -2204,10 +2210,28 @@ class unified extends o365api {
      *
      * @param string $fileid The file's ID.
      * @param string $o365userid user's Microsoft 365 account object ID
+     * @param string $driveid ID of the drive the file belongs to, when it is not the user's own drive. Empty for the user's own
+     *                        drive.
      * @return string The file's content.
      */
-    public function get_file_by_id(string $fileid, string $o365userid): string {
-        return $this->apicall('get', "/users/$o365userid/drive/items/$fileid/content");
+    public function get_file_by_id(string $fileid, string $o365userid, string $driveid = ''): string {
+        $driveendpoint = $this->get_drive_endpoint($o365userid, $driveid);
+        return $this->apicall('get', "$driveendpoint/items/$fileid/content");
+    }
+
+    /**
+     * Get the Graph API endpoint of a drive.
+     *
+     * @param string $o365userid user's Microsoft 365 account object ID
+     * @param string $driveid ID of a specific drive, e.g. the drive a shortcut points to. Empty for the user's own drive.
+     * @return string The drive endpoint, without trailing slash.
+     */
+    protected function get_drive_endpoint(string $o365userid, string $driveid = ''): string {
+        if ($driveid !== '') {
+            return '/drives/' . rawurlencode($driveid);
+        }
+
+        return "/users/$o365userid/drive";
     }
 
     /**
@@ -2695,12 +2719,19 @@ class unified extends o365api {
      * @param string $o365userid The user's O365 user ID (for destination).
      * @param string $newname The new file name (optional, defaults to original name with " - Shared" suffix).
      * @param string $parentid The parent folder ID (optional, defaults to root).
+     * @param string $driveid ID of the drive the source file belongs to, when it is not the user's own drive (optional).
      * @return string The new file's ID.
      * @throws moodle_exception
      */
-    public function copy_file(string $fileid, string $o365userid, string $newname = '', string $parentid = ''): string {
+    public function copy_file(
+        string $fileid,
+        string $o365userid,
+        string $newname = '',
+        string $parentid = '',
+        string $driveid = ''
+    ): string {
         // Get file metadata including download URL.
-        $fileinfo = $this->get_file_metadata($fileid, $o365userid);
+        $fileinfo = $this->get_file_metadata($fileid, $o365userid, $driveid);
 
         if (empty($fileinfo['@microsoft.graph.downloadUrl'])) {
             throw new moodle_exception('errorwhiledownload', 'repository_office365');
