@@ -638,6 +638,7 @@ class acp extends base {
         $table->head = [
             get_string('fullnamecourse'),
             get_string('shortnamecourse'),
+            get_string('idnumber'),
             get_string('coursevisibility'),
             get_string('acp_coursesynccustom_enabled', 'local_o365'),
         ];
@@ -660,8 +661,10 @@ var local_o365_coursesync_bulk_set_enable = function(state) {
 
 var local_o365_coursesync_save = function() {
     var coursedata = {};
-    // Collect all visible course checkboxes from the current DataTables page
-    $("input.course_sync_enabled").each(function() {
+    // Collect all visible, editable course checkboxes from the current DataTables page.
+    // Locked checkboxes (SDS or category-controlled courses) are excluded because this save action must not
+    // attempt to change their sync status - it is controlled by SDS or by category selection instead.
+    $("input.course_sync_enabled:not(:disabled)").each(function() {
         var name = $(this).attr("name");
         var match = name.match(/course_(\d+)_enabled/);
         if (match) {
@@ -671,21 +674,15 @@ var local_o365_coursesync_save = function() {
             coursedata[courseid] = syncstatus;
         }
     });
-    // Send data to server.
-    $.ajax({
-        url: \'' . $endpoint->out(false) . '\',
-        data: {
-            coursedata: JSON.stringify(coursedata),
-            newcourse: $("input#id_s_local_o365_sync_new_course").prop("checked"),
-            percourse: $("input#id_s_local_o365_course_sync_per_course").prop("checked"),
-        },
-        type: "POST",
-        success: function(data) {
-            console.log(data);
-            $(\'#acp_coursesynccustom_savemessage\').show();
-            setTimeout(function () { $(\'#acp_coursesynccustom_savemessage\').hide(); }, 5000);
-        }
-    });
+    var categorydata = $("#id_local_o365_coursesync_categories").val() || [];
+
+    // Submit as a real page POST (rather than AJAX) so the page fully reloads afterwards. This is required so
+    // that courses affected by a category selection change are immediately reflected as locked/enabled.
+    $("#id_local_o365_coursesync_coursedata").val(JSON.stringify(coursedata));
+    $("#id_local_o365_coursesync_categorydata").val(JSON.stringify(categorydata));
+    $("#id_local_o365_coursesync_newcourse").val($("input#id_s_local_o365_sync_new_course").prop("checked"));
+    $("#id_local_o365_coursesync_percourse").val($("input#id_s_local_o365_course_sync_per_course").prop("checked"));
+    document.getElementById("coursesynccustom_saveform").submit();
 };
 
 var local_o365_coursesync_all_set_feature = function(state) {
@@ -757,6 +754,44 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         echo html_writer::empty_tag('hr');
 
+        // Allow course sync to be enabled for whole course categories.
+        $categorysyncheader = new admin_setting_heading(
+            'local_o365/course_sync_customize_categories_header',
+            get_string('acp_coursesynccustom_categories_header', 'local_o365'),
+            get_string('acp_coursesynccustom_categories_desc', 'local_o365')
+        );
+        echo $categorysyncheader->output_html(null);
+
+        $categorylist = core_course_category::make_categories_list();
+        $enabledcategories = \local_o365\feature\coursesync\utils::get_enabled_categories();
+
+        $categoryselectattrs = [
+            'id' => 'id_local_o365_coursesync_categories',
+            'name' => 'categories[]',
+            'multiple' => 'multiple',
+            'size' => (string) min(10, max(4, count($categorylist))),
+            'class' => 'form-control',
+            'style' => 'width: 100%; max-width: 40em;',
+        ];
+        if (!$iseditable) {
+            $categoryselectattrs['disabled'] = 'disabled';
+        }
+
+        $categoryoptions = [];
+        foreach ($categorylist as $categoryid => $categoryname) {
+            $categoryoptions[] = html_writer::tag(
+                'option',
+                $categoryname,
+                ['value' => $categoryid, 'selected' => in_array($categoryid, $enabledcategories) ? 'selected' : null]
+            );
+        }
+
+        echo html_writer::start_tag('div', ['class' => 'admin-setting']);
+        echo html_writer::tag('select', implode('', $categoryoptions), $categoryselectattrs);
+        echo html_writer::end_tag('div');
+
+        echo html_writer::empty_tag('hr');
+
         // Bulk Operations.
         echo html_writer::tag('h3', get_string('acp_coursesynccustom_bulk', 'local_o365'));
 
@@ -807,13 +842,12 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         // Initialize DataTables via AMD module.
         $ajaxendpoint = new url('/local/o365/acp.php', ['mode' => 'coursesynccustom_ajax']);
-        $PAGE->requires->js_call_amd('local_o365/coursesynccustom_datatables', 'init', [$ajaxendpoint->out(false), $iseditable]);
-
-        echo html_writer::tag(
-            'p',
-            get_string('acp_coursesynccustom_savemessage', 'local_o365'),
-            ['id' => 'acp_coursesynccustom_savemessage', 'style' => 'display: none; font-weight: bold; color: red']
-        );
+        $PAGE->requires->js_call_amd('local_o365/coursesynccustom_datatables', 'init', [
+            $ajaxendpoint->out(false),
+            $iseditable,
+            get_string('acp_coursesynccustom_regex_search', 'local_o365'),
+            get_string('acp_coursesynccustom_regex_search_title', 'local_o365'),
+        ]);
 
         if (!$iseditable) {
             if ($isdisabledmode) {
@@ -835,6 +869,31 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 ['class' => 'buttonsbar', 'disabled' => 'disabled']
             );
         } else {
+            // Hidden form used to submit changes as a real page POST (instead of AJAX), so the page fully reloads
+            // afterwards and courses affected by a category selection change are immediately shown as up to date.
+            echo html_writer::start_tag('form', [
+                'id' => 'coursesynccustom_saveform',
+                'method' => 'post',
+                'action' => $endpoint->out(false),
+            ]);
+            echo html_writer::empty_tag(
+                'input',
+                ['type' => 'hidden', 'name' => 'coursedata', 'id' => 'id_local_o365_coursesync_coursedata']
+            );
+            echo html_writer::empty_tag(
+                'input',
+                ['type' => 'hidden', 'name' => 'categorydata', 'id' => 'id_local_o365_coursesync_categorydata']
+            );
+            echo html_writer::empty_tag(
+                'input',
+                ['type' => 'hidden', 'name' => 'newcourse', 'id' => 'id_local_o365_coursesync_newcourse']
+            );
+            echo html_writer::empty_tag(
+                'input',
+                ['type' => 'hidden', 'name' => 'percourse', 'id' => 'id_local_o365_coursesync_percourse']
+            );
+            echo html_writer::end_tag('form');
+
             echo html_writer::tag(
                 'button',
                 get_string('savechanges'),
@@ -858,6 +917,8 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $start = isset($_GET['start']) ? (int)$_GET['start'] : 0;
         $length = isset($_GET['length']) ? (int)$_GET['length'] : 50;
         $searchvalue = isset($_GET['search']['value']) ? trim($_GET['search']['value']) : '';
+        $searchregex = isset($_GET['search']['regex']) &&
+            in_array(strtolower((string) $_GET['search']['regex']), ['true', '1'], true);
         $ordercolumn = isset($_GET['order'][0]['column']) ? (int)$_GET['order'][0]['column'] : 0;
         $orderdir = isset($_GET['order'][0]['dir']) ? strtolower($_GET['order'][0]['dir']) : 'asc';
 
@@ -870,6 +931,17 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $allcourses = $topcat->get_courses($options);
 
         $sdscourseids = \local_o365\feature\sds\utils::get_sds_course_ids();
+        $enabledcategories = \local_o365\feature\coursesync\utils::get_enabled_categories();
+
+        // If searching as a regex, build the pattern once. An invalid pattern is treated as matching no courses,
+        // rather than erroring out, since the admin may still be part-way through typing it.
+        $searchpattern = null;
+        if ($searchregex && $searchvalue !== '') {
+            $pattern = "\x01" . $searchvalue . "\x01i";
+            if (@preg_match($pattern, '') !== false) {
+                $searchpattern = $pattern;
+            }
+        }
 
         // Filter and search.
         $filteredcourses = [];
@@ -878,13 +950,31 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 continue;
             }
 
-            // Apply search filter (search in fullname and shortname).
-            if (!empty($searchvalue)) {
+            // Apply search filter (search in course ID number, fullname and shortname).
+            if ($searchregex) {
+                if ($searchvalue !== '') {
+                    if (
+                        $searchpattern === null ||
+                        (
+                            !preg_match($searchpattern, $course->idnumber) &&
+                            !preg_match($searchpattern, $course->fullname) &&
+                            !preg_match($searchpattern, $course->shortname)
+                        )
+                    ) {
+                        continue;
+                    }
+                }
+            } else if ($searchvalue !== '') {
+                $idnumber = strtolower($course->idnumber);
                 $fullname = strtolower($course->fullname);
                 $shortname = strtolower($course->shortname);
                 $search = strtolower($searchvalue);
 
-                if (strpos($fullname, $search) === false && strpos($shortname, $search) === false) {
+                if (
+                    strpos($idnumber, $search) === false &&
+                    strpos($fullname, $search) === false &&
+                    strpos($shortname, $search) === false
+                ) {
                     continue;
                 }
             }
@@ -905,7 +995,10 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 case 1: // Course short name.
                     $result = strcasecmp($a->shortname, $b->shortname);
                     break;
-                case 2: // Course visibility.
+                case 2: // Course ID number.
+                    $result = strcasecmp($a->idnumber, $b->idnumber);
+                    break;
+                case 3: // Course visibility.
                     $avis = $a->visible ? 1 : 0;
                     $bvis = $b->visible ? 1 : 0;
                     $result = $avis - $bvis;
@@ -920,7 +1013,15 @@ var local_o365_coursesync_all_set_feature = function(state) {
         // Build response data.
         $data = [];
         foreach ($paginatedcourses as $course) {
-            $isenabled = \local_o365\feature\coursesync\utils::is_course_sync_enabled($course->id);
+            // A single call computes both "enabled" and "enabled via category", instead of calling
+            // is_course_sync_enabled() and category_is_in_enabled_categories() separately, which would
+            // otherwise repeat the same category membership check for this row.
+            $syncstatus = \local_o365\feature\coursesync\utils::get_course_sync_status(
+                $course->id,
+                $enabledcategories,
+                (int) $course->category
+            );
+            $isenabled = $syncstatus['enabled'];
             $enabledname = 'course_' . $course->id . '_enabled';
 
             $enablecheckboxattrs = [
@@ -928,10 +1029,13 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 'onchange' => 'local_o365_set_coursesync(\'' . $course->id . '\', $(this).prop(\'checked\'), $(this))',
             ];
 
-            $sdscoursetext = '';
+            $lockedcoursetext = '';
             if (in_array($course->id, $sdscourseids)) {
                 $enablecheckboxattrs['disabled'] = 'disabled';
-                $sdscoursetext = get_string('acp_coursesynccustom_sds_course', 'local_o365');
+                $lockedcoursetext = get_string('acp_coursesynccustom_sds_course', 'local_o365');
+            } else if ($syncstatus['categoryenabled']) {
+                $enablecheckboxattrs['disabled'] = 'disabled';
+                $lockedcoursetext = get_string('acp_coursesynccustom_category_course', 'local_o365');
             }
 
             $courseurl = new url('/course/view.php', ['id' => $course->id]);
@@ -940,8 +1044,9 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $data[] = [
                 html_writer::link($courseurl, $course->fullname),
                 $course->shortname,
+                $course->idnumber,
                 $visiblestr,
-                html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs) . ' ' . $sdscoursetext,
+                html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs) . ' ' . $lockedcoursetext,
             ];
         }
 
@@ -987,9 +1092,19 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         // Save course settings.
         $coursedata = json_decode(required_param('coursedata', PARAM_RAW), true);
+        if (!is_array($coursedata)) {
+            // Malformed JSON, or not an array/object. Treat as no course data submitted.
+            $coursedata = [];
+        }
+
         foreach ($coursedata as $courseid => $course) {
             if (!is_scalar($courseid) || ((string) $courseid !== (string) (int) $courseid)) {
                 // Non-int-like course ID value. Invalid. Skip.
+                continue;
+            }
+
+            if (!is_array($course)) {
+                // Malformed entry for this course. Invalid. Skip.
                 continue;
             }
 
@@ -1005,7 +1120,21 @@ var local_o365_coursesync_all_set_feature = function(state) {
             }
         }
 
-        echo json_encode(['Saved']);
+        // Save the course categories selected for category-based sync.
+        $categorydata = json_decode(required_param('categorydata', PARAM_RAW), true);
+        if (is_array($categorydata)) {
+            $categoryids = array_filter($categorydata, function ($categoryid) {
+                return is_scalar($categoryid) && (string) $categoryid === (string) (int) $categoryid;
+            });
+            \local_o365\feature\coursesync\utils::set_enabled_categories(array_map('intval', $categoryids));
+        }
+
+        redirect(
+            new url('/local/o365/acp.php', ['mode' => 'coursesynccustom']),
+            get_string('acp_coursesynccustom_savemessage', 'local_o365'),
+            null,
+            \core\output\notification::NOTIFY_SUCCESS
+        );
     }
 
     /**

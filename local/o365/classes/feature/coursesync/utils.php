@@ -27,6 +27,9 @@
 namespace local_o365\feature\coursesync;
 
 use core\context\course;
+use core_cache\cache;
+use core_cache\store;
+use core_course_category;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\rest\unified;
@@ -77,7 +80,11 @@ class utils {
 
             $originalcoursesenabled = $coursesenabled;
             $coursesenabled = @json_decode($coursesenabled, true);
-            if (!empty($coursesenabled) && is_array($coursesenabled)) {
+            if (!is_array($coursesenabled)) {
+                $coursesenabled = [];
+            }
+
+            if (!empty($coursesenabled)) {
                 $changed = false;
                 foreach ($coursesenabled as $courseid => $value) {
                     if (!$DB->record_exists('course', ['id' => $courseid])) {
@@ -86,39 +93,371 @@ class utils {
                     }
                 }
 
-                if ($changed) {
-                    if ($originalcoursesenabled !== json_encode($coursesenabled)) {
-                        add_to_config_log('coursesynccustom', $originalcoursesenabled, json_encode($coursesenabled), 'local_o365');
-                        set_config('coursesynccustom', json_encode($coursesenabled), 'local_o365');
-                    }
+                if ($changed && $originalcoursesenabled !== json_encode($coursesenabled)) {
+                    add_to_config_log('coursesynccustom', $originalcoursesenabled, json_encode($coursesenabled), 'local_o365');
+                    set_config('coursesynccustom', json_encode($coursesenabled), 'local_o365');
                 }
-
-                return array_keys($coursesenabled);
             }
+
+            $courseids = array_map('intval', array_keys($coursesenabled));
+
+            // Add courses that are enabled through a selected course category.
+            $enabledcategories = static::get_enabled_categories();
+            if (!empty($enabledcategories)) {
+                $categorycourseids = static::get_course_ids_in_categories($enabledcategories);
+                $courseids = array_values(array_unique(array_merge($courseids, $categorycourseids)));
+            }
+
+            return $courseids;
         }
 
         return [];
     }
 
     /**
-     * Determine whether a course is enabled for sync.
+     * Get a course's category ID, via a request-scoped cache to avoid repeating this lookup for the same course
+     * within a request. Callers that already know the category ID (e.g. from a previously loaded course record)
+     * should pass it directly to is_course_sync_enabled() instead of relying on this.
+     *
+     * @param int $courseid The Moodle course ID.
+     * @return int The course's category ID, or 0 if the course could not be found.
+     */
+    protected static function get_course_category_id(int $courseid): int {
+        global $DB;
+
+        $cache = cache::make_from_params(store::MODE_REQUEST, 'local_o365', 'coursesynccategoryids');
+        $cached = $cache->get($courseid);
+        if ($cached !== false) {
+            return (int) $cached;
+        }
+
+        $categoryid = (int) $DB->get_field('course', 'category', ['id' => $courseid]);
+        $cache->set($courseid, $categoryid);
+
+        return $categoryid;
+    }
+
+    /**
+     * Determine whether a course is enabled for sync, and whether its category is selected for category-based
+     * sync - independently of whether the course also happens to have an individual enablement entry (e.g. from
+     * a past bulk "enable all", from being individually toggled, or from being seeded when switching from
+     * "All Features Enabled" to "Customize"). Category membership is always checked, rather than only being
+     * checked when there is no individual entry, so that a course whose category is selected is correctly
+     * reported as category-enabled ("locked" in the Customize page's UI) even if it also has an individual
+     * entry left over from before the category was selected.
+     *
+     * Callers that need both pieces of information (e.g. to decide whether a course row's "enabled" control
+     * should be locked because it is category-controlled) should use this instead of combining separate calls
+     * to is_course_sync_enabled() and category_is_in_enabled_categories(), which would otherwise repeat the same
+     * category membership check.
+     *
+     * The optional parameters let callers that already have this data (e.g. when checking many courses in a
+     * loop, such as the Customize page's course list) avoid the DB lookups this method would otherwise repeat
+     * on every call. When $coursecategoryid is not provided, the lookup is cached for the duration of the
+     * request, so repeated calls for the same course across other loops (e.g. observers, tasks) are cheap too.
      *
      * @param int $courseid The Moodle course ID to check.
-     * @return bool Whether the course is enabled for sync.
+     * @param int[]|null $enabledcategories Pre-fetched list of enabled category IDs. If not provided, it is
+     *     retrieved internally.
+     * @param int|null $coursecategoryid The course's category ID, if already known by the caller. If not
+     *     provided, it is looked up internally when needed.
+     * @return array{enabled: bool, categoryenabled: bool} 'enabled' - whether the course is enabled for sync
+     *     (individually, via its category, or both). 'categoryenabled' - whether its category is selected for
+     *     category-based sync, regardless of whether it is also individually enabled.
      */
-    public static function is_course_sync_enabled(int $courseid): bool {
+    public static function get_course_sync_status(
+        int $courseid,
+        ?array $enabledcategories = null,
+        ?int $coursecategoryid = null
+    ): array {
         $coursesyncsetting = get_config('local_o365', 'coursesync');
         if ($coursesyncsetting === 'onall') {
-            return true;
+            return ['enabled' => true, 'categoryenabled' => false];
         } else if ($coursesyncsetting === 'oncustom') {
             $coursesenabled = get_config('local_o365', 'coursesynccustom');
             $coursesenabled = @json_decode($coursesenabled, true);
-            if (!empty($coursesenabled) && is_array($coursesenabled) && isset($coursesenabled[$courseid])) {
-                return true;
+            $individuallyenabled = !empty($coursesenabled) && is_array($coursesenabled) && isset($coursesenabled[$courseid]);
+
+            $categoryenabled = false;
+            if ($enabledcategories === null) {
+                $enabledcategories = static::get_enabled_categories();
+            }
+
+            if (!empty($enabledcategories)) {
+                if ($coursecategoryid === null) {
+                    $coursecategoryid = static::get_course_category_id($courseid);
+                }
+
+                if (!empty($coursecategoryid)) {
+                    $categoryenabled = static::category_is_in_enabled_categories((int) $coursecategoryid, $enabledcategories);
+                }
+            }
+
+            return ['enabled' => $individuallyenabled || $categoryenabled, 'categoryenabled' => $categoryenabled];
+        }
+
+        return ['enabled' => false, 'categoryenabled' => false];
+    }
+
+    /**
+     * Determine whether a course is enabled for sync.
+     *
+     * @param int $courseid The Moodle course ID to check.
+     * @param int[]|null $enabledcategories Pre-fetched list of enabled category IDs. If not provided, it is
+     *     retrieved internally.
+     * @param int|null $coursecategoryid The course's category ID, if already known by the caller. If not
+     *     provided, it is looked up internally when needed.
+     * @return bool Whether the course is enabled for sync.
+     */
+    public static function is_course_sync_enabled(
+        int $courseid,
+        ?array $enabledcategories = null,
+        ?int $coursecategoryid = null
+    ): bool {
+        return static::get_course_sync_status($courseid, $enabledcategories, $coursecategoryid)['enabled'];
+    }
+
+    /**
+     * Get an array of course category IDs selected for course sync.
+     *
+     * @return int[] Array of course category IDs.
+     */
+    public static function get_enabled_categories(): array {
+        global $DB;
+
+        $coursesyncsetting = get_config('local_o365', 'coursesync');
+        if ($coursesyncsetting !== 'oncustom') {
+            return [];
+        }
+
+        // Get the list of enabled categories from database rather than get_config() to avoid cache issues.
+        $categoriesenabled = $DB->get_field(
+            'config_plugins',
+            'value',
+            ['plugin' => 'local_o365', 'name' => 'coursesynccustomcategories']
+        );
+        if (!$categoriesenabled) {
+            return [];
+        }
+
+        $originalcategoriesenabled = $categoriesenabled;
+        $categoriesenabled = @json_decode($categoriesenabled, true);
+        if (empty($categoriesenabled) || !is_array($categoriesenabled)) {
+            return [];
+        }
+
+        $categoriesenabled = array_values(array_unique(array_map('intval', $categoriesenabled)));
+
+        // Remove any category IDs that no longer exist.
+        [$insql, $inparams] = $DB->get_in_or_equal($categoriesenabled);
+        $existingcategoryids = $DB->get_fieldset_select('course_categories', 'id', "id $insql", $inparams);
+        $existingcategoryids = array_map('intval', $existingcategoryids);
+
+        if (count($existingcategoryids) != count($categoriesenabled)) {
+            if ($originalcategoriesenabled !== json_encode($existingcategoryids)) {
+                add_to_config_log(
+                    'coursesynccustomcategories',
+                    $originalcategoriesenabled,
+                    json_encode($existingcategoryids),
+                    'local_o365'
+                );
+                set_config('coursesynccustomcategories', json_encode($existingcategoryids), 'local_o365');
             }
         }
 
-        return false;
+        return $existingcategoryids;
+    }
+
+    /**
+     * Set the course categories selected for course sync.
+     *
+     * Any course that was only enabled through a category that is no longer selected will have its Microsoft 365 group
+     * deleted, if configured to do so.
+     *
+     * @param int[] $categoryids Array of course category IDs to enable course sync for.
+     */
+    public static function set_enabled_categories(array $categoryids) {
+        global $DB;
+
+        $categoryids = array_values(array_unique(array_map('intval', $categoryids)));
+
+        $existingsetting = $DB->get_field(
+            'config_plugins',
+            'value',
+            ['plugin' => 'local_o365', 'name' => 'coursesynccustomcategories']
+        );
+        if (!$existingsetting) {
+            $existingsetting = '';
+        }
+
+        $existingcategoryids = @json_decode($existingsetting, true);
+        if (!is_array($existingcategoryids)) {
+            $existingcategoryids = [];
+        }
+
+        $newsetting = json_encode($categoryids);
+        if ($existingsetting !== $newsetting) {
+            add_to_config_log('coursesynccustomcategories', $existingsetting, $newsetting, 'local_o365');
+            set_config('coursesynccustomcategories', $newsetting, 'local_o365');
+        }
+
+        // Clean up groups for courses that lost sync as a result of removing categories, if configured to do so.
+        $removedcategoryids = array_diff($existingcategoryids, $categoryids);
+        if (!empty($removedcategoryids) && get_config('local_o365', 'delete_group_on_course_sync_disabled')) {
+            $affectedcourseids = static::get_course_ids_in_categories($removedcategoryids);
+            if (!empty($affectedcourseids)) {
+                // Compute the full set of enabled courses once (reflecting the category setting just saved
+                // above), and check membership in it, rather than repeating is_course_sync_enabled()'s
+                // config/category lookups on every affected course.
+                $enabledcourseids = array_flip(static::get_enabled_courses(true));
+
+                foreach ($affectedcourseids as $courseid) {
+                    if (!isset($enabledcourseids[$courseid])) {
+                        static::delete_microsoft_365_group($courseid);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Get the ancestor category IDs for a course category, via a request-scoped cache to avoid repeating the
+     * category lookup and path parsing for the same category ID within a request - e.g. when many courses on
+     * the Customize page's course list share the same category.
+     *
+     * @param int $categoryid The course category ID.
+     * @return int[] Ancestor category IDs, or an empty array if the category could not be found.
+     */
+    protected static function get_category_ancestor_ids(int $categoryid): array {
+        $cache = cache::make_from_params(store::MODE_REQUEST, 'local_o365', 'coursesynccategoryancestorids');
+        $cached = $cache->get($categoryid);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        $category = core_course_category::get($categoryid, IGNORE_MISSING, true);
+        $ancestorids = (!empty($category) && !empty($category->path))
+            ? array_map('intval', array_filter(explode('/', $category->path)))
+            : [];
+
+        $cache->set($categoryid, $ancestorids);
+
+        return $ancestorids;
+    }
+
+    /**
+     * Determine whether a course category, or any of its ancestors, is in a list of enabled category IDs.
+     *
+     * @param int $categoryid The course category ID to check.
+     * @param int[]|null $enabledcategories The list of enabled category IDs. If not provided, it is retrieved.
+     * @return bool Whether the category (or an ancestor of it) is enabled for course sync.
+     */
+    public static function category_is_in_enabled_categories(int $categoryid, ?array $enabledcategories = null): bool {
+        if ($enabledcategories === null) {
+            $enabledcategories = static::get_enabled_categories();
+        }
+
+        if (empty($enabledcategories)) {
+            return false;
+        }
+
+        if (in_array($categoryid, $enabledcategories)) {
+            return true;
+        }
+
+        $ancestorids = static::get_category_ancestor_ids($categoryid);
+
+        return (bool) array_intersect($ancestorids, $enabledcategories);
+    }
+
+    /**
+     * Get the IDs of all courses belonging to the given course categories, or any of their subcategories.
+     *
+     * @param int[] $categoryids Array of course category IDs.
+     * @return int[] Array of course IDs.
+     */
+    public static function get_course_ids_in_categories(array $categoryids): array {
+        global $DB;
+
+        $categoryids = array_values(array_unique(array_filter(array_map('intval', $categoryids))));
+        if (empty($categoryids)) {
+            return [];
+        }
+
+        [$insql, $inparams] = $DB->get_in_or_equal($categoryids);
+        $paths = $DB->get_fieldset_select('course_categories', 'path', "id $insql", $inparams);
+        if (empty($paths)) {
+            return [];
+        }
+
+        $conditions = [];
+        $params = [];
+        foreach ($paths as $path) {
+            $conditions[] = 'cc.path = ? OR ' . $DB->sql_like('cc.path', '?');
+            $params[] = $path;
+            $params[] = $path . '/%';
+        }
+
+        $sql = 'SELECT c.id
+                  FROM {course} c
+                  JOIN {course_categories} cc ON cc.id = c.category
+                 WHERE c.id <> ? AND (' . implode(' OR ', $conditions) . ')';
+        array_unshift($params, SITEID);
+
+        $courseids = $DB->get_fieldset_sql($sql, $params);
+
+        return array_map('intval', $courseids);
+    }
+
+    /**
+     * Seed the individual course sync list with courses that already have a Microsoft 365 group.
+     *
+     * Intended to be called once, when course sync mode is switched from "All Features Enabled" to "Customize", so
+     * that courses already synced are not suddenly treated as disabled. Any existing individually-enabled courses
+     * are preserved.
+     *
+     * @return void
+     */
+    public static function seed_customize_list_from_existing_groups(): void {
+        global $DB;
+
+        $syncedcourseids = $DB->get_fieldset_select(
+            'local_o365_objects',
+            'moodleid',
+            'type = ? AND subtype = ?',
+            ['group', 'course']
+        );
+        if (empty($syncedcourseids)) {
+            return;
+        }
+
+        $existingsetting = $DB->get_field(
+            'config_plugins',
+            'value',
+            ['plugin' => 'local_o365', 'name' => 'coursesynccustom']
+        );
+        if (!$existingsetting) {
+            $existingsetting = '';
+        }
+
+        $coursesenabled = @json_decode($existingsetting, true);
+        if (!is_array($coursesenabled)) {
+            $coursesenabled = [];
+        }
+
+        $changed = false;
+        foreach ($syncedcourseids as $courseid) {
+            if (empty($coursesenabled[$courseid])) {
+                $coursesenabled[$courseid] = true;
+                $changed = true;
+            }
+        }
+
+        if ($changed) {
+            $newsetting = json_encode($coursesenabled);
+            add_to_config_log('coursesynccustom', $existingsetting, $newsetting, 'local_o365');
+            set_config('coursesynccustom', $newsetting, 'local_o365');
+        }
     }
 
     /**
