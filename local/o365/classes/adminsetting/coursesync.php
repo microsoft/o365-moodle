@@ -54,7 +54,16 @@ class coursesync extends \admin_setting {
      * @return string empty string if ok, string error message otherwise
      */
     public function write_setting($data) {
+        $previousvalue = $this->get_setting();
+
         $this->config_write($this->name, $data);
+
+        if ($previousvalue === 'onall' && $data === 'oncustom') {
+            // Switching from "All Features Enabled" to "Customize" - seed the individual course sync list with
+            // courses that already have a Microsoft 365 group, so they are not suddenly treated as disabled.
+            \local_o365\feature\coursesync\utils::seed_customize_list_from_existing_groups();
+        }
+
         return '';
     }
 
