@@ -80,7 +80,7 @@ $(function() {
                             .find('img.smallicon').replaceWith(opts.iconsuccess);
                         main.find('.permmessage').html(opts.strpermscorrect);
                     } else {
-                        main.find('.statusmessage').html('<div>' + opts.strerrorfix + '</div>');
+                        main.find('.statusmessage').empty().append($('<div></div>').text(opts.strerrorfix));
                     }
                     return true;
                 },
@@ -91,41 +91,62 @@ $(function() {
         }
 
         /**
+         * Safely append box body content, whether it is a plain text string or
+         * a jQuery object already built out of safe DOM elements/text nodes.
+         *
+         * @param object body jQuery object for the box body element.
+         * @param string|object content Text to escape, or a pre-built jQuery object.
+         */
+        this.appendboxcontent = function(body, content) {
+            if (content && typeof content === 'object' && content.jquery) {
+                body.append(content);
+            } else {
+                body.text(content);
+            }
+        }
+
+        /**
          * Render an error box.
          *
-         * @param string content HTML to use as box body.
+         * @param string|object content Text to use as box body, or a jQuery object of safe HTML.
          * @return object jQuery object representing rendered box.
          */
         this.rendererrorbox = function(content) {
             var box = $('<div></div>').addClass('alert-error alert local_o365_statusmessage');
             box.append(opts.iconerror);
-            box.append('<span style="inline-block">' + content + '</span>');
+            var body = $('<div style="display: inline-block"></div>');
+            main.appendboxcontent(body, content);
+            box.append(body);
             return box;
         }
 
         /**
          * Render an info box.
          *
-         * @param string content HTML to use as box body.
+         * @param string|object content Text to use as box body, or a jQuery object of safe HTML.
          * @return object jQuery object representing rendered box.
          */
         this.renderinfobox = function(content) {
             var box = $('<div></div>').addClass('alert-info alert local_o365_statusmessage');
             box.append(opts.iconinfo);
-            box.append('<span style="inline-block">' + content + '</span>');
+            var body = $('<div style="display: inline-block"></div>');
+            main.appendboxcontent(body, content);
+            box.append(body);
             return box;
         }
 
         /**
          * Render an success box.
          *
-         * @param string content HTML to use as box body.
+         * @param string|object content Text to use as box body, or a jQuery object of safe HTML.
          * @return object jQuery object representing rendered box.
          */
         this.rendersuccessbox = function(content) {
             var box = $('<div></div>').addClass('alert-success alert local_o365_statusmessage');
             box.append(opts.iconsuccess);
-            box.append('<span style="inline-block">' + content + '</span>');
+            var body = $('<div style="display: inline-block"></div>');
+            main.appendboxcontent(body, content);
+            box.append(body);
             return box;
         }
 
@@ -136,6 +157,49 @@ $(function() {
          */
         this.updatedisplay = function(content) {
             main.find('.results').html(content);
+        }
+
+        /**
+         * Build a safe "missing permissions" list box, escaping the permission
+         * name and description before inserting them into the DOM.
+         *
+         * @param string header Header text to show above the list.
+         * @param object missingperms Map of permission name to description.
+         * @return object jQuery object representing the built content.
+         */
+        this.buildmissingpermsbox = function(header, missingperms) {
+            var box = $('<div></div>');
+            box.append($('<span></span>').text(header));
+            var ul = $('<ul></ul>');
+            Object.keys(missingperms).forEach(function(perm) {
+                var li = $('<li></li>');
+                li.append($('<b></b>').text(perm));
+                li.append(document.createTextNode(': ' + missingperms[perm]));
+                ul.append(li);
+            });
+            box.append(ul);
+            return box;
+        }
+
+        /**
+         * Build a safe "value mismatch" box (e.g. detected vs. correct URL),
+         * escaping the detected/intended values before inserting them into the DOM.
+         *
+         * @param string introtext Header text describing the mismatch.
+         * @param string detected Detected value, as reported by Azure.
+         * @param string intended Intended/correct value.
+         * @return object jQuery object representing the built content.
+         */
+        this.buildvaluemismatchbox = function(introtext, detected, intended) {
+            var box = $('<span></span>');
+            box.append(document.createTextNode(introtext));
+            box.append(document.createElement('br'));
+            box.append(document.createTextNode(opts.strdetectedval + ' '));
+            box.append($('<b></b>').text(detected));
+            box.append(document.createElement('br'));
+            box.append(document.createTextNode(opts.strcorrectval + ' '));
+            box.append($('<b></b>').text(intended));
+            return box;
         }
 
         /**
@@ -157,11 +221,7 @@ $(function() {
                 // App-only perms.
                 if (typeof(data.missingappperms) === 'object') {
                     if (Object.keys(data.missingappperms).length > 0) {
-                        var missingpermsbox = opts.strmissingappperms + '<ul>';
-                        for (var perm in data.missingappperms) {
-                            missingpermsbox += '<li><b>' + perm + '</b>: ' + data.missingappperms[perm] + '</li>';
-                        }
-                        missingpermsbox += '</ul>';
+                        var missingpermsbox = main.buildmissingpermsbox(opts.strmissingappperms, data.missingappperms);
                         content.append(main.rendererrorbox(missingpermsbox));
                     } else {
                         content.append(main.rendersuccessbox(opts.strapppermscorrect));
@@ -172,12 +232,8 @@ $(function() {
                 // Delegated perms.
                 if (typeof(data.missingperms) === 'object' && data.missingperms !== null) {
                     if (Object.keys(data.missingperms).length > 0) {
-                        var missingpermsbox = opts.strmissingperms + '<ul>';
-                        for (var perm in data.missingperms) {
-                            missingpermsbox += '<li><b>' + perm + '</b>: ' + data.missingperms[perm] + '</li>';
-                        }
-                        missingpermsbox += '</ul>';
-                        content.append(main.rendererrorbox(missingpermsbox));
+                        var missingdelegatedpermsbox = main.buildmissingpermsbox(opts.strmissingperms, data.missingperms);
+                        content.append(main.rendererrorbox(missingdelegatedpermsbox));
                     } else {
                         content.append(main.rendersuccessbox(opts.strpermscorrect));
                     }
@@ -207,18 +263,17 @@ $(function() {
                     // Azure app check.
                     if (typeof(results.data.appdata) !== 'undefined') {
                         var appdata = $('<section></section>');
-                        appdata.append('<h5>'+opts.strappdataheader+'</h5>');
-                        appdata.append('<span>'+opts.strappdatadesc+'</h5>');
+                        appdata.append($('<h5></h5>').text(opts.strappdataheader));
+                        appdata.append($('<span></span>').text(opts.strappdatadesc));
 
                         if (typeof(results.data.appdata.error) === 'undefined') {
                             if (typeof(results.data.appdata.replyurl) !== 'undefined') {
                                 if (results.data.appdata.replyurl.correct === true) {
                                     appdata.append(main.rendersuccessbox(opts.strappdatareplyurlcorrect));
                                 } else {
-                                    var errstr = opts.strappdatareplyurlincorrect+' <br />';
-                                    errstr += opts.strdetectedval+' <b>'+results.data.appdata.replyurl.detected+'</b><br />';
-                                    errstr += opts.strcorrectval+' <b>'+results.data.appdata.replyurl.intended+'</b>';
-                                    appdata.append(main.rendererrorbox(errstr));
+                                    var replyurlerrbox = main.buildvaluemismatchbox(opts.strappdatareplyurlincorrect,
+                                        results.data.appdata.replyurl.detected, results.data.appdata.replyurl.intended);
+                                    appdata.append(main.rendererrorbox(replyurlerrbox));
                                 }
                             } else {
                                 appdata.append(main.renderinfobox(opts.strappdatareplyurlgeneralerror));
@@ -228,10 +283,9 @@ $(function() {
                                 if (results.data.appdata.signonurl.correct === true) {
                                     appdata.append(main.rendersuccessbox(opts.strappdatasignonurlcorrect));
                                 } else {
-                                    var errstr = opts.strappdatasignonurlincorrect+' <br />';
-                                    errstr += opts.strdetectedval+' <b>'+results.data.appdata.signonurl.detected+'</b><br />';
-                                    errstr += opts.strcorrectval+' <b>'+results.data.appdata.signonurl.intended+'</b>';
-                                    appdata.append(main.rendererrorbox(errstr));
+                                    var signonurlerrbox = main.buildvaluemismatchbox(opts.strappdatasignonurlincorrect,
+                                        results.data.appdata.signonurl.detected, results.data.appdata.signonurl.intended);
+                                    appdata.append(main.rendererrorbox(signonurlerrbox));
                                 }
                             }
                         } else {
@@ -242,8 +296,8 @@ $(function() {
 
                     // Unified API.
                     var unified = $('<section></section>');
-                    unified.append('<h5>' + opts.strunifiedheader + '</h5>');
-                    unified.append('<span>' + opts.strunifieddesc + '</h5>');
+                    unified.append($('<h5></h5>').text(opts.strunifiedheader));
+                    unified.append($('<span></span>').text(opts.strunifieddesc));
                     if (typeof(results.data.unifiedapi) !== 'undefined') {
                         unified.append(main.rendersection_unifiedapi(results.data.unifiedapi));
                     } else {
