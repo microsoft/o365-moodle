@@ -46,6 +46,8 @@ class groupmembershipsync extends adhoc_task {
      * @return false|void
      */
     public function execute() {
+        global $SESSION;
+
         // If the sync direction is Teams to Moodle, we don't want to sync the course membership. Exiting.
         $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
         if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
@@ -56,6 +58,12 @@ class groupmembershipsync extends adhoc_task {
         if (utils::is_connected() !== true || \local_o365\feature\coursesync\utils::is_enabled() !== true) {
             return false;
         }
+
+        // Track groups/users known not to exist during this run, so repeat failures across courses are skipped
+        // instead of being retried.
+        $SESSION->o365_groups_not_exist = [];
+        $SESSION->o365_newly_created_groups = [];
+        $SESSION->o365_users_not_exist = [];
 
         $graphclient = \local_o365\feature\coursesync\utils::get_unified_api();
         if ($graphclient) {
