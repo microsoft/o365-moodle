@@ -43,39 +43,39 @@ $(function () {
         /**
          * Render an error box.
          *
-         * @param string content HTML to use as box body.
+         * @param string content Text to use as box body.
          * @return object jQuery object representing rendered box.
          */
         this.rendererrorbox = function (content) {
             var box = $('<div></div>').addClass('alert-error alert local_o365_statusmessage');
             box.append(opts.iconerror);
-            box.append('<span style="inline-block">' + content + '</span>');
+            box.append($('<span style="display: inline-block"></span>').text(content));
             return box;
         }
 
         /**
          * Render an info box.
          *
-         * @param string content HTML to use as box body.
+         * @param string content Text to use as box body.
          * @return object jQuery object representing rendered box.
          */
         this.renderinfobox = function (content) {
             var box = $('<div></div>').addClass('alert-info alert local_o365_statusmessage');
             box.append(opts.iconinfo);
-            box.append('<span style="inline-block">' + content + '</span>');
+            box.append($('<span style="display: inline-block"></span>').text(content));
             return box;
         }
 
         /**
          * Render an success box.
          *
-         * @param string content HTML to use as box body.
+         * @param string content Text to use as box body.
          * @return object jQuery object representing rendered box.
          */
         this.rendersuccessbox = function (content) {
             var box = $('<div></div>').addClass('alert-success alert local_o365_statusmessage');
             box.append(opts.iconsuccess);
-            box.append('<span style="inline-block">' + content + '</span>');
+            box.append($('<span style="display: inline-block"></span>').text(content));
             return box;
         }
 
