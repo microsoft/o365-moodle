@@ -959,4 +959,27 @@ final class usersync_test extends advanced_testcase {
         $apiclient->usergroups = null;
         $this->assertFalse($usersync->check_usercreationrestriction_for_test(['id' => 'test-user']));
     }
+
+    /**
+     * Test that is_enabled() correctly reflects whether the scheduled user sync task should run.
+     *
+     * @covers \local_o365\feature\usersync\main::is_enabled
+     */
+    public function test_is_enabled(): void {
+        // No usersync config at all.
+        unset_config('usersync', 'local_o365');
+        $this->assertFalse(main::is_enabled());
+
+        // Only an on-login-only option is configured; the scheduled task has nothing to do.
+        set_config('usersync', 'photosynconlogin', 'local_o365');
+        $this->assertFalse(main::is_enabled());
+
+        // The 'match' option alone must enable the scheduled task, even without 'matchswitchauth'.
+        set_config('usersync', 'match', 'local_o365');
+        $this->assertTrue(main::is_enabled());
+
+        // A core option combined with an on-login-only option still enables the task.
+        set_config('usersync', 'photosynconlogin,create', 'local_o365');
+        $this->assertTrue(main::is_enabled());
+    }
 }
