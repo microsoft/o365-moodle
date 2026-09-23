@@ -29,47 +29,9 @@
  * @return bool
  */
 function xmldb_tiny_teamsmeeting_upgrade($oldversion) {
-    global $DB;
+    global $CFG, $DB;
 
     $dbman = $DB->get_manager();
-
-    if ($oldversion < 2025100205) {
-        $table = new xmldb_table('tiny_teamsmeeting');
-
-        // Add userid field.
-        $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'id');
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Add contextid field.
-        $field = new xmldb_field('contextid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'userid');
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Add foreign key for userid.
-        $key = new xmldb_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
-        $dbman->add_key($table, $key);
-
-        // Add foreign key for contextid.
-        $key = new xmldb_key('contextid', XMLDB_KEY_FOREIGN, ['contextid'], 'context', ['id']);
-        $dbman->add_key($table, $key);
-
-        // Add index on userid.
-        $index = new xmldb_index('userid', XMLDB_INDEX_NOTUNIQUE, ['userid']);
-        if (!$dbman->index_exists($table, $index)) {
-            $dbman->add_index($table, $index);
-        }
-
-        // Add index on contextid.
-        $index = new xmldb_index('contextid', XMLDB_INDEX_NOTUNIQUE, ['contextid']);
-        if (!$dbman->index_exists($table, $index)) {
-            $dbman->add_index($table, $index);
-        }
-
-        upgrade_plugin_savepoint(true, 2025100205, 'tiny', 'teamsmeeting');
-    }
 
     if ($oldversion < 2025100206) {
         // Remove duplicate meeting rows, keeping the oldest record (lowest id)
@@ -164,6 +126,81 @@ function xmldb_tiny_teamsmeeting_upgrade($oldversion) {
         }
 
         upgrade_plugin_savepoint(true, 2025100602.02, 'tiny', 'teamsmeeting');
+    }
+
+    if ($oldversion < 2025100603.01) {
+        // Add the userid and contextid columns (plus their keys and indexes) if
+        // they are missing, detected directly rather than via a version-number
+        // savepoint. This step used to be keyed to savepoint 2025100205, but
+        // that number was also used by the standalone plugin's own 1.x releases
+        // (up to v1.6) for an unrelated upgrade step, so sites coming from that
+        // line already had 2025100205 recorded and silently skipped the column
+        // addition, even though the upgrade reported success.
+        $table = new xmldb_table('tiny_teamsmeeting');
+        $columns = $DB->get_columns('tiny_teamsmeeting', false);
+
+        // Repair is needed whenever a column is missing entirely, or exists
+        // but was left nullable by an earlier run of this step that added
+        // the column but was interrupted before enforcing NOT NULL below
+        // (the savepoint is only recorded once the whole step completes, so
+        // such a site would retry this step, but field_exists() alone
+        // wouldn't catch that half-finished state).
+        $useridmissing = empty($columns['userid']);
+        $useridneedsrepair = $useridmissing || empty($columns['userid']->not_null);
+
+        $contextidmissing = empty($columns['contextid']);
+        $contextidneedsrepair = $contextidmissing || empty($columns['contextid']->not_null);
+
+        // Add whichever column(s) are missing, nullable first (matching
+        // install.xml's field definitions, which have no default) so the
+        // ALTER succeeds on non-empty tables, then backfill and tighten to
+        // NOT NULL below.
+        if ($useridmissing) {
+            $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'id');
+            $dbman->add_field($table, $field);
+        }
+        if ($contextidmissing) {
+            $field = new xmldb_field('contextid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'userid');
+            $dbman->add_field($table, $field);
+        }
+
+        // Existing rows predate userid/contextid being tracked at all, so
+        // there is no real value to recover. Point them at the guest user
+        // and the system context, which always exist, rather than at a
+        // fabricated id (e.g. 0) that references nothing.
+        if ($useridneedsrepair) {
+            $DB->execute('UPDATE {tiny_teamsmeeting} SET userid = ? WHERE userid IS NULL', [$CFG->siteguest]);
+            $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'id');
+            $dbman->change_field_notnull($table, $field);
+        }
+        if ($contextidneedsrepair) {
+            $DB->execute('UPDATE {tiny_teamsmeeting} SET contextid = ? WHERE contextid IS NULL', [\context_system::instance()->id]);
+            $field = new xmldb_field('contextid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'userid');
+            $dbman->change_field_notnull($table, $field);
+        }
+
+        if ($useridneedsrepair) {
+            $key = new xmldb_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+            $dbman->add_key($table, $key);
+        }
+        if ($contextidneedsrepair) {
+            $key = new xmldb_key('contextid', XMLDB_KEY_FOREIGN, ['contextid'], 'context', ['id']);
+            $dbman->add_key($table, $key);
+        }
+
+        // Indexes are checked for existence directly, so these run whenever
+        // needed regardless of which column(s) above were already present.
+        $index = new xmldb_index('userid', XMLDB_INDEX_NOTUNIQUE, ['userid']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        $index = new xmldb_index('contextid', XMLDB_INDEX_NOTUNIQUE, ['contextid']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        upgrade_plugin_savepoint(true, 2025100603.01, 'tiny', 'teamsmeeting');
     }
 
     return true;
