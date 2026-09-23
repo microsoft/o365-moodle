@@ -95,6 +95,7 @@ class acp extends base {
             case 'healthcheck':
             case 'usermatch':
             case 'teamconnections':
+            case 'teamconnections_resync':
             case 'maintenance':
             case 'maintenance_recreatedeletedgroups':
             case 'maintenance_resyncgroupusers':
@@ -1144,6 +1145,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
                     // Team record can be found in cache.
                     $connectedteamname = $teamscache->name;
                     $existingconnection = html_writer::link($teamscache->url, s($teamscache->name));
+                    $existingconnection .= $this->get_teamconnections_last_resync_html($grouprecord);
                     if (
                         !$DB->record_exists(
                             'local_o365_objects',
@@ -1156,7 +1158,13 @@ var local_o365_coursesync_all_set_feature = function(state) {
                         );
                         $updatelabel = get_string('acp_teamconnections_table_update', 'local_o365');
 
-                        $actions = [html_writer::link($updateurl, $updatelabel)];
+                        $resyncurl = new url(
+                            '/local/o365/acp.php',
+                            ['mode' => 'teamconnections_resync', 'course' => $course->id, 'sesskey' => sesskey()]
+                        );
+                        $resynclabel = get_string('acp_teamconnections_table_resync', 'local_o365');
+
+                        $actions = [html_writer::link($updateurl, $updatelabel), html_writer::link($resyncurl, $resynclabel)];
                     } else {
                         $actions = [get_string('acp_coursesynccustom_sds_course', 'local_o365')];
                     }
@@ -1730,6 +1738,183 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $mform->display();
             $this->standard_footer();
         }
+    }
+
+    /**
+     * Build a short "last resynced" status string for a course's Team connection, read from the connection
+     * record's metadata.
+     *
+     * @param stdClass $grouprecord The local_o365_objects record for the connection (type=group, subtype=course).
+     * @return string
+     */
+    private function get_teamconnections_last_resync_html(stdClass $grouprecord): string {
+        $metadata = (!empty($grouprecord->metadata)) ? json_decode($grouprecord->metadata, true) : [];
+        if (is_array($metadata) && !empty($metadata['lastresync'])) {
+            $status = get_string('acp_teamconnections_last_resync', 'local_o365', userdate($metadata['lastresync']));
+        } else {
+            $status = get_string('acp_teamconnections_never_resynced', 'local_o365');
+        }
+
+        return html_writer::empty_tag('br') . html_writer::tag('small', $status, ['class' => 'text-muted']);
+    }
+
+    /**
+     * Record the time a course's Team connection was last resynced, in the connection record's metadata.
+     *
+     * @param stdClass $grouprecord The local_o365_objects record for the connection (type=group, subtype=course).
+     */
+    private function mark_teamconnections_resynced(stdClass $grouprecord): void {
+        global $DB;
+
+        $metadata = (!empty($grouprecord->metadata)) ? json_decode($grouprecord->metadata, true) : [];
+        if (!is_array($metadata)) {
+            $metadata = [];
+        }
+
+        $metadata['lastresync'] = time();
+
+        $grouprecord->metadata = json_encode($metadata);
+        $grouprecord->timemodified = time();
+        $DB->update_record('local_o365_objects', $grouprecord);
+    }
+
+    /**
+     * Resync team owners / members for a single course from the team connections page.
+     *
+     * @throws moodle_exception
+     */
+    public function mode_teamconnections_resync() {
+        global $DB, $OUTPUT, $PAGE;
+
+        $this->set_title(get_string('acp_teamconnections_resync', 'local_o365'));
+
+        $courseid = required_param('course', PARAM_INT);
+        require_sesskey();
+
+        $redirecturl = new url('/local/o365/acp.php', ['mode' => 'teamconnections']);
+
+        if (utils::is_connected() !== true) {
+            throw new moodle_exception('acp_teamconnections_exception_not_configured', 'local_o365', $redirecturl);
+        }
+
+        if (!$course = $DB->get_record('course', ['id' => $courseid])) {
+            throw new moodle_exception('acp_teamconnections_exception_course_not_exist', 'local_o365', $redirecturl);
+        }
+
+        if (
+            !$groupobject = $DB->get_record(
+                'local_o365_objects',
+                ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid]
+            )
+        ) {
+            redirect($redirecturl);
+        }
+
+        $navurl = new url($this->url, ['mode' => 'teamconnections']);
+        $PAGE->navbar->add(get_string('acp_teamconnections', 'local_o365'), $navurl);
+        $PAGE->requires->jquery();
+
+        $subtitle = get_string('acp_teamconnections_resync_title', 'local_o365', $course->fullname);
+
+        $confirm = optional_param('confirm', 0, PARAM_INT);
+
+        if (!$confirm) {
+            $this->print_settings_page_header('local_o365_advanced', $subtitle);
+
+            echo html_writer::div(get_string('acp_teamconnections_resync_desc', 'local_o365'), 'mb-4');
+
+            $keepurl = new url('/local/o365/acp.php', [
+                'mode' => 'teamconnections_resync',
+                'course' => $courseid,
+                'confirm' => 1,
+                'removeextra' => 0,
+                'sesskey' => sesskey(),
+            ]);
+            echo html_writer::div(
+                html_writer::link($keepurl, get_string('acp_teamconnections_resync_keep', 'local_o365'), [
+                    'class' => 'btn btn-primary',
+                ]),
+                'mb-3'
+            );
+            echo html_writer::div(get_string('acp_teamconnections_resync_keep_desc', 'local_o365'), 'text-muted mb-4');
+
+            $removeurl = new url('/local/o365/acp.php', [
+                'mode' => 'teamconnections_resync',
+                'course' => $courseid,
+                'confirm' => 1,
+                'removeextra' => 1,
+                'sesskey' => sesskey(),
+            ]);
+            echo html_writer::div(
+                html_writer::link($removeurl, get_string('acp_teamconnections_resync_remove', 'local_o365'), [
+                    'class' => 'btn btn-outline-danger',
+                ]),
+                'mb-3'
+            );
+            echo $OUTPUT->notification(get_string('acp_teamconnections_resync_remove_desc', 'local_o365'), 'warning');
+
+            echo html_writer::div(html_writer::link($redirecturl, get_string('cancel')), 'mt-2');
+
+            $this->standard_footer();
+            return;
+        }
+
+        $removeextra = optional_param('removeextra', true, PARAM_BOOL);
+
+        core_php_time_limit::raise();
+        raise_memory_limit(MEMORY_EXTRA);
+
+        $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
+
+        $this->print_settings_page_header('local_o365_advanced', $subtitle);
+
+        if (!($graphclient instanceof \local_o365\rest\unified)) {
+            echo $OUTPUT->notification(get_string('error_not_connected', 'local_o365'), 'error');
+            echo $OUTPUT->continue_button($redirecturl);
+            $this->standard_footer();
+            return;
+        }
+
+        $coursesync = new main($graphclient, true);
+
+        // The sync method writes progress with mtrace(), which echoes directly and calls flush(); capturing it
+        // lets us render the result as a normal part of the page instead of a half-flushed response that some
+        // browsers drop when the link is opened in a background tab.
+        $error = null;
+        ob_start();
+        try {
+            $result = $coursesync->process_course_team_user_sync_from_moodle_to_microsoft(
+                $courseid,
+                $groupobject->objectid,
+                $removeextra
+            );
+        } catch (moodle_exception $e) {
+            $result = false;
+            $error = $e;
+        } finally {
+            $output = trim(ob_get_clean());
+        }
+
+        if ($error !== null && $error->getMessage() !== '') {
+            $output = trim($output . "\n" . $error->getMessage());
+        }
+
+        if ($output !== '') {
+            echo html_writer::tag('pre', s($output), ['class' => 'bg-light p-3 mb-4']);
+        }
+
+        if ($error !== null) {
+            echo $OUTPUT->notification(get_string('acp_teamconnections_resync_failed', 'local_o365'), 'error');
+        } else if ($result !== false) {
+            $this->mark_teamconnections_resynced($groupobject);
+            echo $OUTPUT->notification(get_string('acp_teamconnections_resync_completed', 'local_o365'), 'success');
+        } else {
+            echo $OUTPUT->notification(get_string('acp_teamconnections_resync_failed', 'local_o365'), 'warning');
+        }
+
+        echo $OUTPUT->continue_button($redirecturl);
+
+        $this->standard_footer();
     }
 
     /**
