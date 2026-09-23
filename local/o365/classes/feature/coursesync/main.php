@@ -546,8 +546,9 @@ class main {
 
                     if (isset($SESSION->o365_groups_not_exist)) {
                         if (in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                            $this->mtrace('Group does not exist. Skipping.', $baselevel + 2);
-                            break;
+                            $this->mtrace('Group does not exist. Skipping remaining chunks.', $baselevel + 2);
+                            // No chunk can succeed if the group is missing; stop the retry loop and the chunk loop.
+                            break 2;
                         }
                     }
 
@@ -563,31 +564,50 @@ class main {
                     break;
                 } catch (moodle_exception $e) {
                     $this->mtrace('Error: ' . $e->getMessage(), $baselevel + 2);
-                    if (
-                        isset($SESSION->o365_groups_not_exist) && isset($SESSION->o365_newly_created_groups) &&
-                        isset($SESSION->o365_users_not_exist)
-                    ) {
-                        if (static::is_resource_not_exist_exception($e->getMessage())) {
-                            if (stripos($e->getMessage(), $groupobjectid) !== false) {
-                                // The non-existing resource is the group.
-                                if (!in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
+
+                    // A "resource does not exist" error for a user is not transient: retrying will never succeed.
+                    // The same is true for the group itself, except when it was just created in this run, where
+                    // Azure AD propagation delay can make it briefly appear missing (as handled when fetching its
+                    // existing owners/members above); in that case keep retrying like any other error until the
+                    // retry limit is reached. Skip retries whenever confirmed missing, regardless of whether the
+                    // SESSION-based caches below happen to be set up by the caller.
+                    if (static::is_resource_not_exist_exception($e->getMessage())) {
+                        if (stripos($e->getMessage(), $groupobjectid) !== false) {
+                            // The non-existing resource is the group.
+                            if ($isnewlycreated && $retrycounter < API_CALL_RETRY_LIMIT) {
+                                $this->mtrace('Newly created group not yet accessible. Will retry.', $baselevel + 2);
+                            } else {
+                                if (
+                                    isset($SESSION->o365_groups_not_exist) &&
+                                    !in_array($groupobjectid, $SESSION->o365_groups_not_exist)
+                                ) {
                                     $SESSION->o365_groups_not_exist[] = $groupobjectid;
                                 }
 
-                                $this->mtrace('Group does not exist. Skip retries.', $baselevel + 2);
-                                break;
-                            } else {
-                                // The non-existing resource is a user.
-                                $useroid = \local_o365\utils::extract_guid_from_error_message($e->getMessage());
-                                if (!empty($useroid) && !in_array($useroid, $SESSION->o365_users_not_exist)) {
-                                    $SESSION->o365_users_not_exist[] = $useroid;
-                                    $this->mtrace('User ' . $useroid . ' does not exist. Skip retries.', $baselevel + 2);
-                                } else {
-                                    $this->mtrace('User does not exist. Skip retries.', $baselevel + 2);
-                                }
-
-                                break;
+                                $this->mtrace(
+                                    'Group does not exist. Skip retries and remaining chunks.',
+                                    $baselevel + 2
+                                );
+                                // No chunk can succeed if the group is missing; stop the retry loop and the chunk
+                                // loop.
+                                break 2;
                             }
+                        } else {
+                            // The non-existing resource is a user.
+                            $useroid = \local_o365\utils::extract_guid_from_error_message($e->getMessage());
+                            if (!empty($useroid)) {
+                                if (
+                                    isset($SESSION->o365_users_not_exist) &&
+                                    !in_array($useroid, $SESSION->o365_users_not_exist)
+                                ) {
+                                    $SESSION->o365_users_not_exist[] = $useroid;
+                                }
+                                $this->mtrace('User ' . $useroid . ' does not exist. Skip retries.', $baselevel + 2);
+                            } else {
+                                $this->mtrace('User does not exist. Skip retries.', $baselevel + 2);
+                            }
+
+                            break;
                         }
                     }
 
