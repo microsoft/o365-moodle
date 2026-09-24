@@ -39,6 +39,27 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
  * Represents an oauth2 token.
  */
 class apptoken extends token {
+    /** @var string The reason the last application token request failed, or an empty string if it succeeded. */
+    protected static $lasterror = '';
+
+    /**
+     * Get the reason the last application token request failed.
+     *
+     * @return string The error returned by the token endpoint, or an empty string if there was no failure.
+     */
+    public static function get_last_error(): string {
+        return static::$lasterror;
+    }
+
+    /**
+     * Clear the reason of the last application token request failure.
+     *
+     * @return void
+     */
+    public static function reset_last_error(): void {
+        static::$lasterror = '';
+    }
+
     /**
      * Get a token instance for a new resource.
      *
@@ -78,6 +99,7 @@ class apptoken extends token {
      * @return array|bool If successful, an array of token parameters. False if unsuccessful.
      */
     public static function get_app_token($tokenresource, clientdata $clientdata, $httpclient) {
+        static::reset_last_error();
         $tokenendpoint = $clientdata->get_apptokenendpoint();
 
         switch (get_config('auth_oidc', 'idptype')) {
@@ -119,6 +141,11 @@ class apptoken extends token {
         $httpclient->setheader($header);
         $tokenresult = $httpclient->post($tokenendpoint, $params);
         $tokenresult = @json_decode($tokenresult, true);
+        if (!is_array($tokenresult)) {
+            // The endpoint could not be reached or did not return JSON.
+            $tokenresult = [];
+        }
+
         if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
             if (empty($tokenresult['scope'])) {
                 $tokenresult['scope'] = '';
@@ -140,6 +167,17 @@ class apptoken extends token {
                 'tokenresult' => $tokenresult,
                 'resource' => $tokenresource,
             ];
+            if (!empty($tokenresult['error'])) {
+                $reason = $tokenresult['error'];
+                if (!empty($tokenresult['error_description'])) {
+                    $reason .= ': ' . $tokenresult['error_description'];
+                }
+
+                static::$lasterror = trim(preg_replace('/\s+/', ' ', $reason));
+            } else {
+                static::$lasterror = 'No valid response received from ' . $tokenendpoint;
+            }
+
             \local_o365\utils::debug($errmsg, __METHOD__, $debuginfo);
             return false;
         }
