@@ -606,6 +606,174 @@ final class usersync_test extends advanced_testcase {
     }
 
     /**
+     * Create an OIDC user mapped to an Entra object, for the status processing tests.
+     *
+     * @param string $objectid The Entra object ID.
+     * @param int $suspended Whether the user is suspended.
+     * @return \stdClass The Moodle user.
+     */
+    protected function create_mapped_oidc_user(string $objectid, int $suspended): \stdClass {
+        global $DB;
+
+        $user = $this->getDataGenerator()->create_user();
+        $user->auth = 'oidc';
+        $user->suspended = $suspended;
+        $DB->update_record('user', $user);
+
+        $now = time();
+        $DB->insert_record('local_o365_objects', (object) [
+            'type' => 'user',
+            'subtype' => '',
+            'objectid' => $objectid,
+            'moodleid' => $user->id,
+            'o365name' => $user->email,
+            'tenant' => '',
+            'timecreated' => $now,
+            'timemodified' => $now,
+        ]);
+
+        return $user;
+    }
+
+    /**
+     * Get a user sync instance whose Entra deleted-users list is empty (soft-delete retention expired for everyone).
+     *
+     * @return main
+     */
+    protected function get_usersync_with_empty_deleted_items(): main {
+        $apiclient = new class {
+            /**
+             * Return no deleted users.
+             *
+             * @param callable $callback Batch callback, never called.
+             */
+            public function process_deleted_users_batched(callable $callback): void {
+            }
+        };
+
+        return new class ($apiclient) extends main {
+            /**
+             * Test API client.
+             *
+             * @var object
+             */
+            private object $testapiclient;
+
+            /**
+             * Constructor.
+             *
+             * @param object $apiclient Test API client.
+             */
+            public function __construct(object $apiclient) {
+                parent::__construct();
+                $this->testapiclient = $apiclient;
+            }
+
+            /**
+             * Return the test API client.
+             *
+             * @return object
+             */
+            public function construct_user_api() {
+                return $this->testapiclient;
+            }
+        };
+    }
+
+    /**
+     * Test that suspending a user records the suspension time, and re-enabling the user clears it.
+     *
+     * @covers \local_o365\feature\usersync\main::process_user_status_from_temp_table
+     */
+    public function test_process_user_status_suspension_time_preference(): void {
+        global $DB;
+
+        $user = $this->create_mapped_oidc_user('entra-user-gone', 0);
+
+        $usersync = new main();
+        $temptablename = $usersync->create_entra_users_temp_table();
+
+        try {
+            $before = time();
+            $usersync->process_user_status_from_temp_table($temptablename, false, true, false, false, false);
+            $suspendedtime = (int) get_user_preferences(main::SUSPENDED_TIME_PREFERENCE, 0, $user->id);
+            $this->assertGreaterThanOrEqual($before, $suspendedtime);
+            $this->assertLessThanOrEqual(time(), $suspendedtime);
+
+            // The user reappears in Entra and is re-enabled, so the marker is removed.
+            $DB->insert_records($temptablename, [(object) ['objectid' => 'entra-user-gone', 'accountenabled' => 1]]);
+            [$reenabled] = $usersync->process_user_status_from_temp_table($temptablename, true, true, false, false, false);
+            $this->assertEquals(1, $reenabled);
+            $this->assertEquals(0, $DB->get_field('user', 'suspended', ['id' => $user->id]));
+            $this->assertFalse($DB->record_exists('user_preferences', [
+                'userid' => $user->id,
+                'name' => main::SUSPENDED_TIME_PREFERENCE,
+            ]));
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
+     * Test that suspended users are only deleted once the configured delay since suspension has passed.
+     *
+     * @covers \local_o365\feature\usersync\main::process_user_status_from_temp_table
+     */
+    public function test_process_user_status_delete_delay(): void {
+        global $DB;
+
+        $delay = 30 * DAYSECS;
+        set_config('usersync_delete_delay', $delay, 'local_o365');
+
+        $recent = $this->create_mapped_oidc_user('entra-user-recent', 1);
+        set_user_preference(main::SUSPENDED_TIME_PREFERENCE, time() - 10 * DAYSECS, $recent->id);
+        $expired = $this->create_mapped_oidc_user('entra-user-expired', 1);
+        set_user_preference(main::SUSPENDED_TIME_PREFERENCE, time() - 40 * DAYSECS, $expired->id);
+        $legacy = $this->create_mapped_oidc_user('entra-user-legacy', 1);
+
+        $usersync = $this->get_usersync_with_empty_deleted_items();
+        $temptablename = $usersync->create_entra_users_temp_table();
+
+        try {
+            $before = time();
+            [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                false,
+                true,
+                true,
+                false,
+                false
+            );
+
+            // Only the user suspended for longer than the delay is deleted.
+            $this->assertEquals(1, $deleted);
+            $this->assertEquals(0, $DB->get_field('user', 'deleted', ['id' => $recent->id]));
+            $this->assertEquals(1, $DB->get_field('user', 'deleted', ['id' => $expired->id]));
+            $this->assertEquals(0, $DB->get_field('user', 'deleted', ['id' => $legacy->id]));
+
+            // The user suspended before the delay was tracked has their clock started now.
+            $legacytime = (int) get_user_preferences(main::SUSPENDED_TIME_PREFERENCE, 0, $legacy->id);
+            $this->assertGreaterThanOrEqual($before, $legacytime);
+
+            // Without a delay, the remaining suspended users are deleted straight away.
+            set_config('usersync_delete_delay', 0, 'local_o365');
+            [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                false,
+                true,
+                true,
+                false,
+                false
+            );
+            $this->assertEquals(2, $deleted);
+            $this->assertEquals(1, $DB->get_field('user', 'deleted', ['id' => $recent->id]));
+            $this->assertEquals(1, $DB->get_field('user', 'deleted', ['id' => $legacy->id]));
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
      * Test that 'disabledsyncsuspend' independently suspends a user present in Entra with accountEnabled=false,
      * without needing 'suspend' or 'reenable' enabled, and leaves an enabled user alone. This behaviour lives
      * exclusively in userenabledstatussync (not in the regular usersync task), so a disabled Entra account is
