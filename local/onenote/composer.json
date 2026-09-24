@@ -1,0 +1,24 @@
+{
+    "name": "microsoft/moodle-local_onenote",
+    "description": "Microsoft OneNote integration plugin for Moodle.",
+    "type": "moodle-local",
+    "keywords": [
+        "moodle",
+        "onenote",
+        "microsoft-365"
+    ],
+    "homepage": "https://github.com/microsoft/o365-moodle",
+    "license": "GPL-3.0-or-later",
+    "support": {
+        "issues": "https://github.com/microsoft/o365-moodle/issues",
+        "source": "https://github.com/microsoft/o365-moodle",
+        "docs": "https://docs.moodle.org/en/Microsoft_365"
+    },
+    "require": {
+        "composer/installers": "^1.0 || ^2.0",
+        "microsoft/moodle-local_o365": "^5.2.0"
+    },
+    "extra": {
+        "installer-name": "onenote"
+    }
+}
