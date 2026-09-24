@@ -238,6 +238,17 @@ if ($hassiteconfig) {
             ['h' => 2, 'm' => 30]
         ));
 
+        // Delay between suspending and deleting a user.
+        $label = new lang_string('settings_usersync_delete_delay', 'local_o365');
+        $desc = new lang_string('settings_usersync_delete_delay_desc', 'local_o365');
+        $usersyncsettings->add(new admin_setting_configduration(
+            'local_o365/usersync_delete_delay',
+            $label,
+            $desc,
+            0,
+            DAYSECS
+        ));
+
         // Toggle to control whether to support UPN change.
         $label = new lang_string('settings_support_user_identifier_change', 'local_o365');
         $desc = new lang_string('settings_support_user_identifier_change_desc', 'local_o365');
