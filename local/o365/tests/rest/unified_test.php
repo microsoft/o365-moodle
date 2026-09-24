@@ -28,6 +28,7 @@ namespace local_o365\rest;
 use advanced_testcase;
 use core\component;
 use dml_exception;
+use local_o365\oauth2\apptoken;
 use local_o365\oauth2\token;
 use local_o365\tests\mockhttpclient;
 use moodle_exception;
@@ -173,6 +174,28 @@ final class unified_test extends advanced_testcase {
         ]));
 
         $this->assertFalse(unified::test_tenant('wrong.example.org', $httpclient));
+        $this->assertEquals(
+            'invalid_request: AADSTS90002: Tenant not found.',
+            apptoken::get_last_error()
+        );
+    }
+
+    /**
+     * A tenant is invalid if the token endpoint does not return JSON, and the reason names the endpoint.
+     *
+     * @return void
+     * @covers ::test_tenant
+     */
+    public function test_test_tenant_invalid_response(): void {
+        $this->resetAfterTest();
+        $this->setup_oidc_for_apptoken();
+
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response('<html>Bad gateway</html>');
+
+        $this->assertFalse(unified::test_tenant('tested.example.com', $httpclient));
+        $this->assertStringContainsString('/tested.example.com/', apptoken::get_last_error());
+        $this->assertStringStartsWith('No valid response received from ', apptoken::get_last_error());
     }
 
     /**
@@ -186,8 +209,15 @@ final class unified_test extends advanced_testcase {
         $this->setup_oidc_for_apptoken();
 
         $httpclient = new mockhttpclient();
+        $httpclient->set_response(json_encode(['error' => 'invalid_request', 'error_description' => 'Tenant not found.']));
+        $this->assertFalse(unified::test_tenant('wrong.example.org', $httpclient));
+        $this->assertNotEmpty(apptoken::get_last_error());
+
+        // The reason of the previous failure is not carried over to a check that makes no request.
+        $httpclient = new mockhttpclient();
         $this->assertFalse(unified::test_tenant('  ', $httpclient));
         $this->assertEmpty($httpclient->get_requests());
+        $this->assertSame('', apptoken::get_last_error());
     }
 
     /**

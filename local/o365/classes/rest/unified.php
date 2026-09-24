@@ -276,6 +276,7 @@ class unified extends o365api {
      * @return bool True if an application token was issued by the tenant, false if not.
      */
     public static function test_tenant(string $tenant, httpclientinterface $httpclient): bool {
+        apptoken::reset_last_error();
         $tenant = trim($tenant);
         if ($tenant === '') {
             return false;
