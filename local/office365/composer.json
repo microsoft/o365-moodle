@@ -1,0 +1,28 @@
+{
+    "name": "microsoft/moodle-local_office365",
+    "description": "Meta-plugin that installs the required Microsoft 365 plugins for Moodle.",
+    "type": "moodle-local",
+    "keywords": [
+        "moodle",
+        "microsoft-365",
+        "office365"
+    ],
+    "homepage": "https://github.com/microsoft/o365-moodle",
+    "license": "GPL-3.0-or-later",
+    "support": {
+        "issues": "https://github.com/microsoft/o365-moodle/issues",
+        "source": "https://github.com/microsoft/o365-moodle",
+        "docs": "https://docs.moodle.org/en/Microsoft_365"
+    },
+    "require": {
+        "composer/installers": "^1.0 || ^2.0",
+        "microsoft/moodle-auth_oidc": "^5.1.3",
+        "microsoft/moodle-block_microsoft": "^5.1.3",
+        "microsoft/moodle-local_o365": "^5.1.3",
+        "microsoft/moodle-repository_office365": "^5.1.2",
+        "microsoft/moodle-theme_boost_o365teams": "^5.1.2"
+    },
+    "extra": {
+        "installer-name": "office365"
+    }
+}
