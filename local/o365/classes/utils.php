@@ -110,6 +110,7 @@ class utils {
         bool $throwexception = true
     ) {
         $token = null;
+        apptoken::reset_last_error();
         try {
             if (static::is_configured_apponlyaccess() === true) {
                 $token = apptoken::instance(null, $tokenresource, $clientdata, $httpclient, $forcecreate);
@@ -122,7 +123,7 @@ class utils {
             return $token;
         } else {
             if ($throwexception) {
-                throw new moodle_exception('errorcannotgettoken', 'local_o365');
+                throw new moodle_exception('errorcannotgettoken', 'local_o365', '', null, apptoken::get_last_error());
             } else {
                 return $token;
             }
