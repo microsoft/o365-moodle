@@ -30,6 +30,8 @@ use core_date;
 use core_text;
 use DateTime;
 use dml_exception;
+use local_o365\httpclientinterface;
+use local_o365\oauth2\apptoken;
 use local_o365\oauth2\clientdata;
 use local_o365\obj\o365user;
 use local_o365\utils;
@@ -264,24 +266,34 @@ class unified extends o365api {
     }
 
     /**
-     * Test a tenant value.
+     * Test a tenant value by requesting an application token from the tenant.
      *
-     * @param string $tenant A tenant string to test.
-     * @return bool True if tenant succeeded, false if not.
-     * @throws moodle_exception
+     * The token is only used to confirm that the tenant exists and accepts the configured application credentials. It is not
+     * stored, and the tenant setting is not changed.
+     *
+     * @param string $tenant A tenant string (domain name or ID) to test.
+     * @param httpclientinterface $httpclient An HTTP client.
+     * @return bool True if an application token was issued by the tenant, false if not.
      */
-    public function test_tenant(string $tenant): bool {
-        if (!is_string($tenant)) {
-            throw new moodle_exception('errortenantvaluenotstring', 'local_o365');
+    public static function test_tenant(string $tenant, httpclientinterface $httpclient): bool {
+        $tenant = trim($tenant);
+        if ($tenant === '') {
+            return false;
         }
 
-        $oidcconfig = get_config('auth_oidc');
-        $appinfo = $this->get_application_info();
-        if (isset($appinfo['value']) && isset($appinfo['value'][0]['id'])) {
-            return $appinfo['value'][0]['id'] === $oidcconfig->clientid;
+        try {
+            $clientdata = clientdata::instance_from_oidc($tenant);
+            if (empty($clientdata->get_apptokenendpoint())) {
+                return false;
+            }
+
+            $token = apptoken::get_app_token(static::get_tokenresource(), $clientdata, $httpclient);
+        } catch (moodle_exception $e) {
+            utils::debug($e->getMessage(), __METHOD__, $e);
+            return false;
         }
 
-        return false;
+        return !empty($token) && !empty($token['access_token']);
     }
 
     /**
