@@ -834,7 +834,6 @@ $string['erroro365apisiteexistsnolocal'] = 'Site already exists, but could not f
 $string['errorusermatched'] = 'The Microsoft 365 account "{$a->entraidupn}" is already matched with Moodle user "{$a->username}". To complete the connection, please log in as that Moodle user first and follow the instructions in the Microsoft block.';
 $string['errornodirectaccess'] = 'Direct access to the page is prohibited';
 $string['eventapifail'] = 'API failure';
-$string['errortenantvaluenotstring'] = 'Tenant value must be a string';
 $string['errorunabletofindgraphapi'] = 'Unable to find graph api in application.';
 $string['erroremptyjwt'] = 'Empty JWT token provided';
 $string['errornocachedjwks'] = 'No cached JWKS found';
