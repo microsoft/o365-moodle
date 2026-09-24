@@ -121,6 +121,10 @@ class ajax extends base {
             case 'entratenant':
                 // Test the submitted value, not the saved one, so a wrong saved tenant doesn't prevent it from being corrected.
                 $data->valid = unified::test_tenant($value, $httpclient);
+                if (!$data->valid && apptoken::get_last_error() !== '') {
+                    $data->reason = s(apptoken::get_last_error());
+                }
+
                 $success = true;
                 break;
 
@@ -261,6 +265,9 @@ class ajax extends base {
             $unifiedapi->active = false;
             utils::debug($e->getMessage(), __METHOD__ . ' (unified)', $e);
             $unifiedapi->error = $e->getMessage();
+            if (!empty($e->debuginfo)) {
+                $unifiedapi->error .= ' ' . s($e->debuginfo);
+            }
         }
 
         // Check reply url.
