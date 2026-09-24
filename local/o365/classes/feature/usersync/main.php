@@ -54,6 +54,11 @@ require_once($CFG->libdir . '/gdlib.php');
  */
 class main {
     /**
+     * User preference holding the time a user was suspended by the user sync.
+     */
+    public const SUSPENDED_TIME_PREFERENCE = 'local_o365_suspendedtime';
+
+    /**
      * @var clientdata|null
      */
     protected $clientdata = null;
@@ -2248,10 +2253,21 @@ class main {
             return;
         }
 
+        $now = time();
         [$useridsql, $useridparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_QM);
         $sql = 'UPDATE {user} SET suspended = ?, timemodified = ? WHERE id ' . $useridsql;
-        $params = array_merge([$suspendedvalue, time()], $useridparams);
+        $params = array_merge([$suspendedvalue, $now], $useridparams);
         $DB->execute($sql, $params);
+
+        if ($suspendedvalue) {
+            foreach ($userids as $userid) {
+                set_user_preference(self::SUSPENDED_TIME_PREFERENCE, $now, $userid);
+            }
+        } else {
+            foreach ($userids as $userid) {
+                unset_user_preference(self::SUSPENDED_TIME_PREFERENCE, $userid);
+            }
+        }
 
         $this->preload_user_contexts($userids);
         foreach ($userids as $userid) {
@@ -2436,6 +2452,10 @@ class main {
      * Combines reenable and suspend logic into one query to minimize memory overhead
      * from multiple passes through the user table.
      *
+     * Suspended users are deleted only after Entra's soft-delete retention has ended and, if the
+     * usersync_delete_delay setting is greater than 0, that long after the suspension time stored in the
+     * SUSPENDED_TIME_PREFERENCE user preference.
+     *
      * @param string $temptablename The name of the temporary table with Entra users.
      * @param bool $doreenable Whether to reenable users who reappear in Entra.
      * @param bool $dosuspend Whether to suspend users who are no longer in Entra.
@@ -2461,6 +2481,7 @@ class main {
         $deleted = 0;
         $userstoreenable = [];
         $userstosuspend = [];
+        $deletedelay = (int) get_config('local_o365', 'usersync_delete_delay');
 
         // Build set of deleted user IDs in retention (fetched in batches to minimize memory overhead).
         // Stored as sparse array: objectid => true for quick isset() checks.
@@ -2477,15 +2498,16 @@ class main {
         }
 
         // Single query: join with temp table to identify reenable candidates, and identify suspend candidates.
-        $sql = 'SELECT u.id, u.username, u.suspended, etmp.accountenabled, obj.objectid,
+        $sql = 'SELECT u.id, u.username, u.suspended, etmp.accountenabled, obj.objectid, pref.value AS suspendedtime,
                        CASE WHEN etmp.objectid IS NOT NULL THEN 1 ELSE 0 END AS isinentra
                   FROM {user} u
                   JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
+                  LEFT JOIN {user_preferences} pref ON pref.userid = u.id AND pref.name = ?
                   LEFT JOIN {' . $temptablename . '} etmp ON etmp.objectid = obj.objectid
                  WHERE u.mnethostid = ?
                    AND u.deleted = ?
                    AND u.auth = ?';
-        $params = ['user', $CFG->mnet_localhost_id, '0', 'oidc'];
+        $params = ['user', self::SUSPENDED_TIME_PREFERENCE, $CFG->mnet_localhost_id, '0', 'oidc'];
 
         $usersrs = $DB->get_recordset_sql($sql, $params);
 
@@ -2535,8 +2557,21 @@ class main {
                     $userstosuspend = [];
                 }
             } else if ($dosuspend && $user->suspended && $dodelete) {
-                // User is NOT in Entra, already suspended, and NOT in soft-delete retention - safe to delete.
-                // Only delete if user is not in Entra's deleted-items (soft-delete retention expired).
+                // User is NOT in Entra and already suspended - delete only when the configured delay since suspension has
+                // passed and the user is not in Entra's deleted-items (soft-delete retention expired).
+                if ($deletedelay > 0) {
+                    $now = time();
+                    $suspendedtime = (int) $user->suspendedtime;
+                    if (!$suspendedtime) {
+                        // Suspended before the delay was tracked - start the clock now.
+                        set_user_preference(self::SUSPENDED_TIME_PREFERENCE, $now, $user->id);
+                        continue;
+                    }
+                    if ($suspendedtime + $deletedelay > $now) {
+                        continue;
+                    }
+                }
+
                 if (!isset($deletedentrajsonids[$user->objectid])) {
                     $this->mtrace('Deleted ' . $user->username . ' (permanently deleted from Entra ID)');
                     $fulluser = $DB->get_record('user', ['id' => $user->id]);
