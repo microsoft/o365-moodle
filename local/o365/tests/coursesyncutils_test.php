@@ -140,4 +140,50 @@ final class coursesyncutils_test extends externallib_advanced_testcase {
         $actual = utils::is_course_sync_enabled(3);
         $this->assertTrue($actual);
     }
+
+    /**
+     * Data provider for test_clean_up_group_mail_alias().
+     *
+     * @return array
+     */
+    public static function clean_up_group_mail_alias_provider(): array {
+        return [
+            'ASCII only' => ['sample 15', 'sample15'],
+            'ASCII with unsupported characters' => ['[U] Math (2026); a.b@c', 'UMath2026abc'],
+            'Cyrillic' => ['[U] [СИЭ] Муниципальное право (заочное)', 'USIEMunicipalnoepravozaocnoe'],
+            'Accented Latin' => ['Café Über', 'CafeUber'],
+            'Empty' => ['', ''],
+        ];
+    }
+
+    /**
+     * Test clean_up_group_mail_alias() method.
+     *
+     * @dataProvider clean_up_group_mail_alias_provider
+     * @covers \local_o365\feature\coursesync\utils::clean_up_group_mail_alias
+     * @param string $mailalias
+     * @param string $expected
+     */
+    public function test_clean_up_group_mail_alias(string $mailalias, string $expected): void {
+        $this->assertEquals($expected, utils::clean_up_group_mail_alias($mailalias));
+    }
+
+    /**
+     * Test get_group_mail_alias() method with a course whose name contains only non-Latin characters.
+     *
+     * @covers \local_o365\feature\coursesync\utils::get_group_mail_alias
+     */
+    public function test_get_group_mail_alias_non_latin_course_name(): void {
+        set_config('group_mail_alias_prefix', 'U', 'local_o365');
+        set_config('group_mail_alias_suffix', '', 'local_o365');
+        set_config('group_mail_alias_course', \local_o365\feature\coursesync\main::NAME_OPTION_FULL_NAME, 'local_o365');
+
+        $course = new \stdClass();
+        $course->fullname = 'Муниципальное право (заочное)';
+        $course->shortname = 'МП';
+        $course->idnumber = '';
+        $course->id = 2;
+
+        $this->assertEquals('UMunicipalnoepravozaocnoe', utils::get_group_mail_alias($course));
+    }
 }
