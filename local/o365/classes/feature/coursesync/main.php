@@ -1019,10 +1019,19 @@ class main {
 
             $this->mtrace('Team created successfully. Group/Team ID: ' . $groupobjectid, $baselevel + 1);
         } catch (moodle_exception $e) {
-            $this->mtrace(
-                'Could not create team from template. Reason: ' . $e->getMessage(),
-                $baselevel + 1
-            );
+            $reason = $e->getMessage();
+            if (strpos($reason, 'UnableToGenerateValidTeamAlias') !== false) {
+                // Microsoft generates the mail alias from the team name, and drops all non-Latin characters. When nothing
+                // usable is left, or the generated alias has been used too many times, it cannot generate a valid alias.
+                // The team name is user input, so quote and escape it to keep the log message on one line.
+                $quotedteamname = json_encode($teamname, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES |
+                    JSON_INVALID_UTF8_SUBSTITUTE);
+                $reason .= ' Microsoft could not generate a valid mail alias from the team name ' . $quotedteamname .
+                    '. This usually happens when the name has no Latin characters, or too many teams already use the same ' .
+                    'alias. Use a different course part in the Teams name setting, or add a prefix or suffix containing ' .
+                    'Latin characters.';
+            }
+            $this->mtrace('Could not create team from template. Reason: ' . $reason, $baselevel + 1);
             return false;
         }
 
