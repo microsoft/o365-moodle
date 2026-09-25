@@ -143,4 +143,37 @@ final class authcode_test extends advanced_testcase {
         global $USER;
         $this->assertEquals($user->id, $USER->id);
     }
+
+    /**
+     * Test detection of authorization errors that mean multi-factor authentication is required.
+     *
+     * @param string $error The error code returned by the identity provider.
+     * @param string $errordescription The error description returned by the identity provider.
+     * @param bool $expected The expected result.
+     * @return void
+     * @covers ::is_mfa_required_error
+     * @dataProvider is_mfa_required_error_provider
+     */
+    public function test_is_mfa_required_error(string $error, string $errordescription, bool $expected): void {
+        $this->assertSame($expected, authcode::is_mfa_required_error($error, $errordescription));
+    }
+
+    /**
+     * Data provider for test_is_mfa_required_error().
+     *
+     * @return array
+     */
+    public static function is_mfa_required_error_provider(): array {
+        return [
+            'interaction required error code' => ['interaction_required', 'Interaction is required.', true],
+            'interaction required without description' => ['interaction_required', '', true],
+            'mfa error in description only' => [
+                '',
+                'AADSTS50076: Due to a configuration change made by your administrator, you must use multi-factor authentication.',
+                true,
+            ],
+            'other error' => ['access_denied', 'AADSTS65004: The user declined to consent.', false],
+            'no error' => ['', '', false],
+        ];
+    }
 }
