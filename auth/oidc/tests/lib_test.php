@@ -18,6 +18,11 @@ namespace auth_oidc;
 
 use advanced_testcase;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
 /**
  * Unit tests for functions in auth/oidc/lib.php
  *
@@ -71,5 +76,100 @@ final class lib_test extends advanced_testcase {
         require_once(__DIR__ . '/../lib.php');
 
         $this->assertSame($expected, auth_oidc_validate_secret_expiry_recipients($value));
+    }
+
+    /**
+     * Data provider for {@see self::test_determine_endpoint_version()}.
+     *
+     * @return array
+     */
+    public static function determine_endpoint_version_provider(): array {
+        return [
+            'global v1' => [
+                'https://login.microsoftonline.com/contoso.com/oauth2/token',
+                AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_1,
+            ],
+            'global v2' => [
+                'https://login.microsoftonline.com/contoso.com/oauth2/v2.0/token',
+                AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2,
+            ],
+            'China v1' => [
+                'https://login.partner.microsoftonline.cn/contoso.com/oauth2/authorize',
+                AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_1,
+            ],
+            'China v2' => [
+                'https://login.partner.microsoftonline.cn/contoso.com/oauth2/v2.0/authorize',
+                AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2,
+            ],
+            'China former host name v1' => [
+                'https://login.chinacloudapi.cn/contoso.com/oauth2/token',
+                AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_1,
+            ],
+            'China former host name v2' => [
+                'https://login.chinacloudapi.cn/contoso.com/oauth2/v2.0/token',
+                AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2,
+            ],
+            'other host' => [
+                'https://idp.example.com/contoso.com/oauth2/token',
+                AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN,
+            ],
+            'host only starting with a Microsoft host name' => [
+                'https://login.microsoftonline.com.example.com/contoso.com/oauth2/token',
+                AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN,
+            ],
+            'Microsoft host without an OAuth 2.0 path' => [
+                'https://login.microsoftonline.com/contoso.com/saml2',
+                AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN,
+            ],
+        ];
+    }
+
+    /**
+     * Test auth_oidc_determine_endpoint_version().
+     *
+     * @dataProvider determine_endpoint_version_provider
+     * @param string $endpoint
+     * @param int $expected
+     * @return void
+     * @covers ::auth_oidc_determine_endpoint_version
+     */
+    public function test_determine_endpoint_version(string $endpoint, int $expected): void {
+        $this->assertSame($expected, auth_oidc_determine_endpoint_version($endpoint));
+    }
+
+    /**
+     * The Microsoft cloud endpoints follow the Microsoft cloud setting.
+     *
+     * @return void
+     * @covers ::auth_oidc_use_chinese_api
+     * @covers ::auth_oidc_get_login_baseurl
+     * @covers ::auth_oidc_get_graph_resource
+     */
+    public function test_microsoft_cloud_endpoints(): void {
+        $this->resetAfterTest(true);
+
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+
+        $this->assertFalse(auth_oidc_use_chinese_api());
+        $this->assertSame('https://login.microsoftonline.com', auth_oidc_get_login_baseurl());
+        $this->assertSame('https://graph.microsoft.com', auth_oidc_get_graph_resource());
+
+        set_config('microsoftcloud', AUTH_OIDC_MICROSOFT_CLOUD_GLOBAL, 'auth_oidc');
+        $this->assertFalse(auth_oidc_use_chinese_api());
+        $this->assertSame('https://login.microsoftonline.com', auth_oidc_get_login_baseurl());
+
+        set_config('microsoftcloud', AUTH_OIDC_MICROSOFT_CLOUD_CHINA, 'auth_oidc');
+        $this->assertTrue(auth_oidc_use_chinese_api());
+        $this->assertSame('https://login.partner.microsoftonline.cn', auth_oidc_get_login_baseurl());
+        $this->assertSame('https://microsoftgraph.chinacloudapi.cn', auth_oidc_get_graph_resource());
+
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_oidc');
+        $this->assertTrue(auth_oidc_use_chinese_api());
+
+        // The setting does not apply to other IdP types.
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_OTHER, 'auth_oidc');
+        $this->assertFalse(auth_oidc_use_chinese_api());
+        $this->assertSame('https://login.microsoftonline.com', auth_oidc_get_login_baseurl());
+        $this->assertSame('https://graph.microsoft.com', auth_oidc_get_graph_resource());
     }
 }

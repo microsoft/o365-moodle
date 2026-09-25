@@ -82,7 +82,7 @@ final class unified_test extends advanced_testcase {
     }
 
     /**
-     * If oidcresource is not set and chineseapi is active, then the Chinese resource is returned.
+     * If oidcresource is not set and the China Microsoft cloud is selected, then the Chinese resource is returned.
      *
      * @return void
      * @covers ::get_tokenresource
@@ -95,7 +95,11 @@ final class unified_test extends advanced_testcase {
             $this->markTestSkipped('auth_oidc needs to be installed to use this test!');
         }
 
-        set_config('chineseapi', '1', 'local_o365');
+        global $CFG;
+        require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+        set_config('microsoftcloud', AUTH_OIDC_MICROSOFT_CLOUD_CHINA, 'auth_oidc');
 
         $this->assertEquals(unified::RESOURCE_URL_CHINESE, unified::get_tokenresource());
     }
@@ -110,7 +114,8 @@ final class unified_test extends advanced_testcase {
         $this->resetAfterTest();
         $this->assertFalse(unified::use_chinese_api());
 
-        set_config('chineseapi', '1', 'local_o365');
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+        set_config('microsoftcloud', AUTH_OIDC_MICROSOFT_CLOUD_CHINA, 'auth_oidc');
         $this->assertTrue(unified::use_chinese_api());
     }
 

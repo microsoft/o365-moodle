@@ -660,10 +660,6 @@ if ($hassiteconfig) {
             PARAM_TEXT
         ));
 
-        $label = new lang_string('settings_o365china', 'local_o365');
-        $desc = new lang_string('settings_o365china_details', 'local_o365');
-        $advancedsettings->add(new admin_setting_configcheckbox('local_o365/chineseapi', $label, $desc, '0'));
-
         $label = new lang_string('settings_debugmode', 'local_o365');
         $logurl = new url('/report/log/index.php', ['chooselog' => '1', 'modid' => 'site_errors']);
         $desc = new lang_string('settings_debugmode_details', 'local_o365', $logurl->out());
