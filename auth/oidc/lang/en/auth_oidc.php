@@ -55,6 +55,11 @@ $string['heading_debugging'] = 'Debugging';
 $string['heading_debugging_desc'] = '';
 $string['heading_tools'] = 'Tools';
 $string['heading_tools_desc'] = '';
+$string['microsoftcloud'] = 'Microsoft cloud';
+$string['microsoftcloud_help'] = 'Select the Microsoft cloud your Microsoft Entra tenant belongs to. It applies to the Microsoft Entra ID and Microsoft Identity Platform IdP types.<br/>
+Select "Microsoft 365 operated by 21Vianet (China)" if your organisation uses Microsoft 365 provided by 21Vianet. The sign-in service and Microsoft Graph endpoints of that cloud are then used for the requests made by the plugins, and the default values of the endpoints and resource below follow it. The values already saved for the endpoints, resource and logout endpoint are not changed, so update them if they are still set to the endpoints of the global cloud.';
+$string['microsoftcloud_global'] = 'Microsoft 365 (global)';
+$string['microsoftcloud_china'] = 'Microsoft 365 operated by 21Vianet (China)';
 $string['idptype'] = 'Identity Provider (IdP) Type';
 $string['idptype_help'] = 'Three types of IdP are currently supported:
 <ul>

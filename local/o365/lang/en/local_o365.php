@@ -659,8 +659,6 @@ $string['settings_reset_team_name_prefix'] = 'Reset Team name prefix';
 $string['settings_reset_team_name_prefix_details'] = 'When resetting a course that is connected to a Team, the name of the existing connected Team will be prefixed with this.';
 $string['settings_reset_group_name_prefix'] = 'Reset group name prefix';
 $string['settings_reset_group_name_prefix_details'] = 'When resetting a course that is connected to a group, the name of the existing group will be prefixed with this.';
-$string['settings_o365china'] = 'Microsoft 365 for China';
-$string['settings_o365china_details'] = 'Check this if you are using Microsoft 365 for China.';
 $string['settings_debugmode'] = 'Record debug messages';
 $string['settings_debugmode_details'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems. <a href="{$a}">View recorded log messages.</a>';
 $string['settings_switchauthminupnsplit0'] = 'Minimum inexact username length to switch to Microsoft 365';
