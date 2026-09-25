@@ -28,7 +28,6 @@ defined('MOODLE_INTERNAL') || die();
 
 use auth_oidc\adminsetting\auth_oidc_admin_setting_endpoint;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_iconselect;
-use auth_oidc\adminsetting\auth_oidc_admin_setting_loginflow;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_redirecturi;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_secretexpiryrecipients;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_section_heading;
@@ -568,17 +567,6 @@ if ($hassiteconfig) {
         )
     );
 
-    // Auto-append.
-    $settings->add(
-        new admin_setting_configtext(
-            'auth_oidc/autoappend',
-            get_string('cfg_autoappend_key', 'auth_oidc'),
-            get_string('cfg_autoappend_desc', 'auth_oidc'),
-            '',
-            PARAM_TEXT
-        )
-    );
-
     // Domain hint.
     $settings->add(
         new admin_setting_configtext(
@@ -587,16 +575,6 @@ if ($hassiteconfig) {
             get_string('cfg_domainhint_desc', 'auth_oidc'),
             '',
             PARAM_TEXT
-        )
-    );
-
-    // Login flow.
-    $settings->add(
-        new auth_oidc_admin_setting_loginflow(
-            'auth_oidc/loginflow',
-            get_string('cfg_loginflow_key', 'auth_oidc'),
-            '',
-            'authcode'
         )
     );
 
