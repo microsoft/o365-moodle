@@ -27,6 +27,7 @@
 namespace local_o365\feature\coursesync;
 
 use core\context\course;
+use core_text;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\rest\unified;
@@ -441,10 +442,21 @@ class utils {
     /**
      * Remove unsupported characters from the mail alias parts, and return the result.
      *
+     * Non-ASCII characters, e.g. Cyrillic letters or accented Latin letters, are transliterated to their ASCII equivalents first,
+     * so that names written in non-Latin scripts still produce a meaningful alias.
+     *
      * @param string $mailalias
      * @return string
      */
-    public static function clean_up_group_mail_alias(string $mailalias) {
+    public static function clean_up_group_mail_alias(string $mailalias): string {
+        if (preg_match('/[^\x00-\x7F]/', $mailalias)) {
+            $transliterated = core_text::specialtoascii($mailalias);
+            if (is_string($transliterated)) {
+                // Transliteration turns soft and hard signs into apostrophes, which add nothing to the alias.
+                $mailalias = str_replace("'", '', $transliterated);
+            }
+        }
+
         $notallowedbasicchars = ['@', '(', ')', "\\", '[', ']', '"', ';', ':', '.', '<', '>', ' '];
         $chars = preg_split('//u', $mailalias, -1, PREG_SPLIT_NO_EMPTY);
         foreach ($chars as $key => $char) {
