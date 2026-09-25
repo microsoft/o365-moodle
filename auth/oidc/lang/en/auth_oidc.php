@@ -73,8 +73,6 @@ $string['settings_application_wizard_desc'] = 'To configure these settings using
 $string['authendpoint'] = 'Authorization Endpoint';
 $string['authendpoint_help'] = 'The URI of the Authorization endpoint from your IdP to use.<br/>
 Note if the site is to be configured to allow users from other tenants to access, tenant specific authorization endpoint cannot be used.';
-$string['cfg_autoappend_key'] = 'Auto-Append';
-$string['cfg_autoappend_desc'] = 'Automatically append this string when logging in users using the "Resource Owner Password Credentials" authentication method. This is useful when your IdP requires a common domain, but don\'t want to require users to type it in when logging in. For example, if the full OpenID Connect user is "james@example.com" and you enter "@example.com" here, the user will only have to enter "james" as their username. <br /><b>Note:</b> In the case where conflicting usernames exist - i.e. a Moodle user exists wth the same name, the priority of the authentication plugin is used to determine which user wins out.';
 $string['clientid'] = 'Application ID';
 $string['clientid_help'] = 'The registered Application / Client ID on the IdP.';
 $string['clientauthmethod'] = 'Client authentication method';
@@ -138,9 +136,6 @@ $string['cfg_customicon_key'] = 'Custom Icon';
 $string['cfg_customicon_desc'] = 'If you\'d like to use your own icon, upload it here. This overrides any icon chosen above. <br /><br /><b>Notes on using custom icons:</b><ul><li>The uploaded file is not resized. It will be displayed at a fixed size of 24x24 pixels on the login page, with your browser scaling it to fit, so we recommend uploading a square image to avoid distortion.</li><li>If you have uploaded a custom icon and want to go back to one of the stock icons, click the custom icon in the box above, then click "Delete", then click "OK", then click "Save Changes" at the bottom of this form. The selected stock icon will now appear on the Moodle login page.</li></ul>';
 $string['cfg_debugmode_key'] = 'Record debug messages';
 $string['cfg_debugmode_desc'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems.';
-$string['cfg_loginflow_key'] = 'Login Flow';
-$string['cfg_loginflow_authcode'] = 'Authorization Code Flow <b>(recommended)</b>';
-$string['cfg_loginflow_authcode_desc'] = 'Using this flow, the user clicks the name of the IdP (See "Provider Display Name" above) on the Moodle login page and is redirected to the provider to log in. Once successfully logged in, the user is redirected back to Moodle where the Moodle login takes place transparently. This is the most standardized, secure way for the user log in.';
 $string['cfg_silentloginmode_key'] = 'Silent Login Mode';
 $string['cfg_silentloginmode_desc'] = 'If enabled, Moodle will try to use the active session of a user authenticated to the configured authorization endpoint to log the user in.<br/>
 To use this feature, the following configurations are required:
