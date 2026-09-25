@@ -239,6 +239,7 @@ $string['errorauthgeneral'] = 'There was a problem logging you in. Please contac
 $string['errorauthinvalididtoken'] = 'Invalid id_token received.';
 $string['errorauthloginfailednouser'] = 'Invalid login: User not found in Moodle. If this site has the "authpreventaccountcreation" setting enabled, this may mean you need an administrator to create an account for you first.';
 $string['errorauthloginfaileddupemail'] = 'Invalid login: An existing account on this Moodle has the same email address as the account you try to create, and "Allow accounts with same email" (allowaccountssameemail) setting is disabled.';
+$string['errorauthmfarequired'] = 'Microsoft requires multi-factor authentication to complete your login, but it could not be completed. Please try again, or sign in to Microsoft 365 in a new browser session and complete the multi-factor authentication prompt.';
 $string['errorauthnoauthcode'] = 'No authorization code was received from the identity server. The error logs may have more information.';
 $string['errorauthnocredsandendpoints'] = 'Please configure OpenID Connect client credentials and endpoints.';
 $string['errorauthnohttpclient'] = 'Please set an HTTP client.';
