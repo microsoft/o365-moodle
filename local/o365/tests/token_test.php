@@ -113,4 +113,106 @@ final class token_test extends advanced_testcase {
         $this->assertEquals('newresource', $token->get_tokenresource());
         $this->assertEquals($now + 1000, $token->get_expiry());
     }
+
+    /**
+     * Test detection of token endpoint responses that require multi-factor authentication.
+     *
+     * @param mixed $tokenresult The decoded token endpoint response.
+     * @param bool $expected The expected result.
+     *
+     * @covers \local_o365\oauth2\token::is_mfa_required_response
+     * @dataProvider is_mfa_required_response_provider
+     */
+    public function test_is_mfa_required_response($tokenresult, bool $expected): void {
+        $this->assertSame($expected, \local_o365\oauth2\token::is_mfa_required_response($tokenresult));
+    }
+
+    /**
+     * Data provider for test_is_mfa_required_response().
+     *
+     * @return array
+     */
+    public static function is_mfa_required_response_provider(): array {
+        return [
+            'interaction required error' => [['error' => 'interaction_required'], true],
+            'mfa error code only' => [['error' => 'invalid_grant', 'error_codes' => [50076]], true],
+            'full mfa response' => [
+                [
+                    'error' => 'interaction_required',
+                    'error_description' => 'AADSTS50076: you must use multi-factor authentication.',
+                    'error_codes' => [50076],
+                    'suberror' => 'basic_action',
+                ],
+                true,
+            ],
+            'other error' => [['error' => 'invalid_grant', 'error_codes' => [70008]], false],
+            'successful response' => [['token_type' => 'Bearer', 'access_token' => 'token'], false],
+            'empty array' => [[], false],
+            'not an array' => [null, false],
+        ];
+    }
+
+    /**
+     * Test that a refresh rejected because multi-factor authentication is required is flagged for the user.
+     *
+     * @covers \local_o365\oauth2\token::get_for_new_resource
+     * @covers \local_o365\oauth2\token::consume_mfa_required_for_user
+     */
+    public function test_get_for_new_resource_flags_mfa_required(): void {
+        global $DB;
+
+        $user = $this->getDataGenerator()->create_user();
+        $otheruser = $this->getDataGenerator()->create_user();
+
+        // The Graph token, which is used to get tokens for other resources, is stored by auth_oidc.
+        $DB->insert_record('auth_oidc_token', (object)[
+            'oidcuniqid' => 'oidcuniqid' . $user->id,
+            'username' => $user->username,
+            'userid' => $user->id,
+            'oidcusername' => $user->username,
+            'scope' => 'scope',
+            'tokenresource' => 'https://graph.microsoft.com',
+            'authcode' => 'authcode',
+            'token' => 'graphtoken',
+            'expiry' => time() - 1000,
+            'refreshtoken' => 'refreshtoken',
+            'idtoken' => 'idtoken',
+        ]);
+
+        $httpclient = new \local_o365\tests\mockhttpclient();
+        $httpclient->set_response(json_encode([
+            'error' => 'interaction_required',
+            'error_description' => 'AADSTS50076: you must use multi-factor authentication.',
+            'error_codes' => [50076],
+        ]));
+        $clientdata = new \local_o365\oauth2\clientdata(
+            'clientid',
+            'clientsecret',
+            'http://example.com/auth',
+            'http://example.com/token'
+        );
+
+        $gettoken = function () use ($user, $clientdata, $httpclient) {
+            return \local_o365\oauth2\token::get_for_new_resource(
+                $user->id,
+                'https://outlook.office.com',
+                $clientdata,
+                $httpclient
+            );
+        };
+
+        $this->assertFalse(\local_o365\oauth2\token::consume_mfa_required_for_user($user->id));
+
+        $this->assertFalse($gettoken());
+        $this->assertFalse(\local_o365\oauth2\token::consume_mfa_required_for_user($otheruser->id));
+        $this->assertTrue(\local_o365\oauth2\token::consume_mfa_required_for_user($user->id));
+        // The flag is one-shot, reading it clears it.
+        $this->assertFalse(\local_o365\oauth2\token::consume_mfa_required_for_user($user->id));
+
+        // A later attempt that fails for a different reason must not leave the flag set by an earlier attempt.
+        $this->assertFalse($gettoken());
+        $httpclient->set_response(json_encode(['error' => 'invalid_grant', 'error_codes' => [70008]]));
+        $this->assertFalse($gettoken());
+        $this->assertFalse(\local_o365\oauth2\token::consume_mfa_required_for_user($user->id));
+    }
 }
