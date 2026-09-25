@@ -62,6 +62,38 @@ const AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_1 = 1;
  */
 const AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2 = 2;
 
+// Microsoft cloud.
+/**
+ * Global Microsoft cloud.
+ */
+const AUTH_OIDC_MICROSOFT_CLOUD_GLOBAL = 1;
+
+/**
+ * Microsoft cloud in China operated by 21Vianet.
+ */
+const AUTH_OIDC_MICROSOFT_CLOUD_CHINA = 2;
+
+// Microsoft cloud endpoints.
+/**
+ * Base URL of the Microsoft Entra sign-in service.
+ */
+const AUTH_OIDC_MICROSOFT_LOGIN_URL = 'https://login.microsoftonline.com';
+
+/**
+ * Base URL of the Microsoft Entra sign-in service in China operated by 21Vianet.
+ */
+const AUTH_OIDC_MICROSOFT_LOGIN_URL_CHINA = 'https://login.partner.microsoftonline.cn';
+
+/**
+ * Microsoft Graph resource URL.
+ */
+const AUTH_OIDC_MICROSOFT_GRAPH_RESOURCE = 'https://graph.microsoft.com';
+
+/**
+ * Microsoft Graph resource URL in China operated by 21Vianet.
+ */
+const AUTH_OIDC_MICROSOFT_GRAPH_RESOURCE_CHINA = 'https://microsoftgraph.chinacloudapi.cn';
+
 // OIDC application authentication method.
 /**
  * OIDC application authentication method using secret.
@@ -341,6 +373,40 @@ function auth_oidc_is_local_365_installed() {
         $DB->record_exists('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']) &&
         $dbmanager->table_exists('local_o365_objects') &&
         $dbmanager->table_exists('local_o365_connections');
+}
+
+/**
+ * Determine whether the Microsoft cloud in China operated by 21Vianet is used.
+ *
+ * The Microsoft cloud setting only applies to the Microsoft IdP types.
+ *
+ * @return bool
+ */
+function auth_oidc_use_chinese_api(): bool {
+    $idptype = (int) get_config('auth_oidc', 'idptype');
+    if (!in_array($idptype, [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM])) {
+        return false;
+    }
+
+    return (int) get_config('auth_oidc', 'microsoftcloud') === AUTH_OIDC_MICROSOFT_CLOUD_CHINA;
+}
+
+/**
+ * Return the base URL of the Microsoft Entra sign-in service of the Microsoft cloud in use.
+ *
+ * @return string
+ */
+function auth_oidc_get_login_baseurl(): string {
+    return auth_oidc_use_chinese_api() ? AUTH_OIDC_MICROSOFT_LOGIN_URL_CHINA : AUTH_OIDC_MICROSOFT_LOGIN_URL;
+}
+
+/**
+ * Return the Microsoft Graph resource URL of the Microsoft cloud in use.
+ *
+ * @return string
+ */
+function auth_oidc_get_graph_resource(): string {
+    return auth_oidc_use_chinese_api() ? AUTH_OIDC_MICROSOFT_GRAPH_RESOURCE_CHINA : AUTH_OIDC_MICROSOFT_GRAPH_RESOURCE;
 }
 
 /**
@@ -883,11 +949,21 @@ function auth_oidc_get_all_user_fields() {
 function auth_oidc_determine_endpoint_version(string $endpoint) {
     $endpointversion = AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN;
 
-    if (strpos($endpoint, 'https://login.microsoftonline.com/') === 0) {
-        if (strpos($endpoint, 'oauth2/v2.0/') !== false) {
-            $endpointversion = AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2;
-        } else if (strpos($endpoint, 'oauth2') !== false) {
-            $endpointversion = AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_1;
+    // The sign-in service of the global Microsoft cloud, and of the one in China operated by 21Vianet (and its former host name).
+    $loginurls = [
+        AUTH_OIDC_MICROSOFT_LOGIN_URL . '/',
+        AUTH_OIDC_MICROSOFT_LOGIN_URL_CHINA . '/',
+        'https://login.chinacloudapi.cn/',
+    ];
+    foreach ($loginurls as $loginurl) {
+        if (strpos($endpoint, $loginurl) === 0) {
+            if (strpos($endpoint, 'oauth2/v2.0/') !== false) {
+                $endpointversion = AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2;
+            } else if (strpos($endpoint, 'oauth2') !== false) {
+                $endpointversion = AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_1;
+            }
+
+            break;
         }
     }
 

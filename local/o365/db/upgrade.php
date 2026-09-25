@@ -29,6 +29,7 @@ use local_o365\utils;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/local/o365/lib.php');
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 /**
  * Update plugin.
@@ -1708,6 +1709,25 @@ function xmldb_local_o365_upgrade($oldversion) {
 
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2026042000.04, 'local', 'o365');
+    }
+
+    if ($oldversion < 2026042001.02) {
+        // The "Microsoft 365 for China" setting has moved to auth_oidc as the "Microsoft cloud" setting.
+        $chineseapi = get_config('local_o365', 'chineseapi');
+        if ($chineseapi !== false) {
+            if (get_config('auth_oidc', 'microsoftcloud') === false) {
+                set_config(
+                    'microsoftcloud',
+                    !empty($chineseapi) ? AUTH_OIDC_MICROSOFT_CLOUD_CHINA : AUTH_OIDC_MICROSOFT_CLOUD_GLOBAL,
+                    'auth_oidc'
+                );
+            }
+
+            unset_config('chineseapi', 'local_o365');
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2026042001.02, 'local', 'o365');
     }
 
     return true;

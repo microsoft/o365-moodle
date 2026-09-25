@@ -129,4 +129,42 @@ final class oidcclient_test extends \advanced_testcase {
             $this->assertEquals($uri, $client->get_endpoint($type));
         }
     }
+
+    /**
+     * The scope requested from Microsoft Graph in the Microsoft Identity Platform requests follows the Microsoft cloud setting.
+     *
+     * @covers \auth_oidc\oidcclient::app_access_token_request
+     * @covers \auth_oidc\oidcclient::getadminconsentrequestparams
+     */
+    public function test_identity_platform_requests_use_graph_of_the_cloud_in_use(): void {
+        require_once(__DIR__ . '/../lib.php');
+
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_oidc');
+        set_config('clientauthmethod', AUTH_OIDC_AUTH_METHOD_SECRET, 'auth_oidc');
+
+        $cases = [
+            [AUTH_OIDC_MICROSOFT_CLOUD_GLOBAL, 'https://graph.microsoft.com/.default'],
+            [AUTH_OIDC_MICROSOFT_CLOUD_CHINA, 'https://microsoftgraph.chinacloudapi.cn/.default'],
+        ];
+        foreach ($cases as [$microsoftcloud, $expectedscope]) {
+            set_config('microsoftcloud', $microsoftcloud, 'auth_oidc');
+
+            $postedparams = null;
+            $httpclient = $this->createMock(\auth_oidc\httpclient::class);
+            $httpclient->method('post')->willReturnCallback(function ($url, $params) use (&$postedparams) {
+                $postedparams = $params;
+                return json_encode(['access_token' => 'token']);
+            });
+
+            $client = new \auth_oidc\tests\mockoidcclient($httpclient);
+            $client->setcreds('id', 'secret', 'https://example.com/redirect');
+            $client->setendpoints(['token' => 'https://example.com/token']);
+
+            $client->app_access_token_request();
+            $this->assertSame($expectedscope, $postedparams['scope']);
+
+            $getparams = new \ReflectionMethod($client, 'getadminconsentrequestparams');
+            $this->assertSame($expectedscope, $getparams->invoke($client)['scope']);
+        }
+    }
 }
