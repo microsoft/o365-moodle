@@ -2260,91 +2260,6 @@ class main {
     }
 
     /**
-     * Re-enable suspended users.
-     * This function will ensure that for all the users in the array received, if they have a Moodle account that's suspended but
-     * not deleted, the account will unsuspended.
-     *
-     * Performance optimizations:
-     * - Uses DB::set_field() instead of user_update_user() to avoid 153+ queries per user
-     * - Manually triggers \core\event\user_updated events to maintain event observer functionality
-     *
-     * @param array $entraidusers Array of Entra ID user objects
-     * @param bool $syncdisabledstatus Whether to check accountEnabled status before re-enabling
-     *
-     * @return int Number of users actually re-enabled
-     */
-    public function reenable_suspsend_users(array $entraidusers, $syncdisabledstatus) {
-        global $DB;
-
-        $reenablecount = 0;
-        $valientraiduserids = [];
-        if ($syncdisabledstatus) {
-            foreach ($entraidusers as $entraiduser) {
-                if ($entraiduser['accountEnabled']) {
-                    $valientraiduserids[] = $entraiduser['id'];
-                }
-            }
-        } else {
-            foreach ($entraidusers as $entraiduser) {
-                $valientraiduserids[] = $entraiduser['id'];
-            }
-        }
-
-        if ($valientraiduserids) {
-            [$objectidsql, $objectidparams] = $DB->get_in_or_equal($valientraiduserids, SQL_PARAMS_NAMED);
-            $query = 'SELECT u.*
-                        FROM {user} u
-                        JOIN {local_o365_objects} obj ON obj.type = :user AND obj.moodleid = u.id
-                       WHERE u.auth = :oidc
-                         AND u.deleted = :deleted
-                         AND u.suspended = :suspended
-                         AND obj.objectid ' . $objectidsql;
-            $params = [
-                'user' => 'user',
-                'oidc' => 'oidc',
-                'deleted' => 0,
-                'suspended' => 1,
-            ];
-            $params = array_merge($params, $objectidparams);
-
-            // Simplify query to only get id and username (reduce data transfer).
-            $simplequery = 'SELECT u.id, u.username
-                              FROM {user} u
-                              JOIN {local_o365_objects} obj ON obj.type = :user AND obj.moodleid = u.id
-                             WHERE u.auth = :oidc
-                               AND u.deleted = :deleted
-                               AND u.suspended = :suspended
-                               AND obj.objectid ' . $objectidsql;
-
-            // Use recordset to stream results instead of loading all into memory.
-            $suspendedusersrs = $DB->get_recordset_sql($simplequery, $params);
-            $userstoreenable = [];
-
-            foreach ($suspendedusersrs as $suspendeduser) {
-                $this->mtrace('Re-enabling user ' . $suspendeduser->username . '...');
-                $userstoreenable[] = $suspendeduser->id;
-                $reenablecount++;
-            }
-
-            // Close recordset to free memory.
-            $suspendedusersrs->close();
-
-            // Bulk update all users at once (single query instead of N queries).
-            if (!empty($userstoreenable)) {
-                [$useridsql, $useridparams] = $DB->get_in_or_equal($userstoreenable, SQL_PARAMS_QM);
-                $DB->execute('UPDATE {user} SET suspended = 0 WHERE id ' . $useridsql, $useridparams);
-
-                $this->preload_user_contexts($userstoreenable);
-                foreach ($userstoreenable as $userid) {
-                    \core\event\user_updated::create_from_userid($userid)->trigger();
-                }
-            }
-        }
-
-        return $reenablecount;
-    }
-
-    /**
      * Create a temporary table to hold Entra users with their enabled status.
      *
      * @return string The name of the created temporary table.
@@ -2437,12 +2352,11 @@ class main {
      * from multiple passes through the user table.
      *
      * @param string $temptablename The name of the temporary table with Entra users.
-     * @param bool $doreenable Whether to reenable users who reappear in Entra.
+     * @param bool $doreenable Whether to reenable users who reappear in Entra with an enabled account.
      * @param bool $dosuspend Whether to suspend users who are no longer in Entra.
      * @param bool $dodelete Whether to delete suspended users.
      * @param bool $dodisabledsyncsuspend Whether to suspend users whose Entra account is disabled.
-     * @param bool $dodisabledsyncreenable Whether to reenable users whose Entra account is (re-)enabled, and whether
-     *                                     to require accountEnabled=true before reenabling via $doreenable.
+     * @param bool $dodisabledsyncreenable Whether to reenable users whose Entra account is (re-)enabled.
      *
      * @return array [$reenabled, $suspended, $deleted] counts.
      */
@@ -2492,17 +2406,10 @@ class main {
         foreach ($usersrs as $user) {
             if ($user->isinentra) {
                 if ($user->suspended) {
-                    // User is in Entra and currently suspended - check if they should be reenabled, either because
-                    // they reappeared in Entra (gated by $doreenable, optionally requiring accountEnabled=true) or
-                    // because their Entra account has been (re-)enabled, independent of $doreenable.
-                    $shouldreenable = false;
-                    if ($doreenable && (!$dodisabledsyncreenable || $user->accountenabled)) {
-                        $shouldreenable = true;
-                    } else if ($dodisabledsyncreenable && $user->accountenabled) {
-                        $shouldreenable = true;
-                    }
-
-                    if ($shouldreenable) {
+                    // User is in Entra and currently suspended - reenable only if their Entra account is allowed to sign in,
+                    // either because they reappeared in Entra ($doreenable) or because their Entra account has been
+                    // (re-)enabled ($dodisabledsyncreenable). Accounts blocked from signing in are never reenabled.
+                    if ($user->accountenabled && ($doreenable || $dodisabledsyncreenable)) {
                         $userstoreenable[] = $user->id;
                         $this->mtrace('Re-enabling user ' . $user->username . '...');
                         $reenabled++;
