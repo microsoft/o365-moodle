@@ -58,15 +58,8 @@ class auth_plugin_oidc extends \auth_plugin_base {
             isset($SESSION->stateadditionaldata['forceflow'])
         ) {
             $loginflow = $SESSION->stateadditionaldata['forceflow'];
-        } else {
-            if (!empty($forceloginflow) && is_string($forceloginflow)) {
-                $loginflow = $forceloginflow;
-            } else {
-                $configuredloginflow = get_config('auth_oidc', 'loginflow');
-                if (!empty($configuredloginflow)) {
-                    $loginflow = $configuredloginflow;
-                }
-            }
+        } else if (!empty($forceloginflow) && is_string($forceloginflow)) {
+            $loginflow = $forceloginflow;
         }
         $loginflowclass = '\auth_oidc\loginflow\\' . $loginflow;
         if (class_exists($loginflowclass)) {
