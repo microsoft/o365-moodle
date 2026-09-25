@@ -148,6 +148,18 @@ class authcode extends base {
     }
 
     /**
+     * Check whether an authorization error returned by the identity provider means multi-factor authentication is required.
+     *
+     * @param string $error The error code returned by the identity provider.
+     * @param string $errordescription The error description returned by the identity provider.
+     * @return bool
+     */
+    public static function is_mfa_required_error(string $error, string $errordescription): bool {
+        // AADSTS50076: multi-factor authentication is required.
+        return $error === 'interaction_required' || strpos($errordescription, 'AADSTS50076') !== false;
+    }
+
+    /**
      * Handle requests to the redirect URL.
      *
      * @return mixed Determined by loginflow.
@@ -199,7 +211,8 @@ class authcode extends base {
             $requestparams = [
                 'state' => $state,
                 'code' => $code,
-                'error_description' => optional_param('error_description', '', PARAM_TEXT),
+                'error' => $error,
+                'error_description' => $errordescription,
             ];
             // Response from OP.
             $this->handleauthresponse($requestparams);
@@ -513,9 +526,14 @@ class authcode extends base {
 
         $sid = optional_param('session_state', '', PARAM_TEXT);
 
-        if (!empty($authparams['error_description'])) {
+        if (!empty($authparams['error']) || !empty($authparams['error_description'])) {
             utils::debug('Authorization error.', __METHOD__, $authparams);
-            redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, notification::NOTIFY_ERROR);
+            if (static::is_mfa_required_error($authparams['error'] ?? '', $authparams['error_description'] ?? '')) {
+                $errormessage = get_string('errorauthmfarequired', 'auth_oidc');
+            } else {
+                $errormessage = get_string('errorauthgeneral', 'auth_oidc');
+            }
+            redirect($CFG->wwwroot, $errormessage, null, notification::NOTIFY_ERROR);
         }
 
         if (!isset($authparams['code'])) {

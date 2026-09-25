@@ -816,6 +816,7 @@ $string['erroracplocalo365notconfig'] = 'Please configure local_o365 first.';
 $string['errorhttpclientbadtempfileloc'] = 'Could not open temporary location to store file.';
 $string['errorhttpclientnofileinput'] = 'No file parameter in httpclient::put';
 $string['errorcouldnotrefreshtoken'] = 'Could not refresh token';
+$string['errormfarequired'] = 'Microsoft requires multi-factor authentication before Moodle can access your Microsoft 365 account. Please log out of Moodle, then log in again using your Microsoft 365 account and complete the multi-factor authentication prompt.';
 $string['errorgetapplicationtoken'] = 'Could not get application token. Please verify your integration configuration.';
 $string['erroracpapcantgettenant'] = 'Could not get Microsoft Entra tenant, please enter manually.';
 $string['erroracpcantgettenant'] = 'Could not get OneDrive URL, please enter manually.';
