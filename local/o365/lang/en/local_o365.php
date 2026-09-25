@@ -924,7 +924,6 @@ $string['ucp_connection_stop'] = 'Disconnect from Microsoft 365';
 $string['ucp_connection_options'] = 'Connection Options:';
 $string['ucp_connection_desc'] = 'Here you can configure how you connect to Microsoft 365. To use Microsoft 365 features, you must be connected to a Microsoft 365 account. This can be accomplished as outlined below.';
 $string['ucp_connection_entraidlogin'] = 'Use your Microsoft 365 credentials to log in to Moodle<br />';
-$string['ucp_connection_entraidlogin_desc_rocreds'] = 'Instead of your Moodle username and password, you will enter your Microsoft 365 username and password on the Moodle login page.';
 $string['ucp_connection_entraidlogin_desc_authcode'] = 'Instead of entering a username and password on the Moodle login page, you will see a section that says "Login using your account on {$a}" on the login page. You will click the link and be redirected to Microsoft 365 to log in. After you have logged in to Microsoft 365 successfully, you will be returned to Moodle and logged in to your account.';
 $string['ucp_connection_entraidlogin_start'] = 'Start using Microsoft 365 to log in to Moodle.';
 $string['ucp_connection_entraidlogin_stop'] = 'Stop using Microsoft 365 to log in to Moodle.';
