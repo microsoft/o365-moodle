@@ -19,6 +19,7 @@ namespace auth_oidc\loginflow;
 use advanced_testcase;
 use auth_oidc\jwt;
 use core\plugininfo\auth as auth_plugininfo;
+use moodle_exception;
 use phpunit_util;
 
 /**
@@ -78,6 +79,83 @@ final class authcode_test extends advanced_testcase {
         }
 
         $this->assert_login_completes_for_matched_user('ASmith@SC.School.edu.AU', 'asmith@sc.school.edu.au');
+    }
+
+    /**
+     * Data provider for test_handlelogin_rejects_new_user_with_duplicate_email().
+     *
+     * @return array
+     */
+    public static function duplicate_email_provider(): array {
+        return [
+            'same case' => ['john.smith@example.com', 'john.smith@example.com'],
+            'different case' => ['john.smith@example.com', 'John.Smith@Example.com'],
+            'existing email is mixed case' => ['John.Smith@Example.com', 'john.smith@example.com'],
+        ];
+    }
+
+    /**
+     * When "Allow accounts with same email" is disabled, a first-time OIDC login must not create a new account
+     * if another account already uses the same email address, regardless of the letter case of either address.
+     *
+     * Regression test for https://github.com/microsoft/o365-moodle/issues/1836.
+     *
+     * @dataProvider duplicate_email_provider
+     * @param string $existingemail The email of the existing Moodle user.
+     * @param string $incomingemail The email received for the user who is logging in.
+     * @return void
+     * @covers ::handlelogin
+     */
+    public function test_handlelogin_rejects_new_user_with_duplicate_email(
+        string $existingemail,
+        string $incomingemail
+    ): void {
+        global $DB;
+
+        set_config('allowaccountssameemail', 0);
+        $this->getDataGenerator()->create_user(['username' => 'existinguser', 'email' => $existingemail]);
+
+        $upn = 'newuser@example.com';
+        $idtoken = new jwt();
+        $idtoken->set_claims([
+            'sub' => 'sub-newuser',
+            'upn' => $upn,
+            'preferred_username' => $upn,
+        ]);
+
+        $oidcuniqid = 'oidcuniqid-newuser';
+        $authparams = ['code' => 'authcode-newuser'];
+        $tokenparams = [
+            'access_token' => 'access-token',
+            'id_token' => 'id-token',
+            'expires_in' => 3600,
+            'resource' => 'resource',
+            'scope' => 'scope',
+        ];
+
+        $loginflow = $this->getMockBuilder(authcode::class)
+            ->onlyMethods(['get_userinfo'])
+            ->getMock();
+        $loginflow->method('get_userinfo')->willReturn(['email' => $incomingemail]);
+
+        $_GET['code'] = $authparams['code'];
+
+        try {
+            phpunit_util::call_internal_method(
+                $loginflow,
+                'handlelogin',
+                [$oidcuniqid, $authparams, $tokenparams, $idtoken],
+                authcode::class
+            );
+            $this->fail('Expected a moodle_exception for the duplicate email address.');
+        } catch (moodle_exception $e) {
+            $this->assertEquals('errorauthloginfaileddupemail', $e->errorcode);
+            $this->assertEquals('auth_oidc', $e->module);
+        } finally {
+            unset($_GET['code']);
+        }
+
+        $this->assertFalse($DB->record_exists('user', ['username' => 'newuser@example.com']));
     }
 
     /**
