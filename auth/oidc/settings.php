@@ -109,6 +109,22 @@ if ($hassiteconfig) {
     $idptypesetting->set_updatedcallback('auth_oidc_validate_auth_settings');
     $applicationsettings->add($idptypesetting);
 
+    // Microsoft cloud.
+    $microsoftcloudoptions = [
+        AUTH_OIDC_MICROSOFT_CLOUD_GLOBAL => get_string('microsoftcloud_global', 'auth_oidc'),
+        AUTH_OIDC_MICROSOFT_CLOUD_CHINA => get_string('microsoftcloud_china', 'auth_oidc'),
+    ];
+    $microsoftcloudsetting = new admin_setting_configselect(
+        'auth_oidc/microsoftcloud',
+        get_string('microsoftcloud', 'auth_oidc'),
+        get_string('microsoftcloud_help', 'auth_oidc'),
+        AUTH_OIDC_MICROSOFT_CLOUD_GLOBAL,
+        $microsoftcloudoptions
+    );
+    $microsoftcloudsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
+    $applicationsettings->add($microsoftcloudsetting);
+    $applicationsettings->hide_if('auth_oidc/microsoftcloud', 'auth_oidc/idptype', 'eq', AUTH_OIDC_IDP_TYPE_OTHER);
+
     // Client ID.
     $clientidsetting = new admin_setting_configtext(
         'auth_oidc/clientid',
@@ -241,7 +257,7 @@ if ($hassiteconfig) {
         'auth_oidc/authendpoint',
         get_string('authendpoint', 'auth_oidc'),
         get_string('authendpoint_help', 'auth_oidc'),
-        'https://login.microsoftonline.com/organizations/oauth2/authorize',
+        auth_oidc_get_login_baseurl() . '/organizations/oauth2/authorize',
         'auth'
     );
     $authendpointsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
@@ -252,7 +268,7 @@ if ($hassiteconfig) {
         'auth_oidc/tokenendpoint',
         get_string('tokenendpoint', 'auth_oidc'),
         get_string('tokenendpoint_help', 'auth_oidc'),
-        'https://login.microsoftonline.com/organizations/oauth2/token',
+        auth_oidc_get_login_baseurl() . '/organizations/oauth2/token',
         'token'
     );
     $tokenendpointsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
@@ -270,7 +286,7 @@ if ($hassiteconfig) {
         'auth_oidc/oidcresource',
         get_string('oidcresource', 'auth_oidc'),
         get_string('oidcresource_help', 'auth_oidc'),
-        'https://graph.microsoft.com',
+        auth_oidc_get_graph_resource(),
         PARAM_TEXT
     );
     $oidcresourcesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
@@ -709,7 +725,7 @@ if ($hassiteconfig) {
             'auth_oidc/logouturi',
             get_string('cfg_logoutendpoint_key', 'auth_oidc'),
             get_string('cfg_logoutendpoint_desc', 'auth_oidc'),
-            'https://login.microsoftonline.com/organizations/oauth2/logout',
+            auth_oidc_get_login_baseurl() . '/organizations/oauth2/logout',
             PARAM_URL
         )
     );
