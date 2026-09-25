@@ -674,5 +674,19 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025100602.08, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2025100603.04) {
+        // The Microsoft cloud setting replaces the "Microsoft 365 for China" setting of local_o365.
+        if (get_config('auth_oidc', 'microsoftcloud') === false) {
+            $chineseapi = get_config('local_o365', 'chineseapi');
+            set_config(
+                'microsoftcloud',
+                !empty($chineseapi) ? AUTH_OIDC_MICROSOFT_CLOUD_CHINA : AUTH_OIDC_MICROSOFT_CLOUD_GLOBAL,
+                'auth_oidc'
+            );
+        }
+
+        upgrade_plugin_savepoint(true, 2025100603.04, 'auth', 'oidc');
+    }
+
     return true;
 }
