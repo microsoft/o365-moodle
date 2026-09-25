@@ -93,9 +93,9 @@ class clientdata {
     public static function get_apptokenendpoint_from_tenant($tenant) {
         $idptype = get_config('auth_oidc', 'idptype');
         if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID) {
-            return 'https://login.microsoftonline.com/' . $tenant . '/oauth2/token';
+            return auth_oidc_get_login_baseurl() . '/' . $tenant . '/oauth2/token';
         } else if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-            return 'https://login.microsoftonline.com/' . $tenant . '/oauth2/v2.0/token';
+            return auth_oidc_get_login_baseurl() . '/' . $tenant . '/oauth2/v2.0/token';
         } else {
             return '';
         }
