@@ -82,15 +82,7 @@ class oidcclient {
         if (!empty($tokenresource)) {
             $this->tokenresource = $tokenresource;
         } else {
-            if (auth_oidc_is_local_365_installed()) {
-                if (\local_o365\rest\o365api::use_chinese_api() === true) {
-                    $this->tokenresource = 'https://microsoftgraph.chinacloudapi.cn';
-                } else {
-                    $this->tokenresource = 'https://graph.microsoft.com';
-                }
-            } else {
-                $this->tokenresource = 'https://graph.microsoft.com';
-            }
+            $this->tokenresource = auth_oidc_get_graph_resource();
         }
         $this->scope = (!empty($scope)) ? $scope : 'openid profile email';
     }
@@ -231,7 +223,7 @@ class oidcclient {
 
         $params = [
             'client_id' => $this->clientid,
-            'scope' => 'https://graph.microsoft.com/.default',
+            'scope' => auth_oidc_get_graph_resource() . '/.default',
             'state' => $this->getnewstate($nonce, $stateparams),
             'redirect_uri' => $this->redirecturi,
         ];
@@ -295,7 +287,7 @@ class oidcclient {
      * @return void
      */
     public function adminconsentrequest(array $stateparams = [], array $extraparams = []) {
-        $adminconsentendpoint = 'https://login.microsoftonline.com/organizations/v2.0/adminconsent';
+        $adminconsentendpoint = auth_oidc_get_login_baseurl() . '/organizations/v2.0/adminconsent';
         $params = $this->getadminconsentrequestparams($stateparams, $extraparams);
         $redirecturl = new url($adminconsentendpoint, $params);
         redirect($redirecturl);
@@ -340,7 +332,7 @@ class oidcclient {
     public function app_access_token_request() {
         $params = [
             'client_id' => $this->clientid,
-            'scope' => 'https://graph.microsoft.com/.default',
+            'scope' => auth_oidc_get_graph_resource() . '/.default',
             'grant_type' => 'client_credentials',
         ];
 
