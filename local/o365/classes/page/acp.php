@@ -1803,6 +1803,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $plugins = [
             'auth_oidc' => [
+                'microsoftcloud',
                 'authendpoint',
                 'tokenendpoint',
                 'oidcresource',
@@ -1842,7 +1843,6 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 'entratenant',
                 'entratenantid',
                 'verifysetupresult',
-                'chineseapi',
                 'coursesync',
                 'coursesynccustom',
                 'debugmode',
