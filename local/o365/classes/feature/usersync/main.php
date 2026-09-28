@@ -1356,8 +1356,14 @@ class main {
 
         $usersyncsettings = $this->get_sync_options();
         $switchauthminupnsplit0 = get_config('local_o365', 'switchauthminupnsplit0');
-        if (empty($switchauthminupnsplit0)) {
+        if ($switchauthminupnsplit0 === false || $switchauthminupnsplit0 === '' || !is_numeric($switchauthminupnsplit0)) {
+            // Not configured, or a legacy non-numeric value saved before this setting used PARAM_INT; fall back to
+            // the default.
             $switchauthminupnsplit0 = 10;
+        } else {
+            // A configured value of 0 is left as-is so admins can deliberately disable the minimum length
+            // protection. Negative values are clamped to 0.
+            $switchauthminupnsplit0 = max(0, (int) $switchauthminupnsplit0);
         }
 
         $usernames = [];
@@ -2204,7 +2210,13 @@ class main {
                     'uselogin' => isset($syncoptions['matchswitchauth']) ? 1 : 0,
                 ];
                 $DB->insert_record('local_o365_connections', $matchrec);
-                $this->mtrace('Matched user, but did not switch them to OIDC.');
+                if (isset($syncoptions['matchswitchauth']) && !$exactmatch) {
+                    $this->mtrace('Matched user, but the username is not an exact match to the Microsoft Entra ID UPN ' .
+                        'and does not meet the exact-match requirements for switching to OIDC (see the "Minimum ' .
+                        'inexact username length to switch to Microsoft 365" setting); not switching to OIDC.');
+                } else {
+                    $this->mtrace('Matched user, but did not switch them to OIDC.');
+                }
             }
 
             return true;
