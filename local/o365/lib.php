@@ -485,3 +485,73 @@ function local_o365_get_settings_nav_html(string $currentpage): string {
 
     return $html;
 }
+
+/**
+ * Force the Microsoft Teams tab theme override onto the current session.
+ *
+ * Only marks the override as Teams-originated (via $SESSION->local_o365_teamstheme) when a theme was
+ * actually applied. This matters when neither local_o365/customtheme nor theme_boost_o365teams is
+ * installed/configured: without this guard, local_o365_after_require_login() and
+ * theme_boost_o365teams/amd/src/iframeChecker.js could later clear a theme override this function
+ * never set in the first place, e.g. Moodle's own ?theme= URL override.
+ */
+function local_o365_apply_teams_theme() {
+    global $SESSION;
+
+    $customtheme = get_config('local_o365', 'customtheme');
+    if (!empty($customtheme) && get_config('theme_' . $customtheme, 'version')) {
+        $SESSION->theme = $customtheme;
+    } else if (get_config('theme_boost_o365teams', 'version')) {
+        $SESSION->theme = 'boost_o365teams';
+    } else {
+        return;
+    }
+
+    $SESSION->local_o365_teamstheme = true;
+}
+
+/**
+ * Plugin callback invoked by require_login() on every page load that requires login, before the
+ * theme for the response is resolved (theme resolution is triggered by the first $OUTPUT call,
+ * which happens later in the request).
+ *
+ * A Microsoft Teams tab and an ordinary browser tab share the same Moodle session, so a theme
+ * override written to $SESSION persists across both. This re-derives the override on each request
+ * from that request's own Sec-Fetch-Dest header (sent by Chromium and Firefox for navigations that
+ * load into an iframe), so a request made directly in a browser tab can no longer inherit a theme
+ * override left behind by a request made through the Teams tab, or vice versa (see
+ * microsoft/o365-moodle#1278). Browsers that do not send this header (e.g. Safari) fall back to the
+ * session-based override set in teams_tab.php/sso_login.php, self-corrected client-side by
+ * theme_boost_o365teams/amd/src/iframeChecker.js.
+ *
+ * Only acts on full-page navigations (Sec-Fetch-Mode: navigate). Subresource/AJAX/fragment requests
+ * made from within the Teams tab also call require_login() and commonly carry other Sec-Fetch-Dest
+ * values (e.g. empty, script, style), which would otherwise be misread as "not in Teams" and clear
+ * the override out from under an active Teams session.
+ *
+ * @param mixed $courseorid unused, part of the after_require_login callback signature.
+ * @param bool $autologinguest unused, part of the after_require_login callback signature.
+ * @param mixed $cm unused, part of the after_require_login callback signature.
+ * @param bool $setwantsurltome unused, part of the after_require_login callback signature.
+ * @param bool $preventredirect unused, part of the after_require_login callback signature.
+ */
+function local_o365_after_require_login($courseorid, $autologinguest, $cm, $setwantsurltome, $preventredirect) {
+    global $SESSION;
+
+    if (!isset($_SERVER['HTTP_SEC_FETCH_MODE']) || $_SERVER['HTTP_SEC_FETCH_MODE'] !== 'navigate') {
+        return;
+    }
+
+    if (!isset($_SERVER['HTTP_SEC_FETCH_DEST'])) {
+        return;
+    }
+
+    if ($_SERVER['HTTP_SEC_FETCH_DEST'] === 'iframe') {
+        local_o365_apply_teams_theme();
+    } else if (!empty($SESSION->local_o365_teamstheme)) {
+        // Only clear an override this plugin itself set for an earlier Teams-embedded request;
+        // never touch an unrelated theme override, e.g. Moodle's own ?theme= URL switch.
+        unset($SESSION->theme);
+        unset($SESSION->local_o365_teamstheme);
+    }
+}
