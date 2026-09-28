@@ -140,8 +140,9 @@ class assign_submission_onenote extends assign_submission_plugin {
         try {
             $onenoteapi = base::getinstance();
         } catch (moodle_exception $e) {
-            $html = '<div>' . $e->getMessage() . '</div>';
-            $mform->addElement('html', $html);
+            // OneNote is unavailable for this user (e.g. no Microsoft 365 account connected). Other enabled
+            // submission types remain usable, so skip this section silently instead of alarming the student
+            // with an API error.
             return false;
         }
 
@@ -423,10 +424,25 @@ class assign_submission_onenote extends assign_submission_plugin {
         $count = $this->count_files($submission->id, base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
         $showviewlink = $count > base::ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES;
 
+        if ($count == 0) {
+            // Nothing was submitted via OneNote, so there is nothing to show here and no need to contact
+            // the API. This keeps the summary blank for users who simply used another submission type.
+            return '';
+        }
+
         try {
             $onenoteapi = base::getinstance();
         } catch (moodle_exception $e) {
-            return $e->getMessage();
+            // OneNote is unavailable for this user (e.g. no Microsoft 365 account connected), but files were
+            // already submitted, so still let them be downloaded instead of showing a raw API error.
+            if ($count <= base::ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES) {
+                return $this->assignment->render_area_files(
+                    'assignsubmission_onenote',
+                    base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+                    $submission->id
+                );
+            }
+            return get_string('countfiles', 'assignsubmission_onenote', $count);
         }
 
         $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
@@ -434,11 +450,8 @@ class assign_submission_onenote extends assign_submission_plugin {
 
         if ($count <= base::ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES) {
             if (
-                ($count > 0)
-                && (
-                    $isteacher
-                    || (isset($submission->status) && ($submission->status == ASSIGN_SUBMISSION_STATUS_SUBMITTED))
-                )
+                $isteacher
+                || (isset($submission->status) && ($submission->status == ASSIGN_SUBMISSION_STATUS_SUBMITTED))
             ) {
                 if ($onenoteapi->is_logged_in()) {
                     // Show a link to open the OneNote page.
