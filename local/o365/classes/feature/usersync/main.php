@@ -377,8 +377,9 @@ class main {
         fclose($fp);
 
         $newpicture = process_new_icon($context, 'user', 'icon', 0, $tempfile);
+        $iconprocessingfailed = ($newpicture === false);
         $result = false;
-        if ($newpicture != $muser->picture) {
+        if (!$iconprocessingfailed && $newpicture != $muser->picture) {
             $DB->set_field('user', 'picture', $newpicture, ['id' => $muser->id]);
             $result = true;
         }
@@ -386,35 +387,46 @@ class main {
         @unlink($tempfile);
 
         if ($printtrace) {
-            $this->mtrace('Photo applied.');
+            if ($iconprocessingfailed) {
+                $this->mtrace('Photo processing failed.');
+            } else if ($result) {
+                $this->mtrace('Photo applied.');
+            } else {
+                $this->mtrace('Photo unchanged.');
+            }
         }
 
-        // Update appassign record only if photo changed.
-        if ($result) {
-            if ($appassignid !== null) {
+        // Update appassign record whenever an attempt was made, whether or not the photo actually
+        // changed in Moodle. This keeps photoupdated accurate (so the expiry logic in the sync task
+        // can skip re-fetching too often) and ensures a record always exists to reflect sync status,
+        // even when process_new_icon() fails to process the downloaded image (e.g. corrupt data or
+        // an unsupported format/size). The photohash is only stored on success. If it were stored
+        // after a failed attempt, a later run would see the hash still matches the (unchanged) M365
+        // photo and treat that as "already applied", permanently skipping retries for a photo that
+        // was never actually applied.
+        if ($appassignid !== null) {
+            $record = new stdClass();
+            $record->id = $appassignid;
+            $record->photoupdated = time();
+            if (!$iconprocessingfailed && $photohash !== null) {
+                $record->photohash = $photohash;
+            }
+            $DB->update_record('local_o365_appassign', $record);
+        } else {
+            $record = $DB->get_record('local_o365_appassign', ['muserid' => $muserid]);
+            if (empty($record)) {
                 $record = new stdClass();
-                $record->id = $appassignid;
-                $record->photoupdated = time();
-                if ($photohash !== null) {
-                    $record->photohash = $photohash;
-                }
-                $DB->update_record('local_o365_appassign', $record);
+                $record->muserid = $muserid;
+                $record->assigned = 0;
+            }
+            $record->photoupdated = time();
+            if (!$iconprocessingfailed && $photohash !== null) {
+                $record->photohash = $photohash;
+            }
+            if (empty($record->id)) {
+                $DB->insert_record('local_o365_appassign', $record);
             } else {
-                $record = $DB->get_record('local_o365_appassign', ['muserid' => $muserid]);
-                if (empty($record)) {
-                    $record = new stdClass();
-                    $record->muserid = $muserid;
-                    $record->assigned = 0;
-                }
-                $record->photoupdated = time();
-                if ($photohash !== null) {
-                    $record->photohash = $photohash;
-                }
-                if (empty($record->id)) {
-                    $DB->insert_record('local_o365_appassign', $record);
-                } else {
-                    $DB->update_record('local_o365_appassign', $record);
-                }
+                $DB->update_record('local_o365_appassign', $record);
             }
         }
 
