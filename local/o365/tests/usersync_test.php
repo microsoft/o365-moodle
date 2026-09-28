@@ -289,6 +289,60 @@ final class usersync_test extends advanced_testcase {
     }
 
     /**
+     * Test that update_user_from_entra_id_data() clears a mapped Moodle profile field when Microsoft
+     * Entra ID returns the field explicitly as null, rather than leaving the previously-synced value
+     * in place. Graph's $select response returns a selected-but-unset field as null instead of
+     * omitting the key entirely, which apply_configured_fieldmap() must treat as "clear this field".
+     *
+     * @covers \local_o365\feature\usersync\main::update_user_from_entra_id_data
+     * @covers \local_o365\feature\usersync\main::apply_configured_fieldmap
+     */
+    public function test_update_user_from_entra_id_data_clears_field_on_null(): void {
+        global $DB;
+
+        $httpclient = new mockhttpclient();
+        $clientdata = $this->get_mock_clientdata();
+        $usersync = new main($clientdata, $httpclient);
+
+        $entraiddata = [
+            'odata.type' => 'Microsoft.WindowsAzure.ActiveDirectory.User',
+            'objectType' => 'User',
+            'objectId' => '00000000-0000-0000-0000-000000000099',
+            'id' => '00000000-0000-0000-0000-000000000099',
+            'city' => 'Toronto',
+            'country' => 'CA',
+            'department' => 'Dev',
+            'givenName' => 'Test',
+            'mail' => 'testuser99@example.onmicrosoft.com',
+            'surname' => 'User99',
+            'userPrincipalName' => 'testuser99@example.onmicrosoft.com',
+            'useridentifier' => 'testuser99@example.onmicrosoft.com',
+            'useridentifierlower' => 'testuser99@example.onmicrosoft.com',
+            'upnsplit0' => 'testuser99',
+        ];
+
+        $usersync->create_user_from_entra_id_data($entraiddata, []);
+
+        $existinguser = $DB->get_record('user', ['username' => $entraiddata['mail']], '*', MUST_EXIST);
+        $this->assertSame('Toronto', $existinguser->city);
+        $this->assertSame('CA', $existinguser->country);
+        $this->assertSame('Dev', $existinguser->department);
+
+        // Simulate the fields being cleared in Microsoft Entra ID: Graph's $select response returns
+        // the keys explicitly as null rather than omitting them.
+        $entraiddata['city'] = null;
+        $entraiddata['country'] = null;
+        $entraiddata['department'] = null;
+
+        $usersync->update_user_from_entra_id_data($entraiddata, $existinguser);
+
+        $updateduser = $DB->get_record('user', ['id' => $existinguser->id], '*', MUST_EXIST);
+        $this->assertSame('', $updateduser->city);
+        $this->assertSame('', $updateduser->country);
+        $this->assertSame('', $updateduser->department);
+    }
+
+    /**
      * Test sync_users method when creating users.
      *
      * @covers \local_o365\feature\usersync\main::sync_users
