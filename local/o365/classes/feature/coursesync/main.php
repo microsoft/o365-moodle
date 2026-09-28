@@ -2242,8 +2242,21 @@ class main {
         $currentowners = array_keys($owners);
 
         // Get intended group members.
-        $intendedteamowners = utils::get_team_owner_object_ids_by_course_id($courseid);
-        $intendedteammembers = utils::get_team_member_object_ids_by_course_id($courseid, $intendedteamowners);
+        try {
+            $intendedteamowners = utils::get_team_owner_object_ids_by_course_id($courseid);
+        } catch (moodle_exception $e) {
+            $this->mtrace('Failed to get intended team owners. Details: ' . $e->getMessage(), 2);
+            $this->mtrace('Skipped syncing group owners / members for course ' . $courseid, 2);
+            return false;
+        }
+
+        try {
+            $intendedteammembers = utils::get_team_member_object_ids_by_course_id($courseid, $intendedteamowners);
+        } catch (moodle_exception $e) {
+            $this->mtrace('Failed to get intended team members. Details: ' . $e->getMessage(), 2);
+            $this->mtrace('Skipped syncing group owners / members for course ' . $courseid, 2);
+            return false;
+        }
 
         if (!empty($currentowners)) {
             $toaddowners = array_diff($intendedteamowners, $currentowners);
