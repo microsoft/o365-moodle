@@ -700,6 +700,59 @@ function auth_oidc_apply_default_email_mapping() {
 }
 
 /**
+ * Determine whether the given user principal name is itself a usable email address.
+ *
+ * Some Microsoft Entra ID accounts have no 'mail' attribute (for example, cloud-only accounts without an
+ * Exchange Online mailbox, or on-premises accounts synced without a mail attribute set), but their UPN
+ * happens to be in email format and can be used as a stand-in.
+ *
+ * @param string|null $upn The user's user principal name.
+ * @return string|null The UPN, if it is a valid email address; otherwise null.
+ */
+function auth_oidc_upn_as_email(?string $upn): ?string {
+    if (empty($upn)) {
+        return null;
+    }
+
+    $email = filter_var($upn, FILTER_VALIDATE_EMAIL);
+
+    return !empty($email) ? $email : null;
+}
+
+/**
+ * Generate a placeholder email address for a Microsoft Entra ID user who has no usable email address, if the
+ * site is configured to do so.
+ *
+ * @param string|null $upn The user's user principal name, used to build the placeholder address when available.
+ * @param string|null $objectid The user's Entra ID object ID, used to build the placeholder address if no UPN
+ *                               is available.
+ * @return string|null The generated placeholder email address, or null if generation is disabled, not fully
+ *                      configured, or no usable identifier is available to build one from.
+ */
+function auth_oidc_generate_dummy_email(?string $upn, ?string $objectid = null): ?string {
+    if (empty(get_config('auth_oidc', 'generatedummyemail'))) {
+        return null;
+    }
+
+    $domain = trim((string) get_config('auth_oidc', 'dummyemaildomain'));
+    if (empty($domain)) {
+        return null;
+    }
+
+    $identifier = !empty($upn) ? $upn : $objectid;
+    if (empty($identifier)) {
+        return null;
+    }
+
+    $localpart = strtolower(preg_replace('/[^a-zA-Z0-9._-]/', '', $identifier));
+    if (empty($localpart)) {
+        return null;
+    }
+
+    return $localpart . '@' . $domain;
+}
+
+/**
  * Helper function used to print mapping and locking for auth_oidc plugin on admin pages.
  *
  * @param stdclass $settings Moodle admin settings instance
