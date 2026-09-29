@@ -210,13 +210,6 @@ class base {
                             $email = $token->claim('email');
                             if (!empty($email)) {
                                 $userdata['mail'] = $email;
-                            } else {
-                                if (!empty($upn)) {
-                                    $entraidemailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
-                                    if (!empty($entraidemailvalidateresult)) {
-                                        $userdata['mail'] = $entraidemailvalidateresult;
-                                    }
-                                }
                             }
                         }
 
@@ -299,13 +292,6 @@ class base {
                     $email = $token->claim('email');
                     if (!empty($email)) {
                         $userdata['mail'] = $email;
-                    } else {
-                        if (!empty($upn)) {
-                            $entraidemailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
-                            if (!empty($entraidemailvalidateresult)) {
-                                $userdata['mail'] = $entraidemailvalidateresult;
-                            }
-                        }
                     }
                 }
 
@@ -317,6 +303,25 @@ class base {
                 }
 
                 $this->add_configured_custom_claims_to_userdata($userdata, $token);
+            }
+
+            if (empty($userdata['mail'])) {
+                $upn = $userdata['userPrincipalName'] ?? null;
+                $fallbackemail = auth_oidc_upn_as_email($upn);
+                if (!empty($fallbackemail)) {
+                    $userdata['mail'] = $fallbackemail;
+                } else {
+                    $dummyemail = auth_oidc_generate_dummy_email($upn, $userdata['objectId'] ?? null);
+                    if (!empty($dummyemail)) {
+                        $userdata['mail'] = $dummyemail;
+                        \auth_oidc\utils::debug(
+                            'No email address was received from Microsoft for this user; using generated placeholder ' .
+                                'email address "' . $dummyemail . '" instead.',
+                            'auth_oidc\loginflow\base::get_userinfo',
+                            ['username' => $username, 'userPrincipalName' => $upn]
+                        );
+                    }
+                }
             }
 
             $updateduser = static::apply_configured_fieldmap_from_token($userdata, $eventtype);
