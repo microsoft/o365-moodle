@@ -1368,13 +1368,23 @@ class main {
         foreach ($entraidusers as $i => $user) {
             if (!isset($user[$bindingusernameclaim])) {
                 // User doesn't have the binding username claim, should be deleted users.
+                $userobjectid = $user['id'] ?? ($user['objectId'] ?? 'unknown');
+                $this->mtrace('Microsoft Entra ID user missing binding username claim "' . $bindingusernameclaim . '" (' .
+                    $userobjectid . '); skipping...');
                 unset($entraidusers[$i]);
                 continue;
             }
 
             if (!$guestsync || $bindingusernameclaim != 'userPrincipalName') {
                 if (strpos($user['userPrincipalName'], '#EXT#') !== false) {
-                    // The user is a guest user, and the guest sync option is disabled. Skip processing the user.
+                    // The user is a guest user, and either guest sync is disabled, or the configured binding
+                    // username claim is not userPrincipalName (guest users can only be matched by UPN). Skip
+                    // processing the user.
+                    $skipreason = (!$guestsync)
+                        ? 'guest sync is disabled'
+                        : 'the binding username claim is not userPrincipalName';
+                    $this->mtrace('Microsoft Entra ID guest user ' . $user['userPrincipalName'] .
+                        ' received, but ' . $skipreason . '; skipping...');
                     unset($entraidusers[$i]);
                     continue;
                 }
@@ -1651,6 +1661,7 @@ class main {
             ) {
                 // Check if the user has been renamed.
                 $syncnewuser = array_key_exists('create', $usersyncsettings);
+                $isrenameduser = false;
                 if (
                     isset($entraiduser['id']) && $entraiduser['id'] &&
                     $existingusermatching = ($this->o365objectsbyobjectid[$entraiduser['id']] ?? null)
@@ -1662,6 +1673,7 @@ class main {
                     if ($renamedmoodleuser) {
                         $this->mtrace('The user has been renamed in Microsoft...');
                         $syncnewuser = false;
+                        $isrenameduser = true;
 
                         if ($supportuseridentifierchangeconfig == 1) {
                             // Check if manually matched users, who shouldn't be renamed.
@@ -1750,6 +1762,8 @@ class main {
                         $entraiduser,
                         isset($usersyncsettings['guestsync'])
                     );
+                } else if (!$isrenameduser) {
+                    $this->mtrace('Not creating a Moodle user because that sync option is disabled.');
                 }
             } else {
                 // Entra ID user details match existing user record.
@@ -1879,26 +1893,35 @@ class main {
                         );
                     }
 
-                    if (($existinguser->auth === 'oidc' || empty($existinguser->tokid)) && $connected) {
-                        // Create userobject if it does not exist.
-                        if (empty($existinguser->objectid)) {
-                            $this->mtrace('Adding o365 object record for user.');
-                            $now = time();
-                            $userobjectdata = (object) [
-                                'type' => 'user',
-                                'subtype' => '',
-                                'objectid' => $userobjectid,
-                                'o365name' => $entraiduser['useridentifier'],
-                                'moodleid' => $existinguser->muserid,
-                                'tenant' => '',
-                                'timecreated' => $now,
-                                'timemodified' => $now,
-                            ];
-                            $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
-                        }
+                    if ($connected) {
+                        if ($existinguser->auth === 'oidc' || empty($existinguser->tokid)) {
+                            // Create userobject if it does not exist.
+                            if (empty($existinguser->objectid)) {
+                                $this->mtrace('Adding o365 object record for user.');
+                                $now = time();
+                                $userobjectdata = (object) [
+                                    'type' => 'user',
+                                    'subtype' => '',
+                                    'objectid' => $userobjectid,
+                                    'o365name' => $entraiduser['useridentifier'],
+                                    'moodleid' => $existinguser->muserid,
+                                    'tenant' => '',
+                                    'timecreated' => $now,
+                                    'timemodified' => $now,
+                                ];
+                                $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
+                            }
 
-                        // User already connected.
-                        $this->mtrace('Linked to Moodle account #' . $existinguser->muserid . '.');
+                            // User already connected.
+                            $this->mtrace('Linked to Moodle account #' . $existinguser->muserid . '.');
+                        } else {
+                            // The user is matched to Microsoft Entra ID but authenticates with a non-OIDC method, so
+                            // there is no further account linking or profile syncing to do for them here.
+                            $this->mtrace(
+                                'No further action taken for this user (not using OIDC authentication, ' .
+                                'and no other applicable sync options enabled).'
+                            );
+                        }
                     }
                 }
             }
