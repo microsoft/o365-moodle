@@ -684,6 +684,38 @@ if ($hassiteconfig) {
         )
     );
 
+    // Placeholder email heading.
+    $settings->add(
+        new admin_setting_heading(
+            'auth_oidc/dummy_email_heading',
+            get_string('heading_dummy_email', 'auth_oidc'),
+            get_string('heading_dummy_email_desc', 'auth_oidc')
+        )
+    );
+
+    // Generate placeholder email addresses.
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'auth_oidc/generatedummyemail',
+            get_string('cfg_generatedummyemail_key', 'auth_oidc'),
+            get_string('cfg_generatedummyemail_desc', 'auth_oidc'),
+            '0'
+        )
+    );
+
+    // Domain to use for placeholder email addresses.
+    $settings->add(
+        new admin_setting_configtext(
+            'auth_oidc/dummyemaildomain',
+            get_string('cfg_dummyemaildomain_key', 'auth_oidc'),
+            get_string('cfg_dummyemaildomain_desc', 'auth_oidc'),
+            '',
+            PARAM_TEXT
+        )
+    );
+
+    $settings->hide_if('auth_oidc/dummyemaildomain', 'auth_oidc/generatedummyemail', 'notchecked');
+
     // Sign out integration heading.
     $settings->add(
         new admin_setting_heading(

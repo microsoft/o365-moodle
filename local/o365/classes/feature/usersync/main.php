@@ -871,6 +871,31 @@ class main {
             $userobjectid = $entraiduserdata['userPrincipalName'];
         }
 
+        if (empty($entraiduserdata['mail'])) {
+            $upn = $entraiduserdata['userPrincipalName'] ?? null;
+            $fallbackemail = auth_oidc_upn_as_email($upn);
+            if (!empty($fallbackemail)) {
+                $entraiduserdata['mail'] = $fallbackemail;
+            } else {
+                $dummyemail = auth_oidc_generate_dummy_email($upn, $userobjectid);
+                if (!empty($dummyemail)) {
+                    $entraiduserdata['mail'] = $dummyemail;
+                    $message = 'No email address was received from Microsoft for user "' . ($upn ?? '') . '"; using ' .
+                        'generated placeholder email address "' . $dummyemail . '" instead.';
+                    if (CLI_SCRIPT) {
+                        // This function also runs during interactive OIDC login, where mtrace() would echo
+                        // straight into the page response, so only trace here when running as a CLI task.
+                        static::mtrace($message);
+                    }
+                    \auth_oidc\utils::debug(
+                        $message,
+                        'local_o365\feature\usersync\main::apply_configured_fieldmap',
+                        ['userPrincipalName' => $upn, 'objectId' => $userobjectid]
+                    );
+                }
+            }
+        }
+
         $usersync = new self();
 
         $countrymapping = get_string_manager()->get_list_of_countries();
