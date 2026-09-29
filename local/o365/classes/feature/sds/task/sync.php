@@ -491,9 +491,14 @@ class sync extends scheduled_task {
                     $classmembers = is_array($classmembers) ? $classmembers : [];
                     static::mtrace('API returned ' . count($classmembers) . ' members for class ' . $schoolclass['id'], 5);
                     foreach ($classmembers as $classmember) {
-                        if (!in_array($classmember['id'], $teachersobjectids)) {
-                            $classuserids[] = $classmember['id'];
+                        if (in_array($classmember['id'], $teachersobjectids)) {
+                            // This member is also a class teacher (SDS lists teachers as class
+                            // members as well). They were already handled by the teacher loop
+                            // above and must not additionally receive the student role.
+                            continue;
                         }
+
+                        $classuserids[] = $classmember['id'];
 
                         $objectrec = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $classmember['id']]);
                         if (empty($objectrec)) {
