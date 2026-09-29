@@ -72,4 +72,135 @@ final class lib_test extends advanced_testcase {
 
         $this->assertSame($expected, auth_oidc_validate_secret_expiry_recipients($value));
     }
+
+    /**
+     * Data provider for {@see self::test_validate_custom_claims()}.
+     *
+     * @return array
+     */
+    public static function validate_custom_claims_provider(): array {
+        return [
+            'empty string' => ['', []],
+            'whitespace only' => ['   ', []],
+            'single valid claim' => ['employee_type', []],
+            'multiple valid claims' => ['employee_type badge_number costCenter custom_role', []],
+            'valid directory extension attribute claim' => [
+                'extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode',
+                [],
+            ],
+            'single format-invalid claim' => ['bad claim!', ['claim!']],
+            'reserved standard JWT/OIDC claim' => ['sub', ['sub']],
+            'reserved standard OIDC claim' => ['email', ['email']],
+            'reserved Microsoft Entra ID claim' => ['upn', ['upn']],
+            'reserved Microsoft Entra ID claim is case-insensitive' => ['UPN', ['UPN']],
+            'reserved Keycloak claim' => ['realm_access', ['realm_access']],
+            'reserved binding username claim value' => ['samaccountname', ['samaccountname']],
+            'reserved existing field mapping option' => ['department', ['department']],
+            'mixed valid, format-invalid, and reserved claims' => [
+                'employee_type sub bad claim! realm_access',
+                ['sub', 'claim!', 'realm_access'],
+            ],
+        ];
+    }
+
+    /**
+     * Test auth_oidc_validate_custom_claims().
+     *
+     * @dataProvider validate_custom_claims_provider
+     * @param string $value
+     * @param array $expected
+     * @return void
+     * @covers ::auth_oidc_validate_custom_claims
+     * @covers ::auth_oidc_get_reserved_custom_claim_names
+     */
+    public function test_validate_custom_claims(string $value, array $expected): void {
+        $this->resetAfterTest(true);
+
+        require_once(__DIR__ . '/../lib.php');
+
+        $this->assertSame($expected, auth_oidc_validate_custom_claims($value));
+    }
+
+    /**
+     * Data provider for {@see self::test_get_validated_custom_claim_names()}.
+     *
+     * @return array
+     */
+    public static function get_validated_custom_claim_names_provider(): array {
+        return [
+            'not configured' => [null, [], []],
+            'empty string' => ['', [], []],
+            'whitespace only' => ['   ', [], []],
+            'single valid claim' => ['employee_type', ['employee_type'], []],
+            'multiple valid claims' => [
+                'employee_type badge_number costCenter',
+                ['employee_type', 'badge_number', 'costCenter'],
+                [],
+            ],
+            'duplicate claims are deduplicated' => [
+                'employee_type employee_type badge_number',
+                ['employee_type', 'badge_number'],
+                [],
+            ],
+            'format-invalid claims are silently skipped' => [
+                'employee_type bad! badge_number',
+                ['employee_type', 'badge_number'],
+                ['Invalid custom claim name skipped: bad!'],
+            ],
+            'reserved claims are silently skipped' => [
+                'employee_type sub badge_number UPN',
+                ['employee_type', 'badge_number'],
+                [
+                    'Reserved custom claim name skipped: sub',
+                    'Reserved custom claim name skipped: UPN',
+                ],
+            ],
+            'mixed valid, duplicate, format-invalid, and reserved claims' => [
+                'sub employee_type bad! employee_type realm_access badge_number',
+                ['employee_type', 'badge_number'],
+                [
+                    'Reserved custom claim name skipped: sub',
+                    'Invalid custom claim name skipped: bad!',
+                    'Reserved custom claim name skipped: realm_access',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Test auth_oidc_get_validated_custom_claim_names().
+     *
+     * @dataProvider get_validated_custom_claim_names_provider
+     * @param string|null $configvalue
+     * @param array $expected
+     * @param array $expecteddebugging Expected debugging() messages, in call order; empty when
+     *                                  every configured claim is valid and none should be skipped.
+     * @return void
+     * @covers ::auth_oidc_get_validated_custom_claim_names
+     * @covers ::auth_oidc_get_reserved_custom_claim_names
+     */
+    public function test_get_validated_custom_claim_names(
+        ?string $configvalue,
+        array $expected,
+        array $expecteddebugging
+    ): void {
+        $this->resetAfterTest(true);
+
+        require_once(__DIR__ . '/../lib.php');
+
+        if ($configvalue !== null) {
+            set_config('customclaims', $configvalue, 'auth_oidc');
+        }
+
+        $this->assertSame($expected, auth_oidc_get_validated_custom_claim_names());
+
+        // The function under test calls debugging() for each format-invalid or reserved claim it
+        // silently skips; Moodle's test harness fails a test that triggers an unconsumed
+        // debugging() call, so every expected one must be asserted explicitly.
+        if (empty($expecteddebugging)) {
+            $this->assertDebuggingNotCalled();
+        } else {
+            $this->assertDebuggingCalledCount(count($expecteddebugging), $expecteddebugging);
+        }
+    }
 }
