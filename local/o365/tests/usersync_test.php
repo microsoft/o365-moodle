@@ -289,6 +289,113 @@ final class usersync_test extends advanced_testcase {
     }
 
     /**
+     * When Microsoft Entra ID provides no 'mail' attribute for a user being synced (for example, a cloud-only
+     * account with no Exchange Online mailbox), and placeholder email generation is disabled (the default),
+     * the user must still be created, with their email address left unset rather than the sync failing.
+     *
+     * Regression test for https://github.com/microsoft/o365-moodle/issues/2839.
+     *
+     * @return void
+     * @covers \local_o365\feature\usersync\main::create_user_from_entra_id_data
+     * @covers \local_o365\feature\usersync\main::apply_configured_fieldmap
+     */
+    public function test_create_user_from_entra_id_data_leaves_email_unset_when_no_mail_and_generation_disabled(): void {
+        global $DB;
+
+        $entraiddata = [
+            'odata.type' => 'Microsoft.WindowsAzure.ActiveDirectory.User',
+            'objectType' => 'User',
+            'objectId' => '00000000-0000-0000-0000-000000000005',
+            'id' => '00000000-0000-0000-0000-000000000005',
+            'givenName' => 'Test',
+            'surname' => 'User5',
+            'userPrincipalName' => 'CONTOSO\\testuser5',
+            'useridentifier' => 'testuser5',
+        ];
+
+        $httpclient = new mockhttpclient();
+        $clientdata = $this->get_mock_clientdata();
+        $usersync = new main($clientdata, $httpclient);
+        $usersync->create_user_from_entra_id_data($entraiddata, []);
+
+        $createduser = $DB->get_record('user', ['username' => 'testuser5', 'auth' => 'oidc']);
+        $this->assertNotFalse($createduser);
+        $this->assertSame('', $createduser->email);
+    }
+
+    /**
+     * When Microsoft Entra ID provides no 'mail' attribute for a user being synced, and the site is configured
+     * to generate a placeholder address, the user sync task must apply the generated placeholder email
+     * address to the newly created user, the same way the OIDC login flow does.
+     *
+     * Regression test for https://github.com/microsoft/o365-moodle/issues/2839.
+     *
+     * @return void
+     * @covers \local_o365\feature\usersync\main::create_user_from_entra_id_data
+     * @covers \local_o365\feature\usersync\main::apply_configured_fieldmap
+     */
+    public function test_create_user_from_entra_id_data_generates_placeholder_email_when_no_mail_received(): void {
+        global $DB;
+
+        set_config('generatedummyemail', 1, 'auth_oidc');
+        set_config('dummyemaildomain', 'example.test', 'auth_oidc');
+
+        $entraiddata = [
+            'odata.type' => 'Microsoft.WindowsAzure.ActiveDirectory.User',
+            'objectType' => 'User',
+            'objectId' => '00000000-0000-0000-0000-000000000006',
+            'id' => '00000000-0000-0000-0000-000000000006',
+            'givenName' => 'Test',
+            'surname' => 'User6',
+            'userPrincipalName' => 'CONTOSO\\testuser6',
+            'useridentifier' => 'testuser6',
+        ];
+
+        $httpclient = new mockhttpclient();
+        $clientdata = $this->get_mock_clientdata();
+        $usersync = new main($clientdata, $httpclient);
+        $usersync->create_user_from_entra_id_data($entraiddata, []);
+
+        $createduser = $DB->get_record('user', ['username' => 'testuser6', 'auth' => 'oidc']);
+        $this->assertNotFalse($createduser);
+        $this->assertSame('contosotestuser6@example.test', $createduser->email);
+    }
+
+    /**
+     * When Microsoft Graph is configured, Entra ID user data carries the object ID under 'id' rather than
+     * 'objectId'. The placeholder email fallback must still find it, so a Graph-synced user with neither a
+     * mail attribute nor a usable UPN still gets a generated placeholder address instead of none at all.
+     *
+     * Regression test for https://github.com/microsoft/o365-moodle/issues/2839.
+     *
+     * @return void
+     * @covers \local_o365\feature\usersync\main::create_user_from_entra_id_data
+     * @covers \local_o365\feature\usersync\main::apply_configured_fieldmap
+     */
+    public function test_create_user_from_entra_id_data_generates_placeholder_email_using_graph_id_field(): void {
+        global $DB;
+
+        set_config('generatedummyemail', 1, 'auth_oidc');
+        set_config('dummyemaildomain', 'example.test', 'auth_oidc');
+
+        $entraiddata = [
+            'id' => '00000000-0000-0000-0000-000000000007',
+            'givenName' => 'Test',
+            'surname' => 'User7',
+            'useridentifier' => 'testuser7',
+        ];
+
+        $httpclient = new mockhttpclient();
+        $clientdata = $this->get_mock_clientdata();
+        $usersync = new main($clientdata, $httpclient);
+        $usersync->create_user_from_entra_id_data($entraiddata, []);
+
+        $createduser = $DB->get_record('user', ['username' => 'testuser7', 'auth' => 'oidc']);
+        $this->assertNotFalse($createduser);
+        $this->assertSame('00000000-0000-0000-0000-000000000007@example.test', $createduser->email);
+    }
+
+    /**
      * Test sync_users method when creating users.
      *
      * @covers \local_o365\feature\usersync\main::sync_users
