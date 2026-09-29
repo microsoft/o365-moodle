@@ -894,22 +894,29 @@ class main {
                 $remotefield = $objectidfieldname;
             }
 
-            if (isset($entraiduserdata[$remotefield])) {
+            // Use array_key_exists() rather than isset() so that a field explicitly cleared in
+            // Microsoft Entra ID (returned as null by Graph, since it was included in $select)
+            // is applied as an empty value instead of being skipped, which previously left the
+            // stale Moodle value in place. See MDL bug report / GitHub issue #2281.
+            if (array_key_exists($remotefield, $entraiduserdata)) {
                 switch ($remotefield) {
                     case 'country':
                         // Update country with two-letter country code.
-                        $incoming = strtoupper($entraiduserdata[$remotefield]);
-                        if (isset($countrymapping[$incoming])) {
-                            $countrycode = $incoming;
-                        } else {
-                            $incoming = strtolower($incoming);
-                            foreach ($countrymapping as $code => $country) {
-                                if (
-                                    stripos($country, $incoming) !== false ||
-                                    stripos($incoming, $country) !== false
-                                ) {
-                                    $countrycode = $code;
-                                    break;
+                        $incoming = strtoupper((string) $entraiduserdata[$remotefield]);
+                        $countrycode = '';
+                        if ($incoming !== '') {
+                            if (isset($countrymapping[$incoming])) {
+                                $countrycode = $incoming;
+                            } else {
+                                $incominglower = strtolower($incoming);
+                                foreach ($countrymapping as $code => $country) {
+                                    if (
+                                        stripos($country, $incominglower) !== false ||
+                                        stripos($incominglower, $country) !== false
+                                    ) {
+                                        $countrycode = $code;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -917,10 +924,10 @@ class main {
                         $user->$localfield = (!empty($countrycode)) ? $countrycode : '';
                         break;
                     case 'businessPhones':
-                        $user->$localfield = implode(', ', $entraiduserdata[$remotefield]);
+                        $user->$localfield = implode(', ', (array) $entraiduserdata[$remotefield]);
                         break;
                     default:
-                        $user->$localfield = $entraiduserdata[$remotefield];
+                        $user->$localfield = $entraiduserdata[$remotefield] ?? '';
                 }
             }
 
@@ -952,11 +959,18 @@ class main {
                         if (substr($remotefield, 0, 18) == 'extensionAttribute') {
                             $extensionattributeid = substr($remotefield, 18);
                             if (ctype_digit($extensionattributeid) && $extensionattributeid >= 1 && $extensionattributeid <= 15) {
+                                // Use array_key_exists() rather than isset() so that an extension
+                                // attribute cleared in Microsoft Entra ID (returned as null by
+                                // Graph) is applied as an empty value instead of being skipped.
+                                // Guard with is_array() first: onPremisesExtensionAttributes itself
+                                // can be present but null (e.g. cloud-only users), and passing null
+                                // as the array_key_exists() haystack throws a TypeError in PHP 8.
                                 if (
-                                    isset($entraiduserdata['onPremisesExtensionAttributes']) &&
-                                    isset($entraiduserdata['onPremisesExtensionAttributes'][$remotefield])
+                                    array_key_exists('onPremisesExtensionAttributes', $entraiduserdata) &&
+                                    is_array($entraiduserdata['onPremisesExtensionAttributes']) &&
+                                    array_key_exists($remotefield, $entraiduserdata['onPremisesExtensionAttributes'])
                                 ) {
-                                    $user->$localfield = $entraiduserdata['onPremisesExtensionAttributes'][$remotefield];
+                                    $user->$localfield = $entraiduserdata['onPremisesExtensionAttributes'][$remotefield] ?? '';
                                 }
                             }
                         }
