@@ -58,6 +58,14 @@ class unified extends o365api {
     public $apiarea = 'graph';
 
     /**
+     * Custom claim fields requested in the most recent batched user query but never returned for
+     * any user. Read and cleared via get_and_clear_dropped_custom_claim_fields().
+     *
+     * @var array
+     */
+    protected array $lastdroppedcustomclaimfields = [];
+
+    /**
      * The Microsoft OAuth2 token resource
      */
     public const RESOURCE_URL = 'https://graph.microsoft.com';
@@ -1112,6 +1120,103 @@ class unified extends o365api {
     }
 
     /**
+     * Get the subset of a requested field list that are configured "custom claims".
+     *
+     * Custom claim names come from the identity provider's tokens (see the "Custom claims"
+     * auth_oidc setting), not from Microsoft Graph, so they are not guaranteed to also be
+     * selectable Graph user properties. They are returned separately so their presence in
+     * returned user records can be tracked (see track_custom_claim_field_presence()), and any
+     * that Graph does not recognise can be reported instead of the sync silently doing nothing
+     * for that field.
+     *
+     * @param array $params The field list requested from Graph.
+     * @return array The fields in $params that are configured custom claims.
+     */
+    protected function get_custom_claim_fields_in(array $params): array {
+        global $CFG;
+
+        require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
+        return array_values(array_intersect($params, auth_oidc_get_validated_custom_claim_names()));
+    }
+
+    /**
+     * Get and clear the list of custom claim fields that were requested in the last batched user
+     * query but never returned for any user — how Microsoft Graph typically responds to a $select
+     * property it does not recognise, rather than returning an API error. See
+     * track_custom_claim_field_presence() and record_unsupported_custom_claim_fields().
+     *
+     * @return array
+     */
+    public function get_and_clear_dropped_custom_claim_fields(): array {
+        $dropped = $this->lastdroppedcustomclaimfields;
+        $this->lastdroppedcustomclaimfields = [];
+
+        return $dropped;
+    }
+
+    /**
+     * Wrap a page handler so it also tracks which of the given custom claim fields Microsoft
+     * Graph actually returned a key for, in at least one user record.
+     *
+     * Microsoft Graph does not reliably return an API error for a $select property it does not
+     * recognise; it typically just omits that key from every returned record instead. A field
+     * that is genuinely selectable (even if its value happens to be empty for every synced user)
+     * is still returned with a null value, so checking for key presence distinguishes "not a
+     * Graph property" from "no value set".
+     *
+     * @param callable $pagehandler The original page handler.
+     * @param array $droppablefields Configured custom claim fields present in the current $select.
+     * @param array $seenfields Reference used to accumulate which of $droppablefields were seen;
+     *                          inspect it once pagination completes via
+     *                          record_unsupported_custom_claim_fields().
+     * @return callable
+     */
+    protected function track_custom_claim_field_presence(
+        callable $pagehandler,
+        array $droppablefields,
+        array &$seenfields
+    ): callable {
+        return function (array $result) use ($pagehandler, $droppablefields, &$seenfields): int {
+            if (!empty($droppablefields) && !empty($result['value']) && is_array($result['value'])) {
+                foreach ($result['value'] as $user) {
+                    if (!is_array($user)) {
+                        continue;
+                    }
+                    foreach ($droppablefields as $field) {
+                        if (!isset($seenfields[$field]) && array_key_exists($field, $user)) {
+                            $seenfields[$field] = true;
+                        }
+                    }
+                    if (count($seenfields) >= count($droppablefields)) {
+                        break;
+                    }
+                }
+            }
+
+            return $pagehandler($result);
+        };
+    }
+
+    /**
+     * Record, as dropped, any configured custom claim fields that were requested but never seen
+     * in a returned user record. See track_custom_claim_field_presence() for how $seenfields is
+     * populated.
+     *
+     * @param array $droppablefields Configured custom claim fields that were requested.
+     * @param array $seenfields Fields (as keys) actually observed in at least one user record.
+     * @return void
+     */
+    protected function record_unsupported_custom_claim_fields(array $droppablefields, array $seenfields): void {
+        $missing = array_values(array_diff($droppablefields, array_keys($seenfields)));
+        if (empty($missing)) {
+            return;
+        }
+
+        $this->lastdroppedcustomclaimfields = array_unique(array_merge($this->lastdroppedcustomclaimfields, $missing));
+    }
+
+    /**
      * Execute a paginated OData GET query, invoking a page-handler for each API response page.
      *
      * This is the single shared implementation of the pagination loop used by
@@ -1196,6 +1301,7 @@ class unified extends o365api {
      */
     public function process_users_batched(callable $callback, $params = 'default'): int {
         $odataqueries = [];
+        $droppablefields = [];
 
         if ($params === 'default') {
             $params = $this->get_required_user_fields();
@@ -1208,6 +1314,7 @@ class unified extends o365api {
                     unset($params[$key]);
                 }
             }
+            $droppablefields = $this->get_custom_claim_fields_in($params);
             $odataqueries['$select'] = implode(',', $params);
         }
 
@@ -1221,7 +1328,16 @@ class unified extends o365api {
             return 0;
         };
 
+        $seenfields = [];
+        $pagehandler = $this->track_custom_claim_field_presence($pagehandler, $droppablefields, $seenfields);
+
         [$totalprocessed] = $this->execute_odata_paginated('/users', $odataqueries, $pagehandler);
+        if ($totalprocessed > 0) {
+            // Only judge field support when at least one user record was actually seen; an empty
+            // result proves nothing either way.
+            $this->record_unsupported_custom_claim_fields($droppablefields, $seenfields);
+        }
+
         return $totalprocessed;
     }
 
@@ -1239,6 +1355,7 @@ class unified extends o365api {
     public function process_users_delta_batched(callable $callback, $params = 'default', ?string $deltatoken = null): array {
         $odataqueries = [];
         $fieldsmappingchanged = false;
+        $droppablefields = [];
 
         if ($params === 'default') {
             $params = $this->get_required_user_fields();
@@ -1254,6 +1371,7 @@ class unified extends o365api {
 
             // Sort to ensure consistent ordering regardless of how callers supply the field list.
             sort($params);
+            $droppablefields = $this->get_custom_claim_fields_in($params);
             $selectfields = implode(',', $params);
             $odataqueries['$select'] = $selectfields;
 
@@ -1307,7 +1425,15 @@ class unified extends o365api {
             return count($batch);
         };
 
+        $seenfields = [];
+        $pagehandler = $this->track_custom_claim_field_presence($pagehandler, $droppablefields, $seenfields);
+
         [$totalprocessed, $deltatokenvalue] = $this->execute_odata_paginated('/users/delta', $odataqueries, $pagehandler);
+        if ($totalprocessed > 0) {
+            // Only judge field support when at least one user record was actually seen; a delta
+            // run with no changed users proves nothing either way.
+            $this->record_unsupported_custom_claim_fields($droppablefields, $seenfields);
+        }
 
         return [$totalprocessed, $deltatokenvalue, $fieldsmappingchanged];
     }
@@ -1350,6 +1476,7 @@ class unified extends o365api {
      */
     public function process_group_members_batched(string $groupid, callable $callback, $params = 'default'): int {
         $odataqueries = [];
+        $droppablefields = [];
 
         if ($params === 'default') {
             $params = $this->get_required_user_fields();
@@ -1362,6 +1489,7 @@ class unified extends o365api {
                     unset($params[$key]);
                 }
             }
+            $droppablefields = $this->get_custom_claim_fields_in($params);
             $odataqueries['$select'] = implode(',', $params);
         }
 
@@ -1384,6 +1512,11 @@ class unified extends o365api {
             return 0;
         };
 
+        // Track custom claim field presence across both the owner and member queries, since
+        // together they cover everyone this method returns to the caller.
+        $seenfields = [];
+        $ownerpage = $this->track_custom_claim_field_presence($ownerpage, $droppablefields, $seenfields);
+
         $ownerendpoint = "/groups/{$groupid}/owners/microsoft.graph.user";
         $this->execute_odata_paginated($ownerendpoint, $ownerqueries, $ownerpage);
 
@@ -1402,6 +1535,7 @@ class unified extends o365api {
             }
             return 0;
         };
+        $pagehandler = $this->track_custom_claim_field_presence($pagehandler, $droppablefields, $seenfields);
 
         $endpoint = "/groups/{$groupid}/members/microsoft.graph.user";
         [$totalprocessed] = $this->execute_odata_paginated($endpoint, $odataqueries, $pagehandler);
@@ -1412,6 +1546,12 @@ class unified extends o365api {
             $owneronly = array_values($ownerids);
             $callback($owneronly);
             $totalprocessed += count($owneronly);
+        }
+
+        if ($totalprocessed > 0) {
+            // Only judge field support when at least one user record was actually seen; an empty
+            // group proves nothing either way.
+            $this->record_unsupported_custom_claim_fields($droppablefields, $seenfields);
         }
 
         return $totalprocessed;
@@ -1481,6 +1621,7 @@ class unified extends o365api {
         // invalidation logic from process_users_delta_batched so token management is consistent.
         $odataqueries = [];
         $fieldsmappingchanged = false;
+        $droppablefields = [];
 
         if ($params === 'default') {
             $params = $this->get_required_user_fields();
@@ -1495,6 +1636,7 @@ class unified extends o365api {
             }
 
             sort($params);
+            $droppablefields = $this->get_custom_claim_fields_in($params);
             $selectfields = implode(',', $params);
             $odataqueries['$select'] = $selectfields;
 
@@ -1547,7 +1689,17 @@ class unified extends o365api {
             return count($batch);
         };
 
+        // Track presence against the full (pre group-filter) delta response, which gives the
+        // broadest sample of whether Microsoft Graph recognises each custom claim field.
+        $seenfields = [];
+        $pagehandler = $this->track_custom_claim_field_presence($pagehandler, $droppablefields, $seenfields);
+
         [$totalprocessed, $deltatokenvalue] = $this->execute_odata_paginated('/users/delta', $odataqueries, $pagehandler);
+        if ($totalprocessed > 0) {
+            // Only judge field support when at least one user record was actually seen; a delta
+            // run with no changed users proves nothing either way.
+            $this->record_unsupported_custom_claim_fields($droppablefields, $seenfields);
+        }
 
         return [$totalprocessed, $deltatokenvalue, $fieldsmappingchanged];
     }

@@ -656,10 +656,14 @@ class main {
 
         $groupfilter = $this->get_usersync_group_filter();
         if (!empty($groupfilter)) {
-            return $apiclient->process_group_members_batched($groupfilter, $callback, $params);
+            $totalprocessed = $apiclient->process_group_members_batched($groupfilter, $callback, $params);
+        } else {
+            $totalprocessed = $apiclient->process_users_batched($callback, $params);
         }
 
-        return $apiclient->process_users_batched($callback, $params);
+        $this->warn_about_dropped_custom_claim_fields($apiclient);
+
+        return $totalprocessed;
     }
 
     /**
@@ -678,10 +682,40 @@ class main {
 
         $groupfilter = $this->get_usersync_group_filter();
         if (!empty($groupfilter)) {
-            return $apiclient->process_group_members_delta_batched($groupfilter, $callback, $params, $deltatoken);
+            $result = $apiclient->process_group_members_delta_batched($groupfilter, $callback, $params, $deltatoken);
+        } else {
+            $result = $apiclient->process_users_delta_batched($callback, $params, $deltatoken);
         }
 
-        return $apiclient->process_users_delta_batched($callback, $params, $deltatoken);
+        $this->warn_about_dropped_custom_claim_fields($apiclient);
+
+        return $result;
+    }
+
+    /**
+     * Log a warning naming any configured custom claim fields that were requested from Microsoft
+     * Graph during the last batched user query but never returned for any user — how Graph
+     * typically responds to a $select property it does not recognise, rather than an API error.
+     *
+     * Custom claims are read from the identity provider's tokens at login. Since the sync task has
+     * no user token to read from, a custom claim can only be synced this way when its name also
+     * happens to be a selectable Graph user property (for example a directory extension attribute).
+     *
+     * @param unified $apiclient
+     * @return void
+     */
+    protected function warn_about_dropped_custom_claim_fields(unified $apiclient): void {
+        $droppedfields = $apiclient->get_and_clear_dropped_custom_claim_fields();
+        if (empty($droppedfields)) {
+            return;
+        }
+
+        self::mtrace(
+            'Warning: custom claim field(s) "' . implode(', ', $droppedfields) . '" could not be retrieved from ' .
+            'Microsoft Graph during user sync (not a valid Graph user property) and were skipped for this run. ' .
+            'Custom claims are only synced during user sync when they also correspond to a selectable Graph ' .
+            'property, such as a directory extension attribute.'
+        );
     }
 
     /**

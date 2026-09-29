@@ -387,13 +387,9 @@ class application extends moodleform {
 
         // Validate custom claims.
         if (!empty($data['customclaims'])) {
-            $claims = explode(' ', $data['customclaims']);
-            foreach ($claims as $claim) {
-                $claim = trim($claim);
-                if (!empty($claim) && !preg_match('/^[a-zA-Z0-9_-]+$/', $claim)) {
-                    $errors['customclaims'] = get_string('error_invalid_custom_claim', 'auth_oidc');
-                    break;
-                }
+            $invalidclaims = auth_oidc_validate_custom_claims((string) $data['customclaims']);
+            if ($invalidclaims) {
+                $errors['customclaims'] = get_string('error_invalid_custom_claim', 'auth_oidc', implode(', ', $invalidclaims));
             }
         }
 
