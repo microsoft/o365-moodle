@@ -26,6 +26,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use auth_oidc\adminsetting\auth_oidc_admin_setting_customclaims;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_endpoint;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_iconselect;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_loginflow;
@@ -286,6 +287,17 @@ if ($hassiteconfig) {
     );
     $oidcscopesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $applicationsettings->add($oidcscopesetting);
+
+    // Custom claims.
+    $customclaimssetting = new auth_oidc_admin_setting_customclaims(
+        'auth_oidc/customclaims',
+        get_string('customclaims', 'auth_oidc'),
+        get_string('customclaims_help', 'auth_oidc'),
+        '',
+        PARAM_TEXT,
+        100
+    );
+    $applicationsettings->add($customclaimssetting);
 
     // Secret expiry notification (only when local_o365 is installed).
     if (auth_oidc_is_local_365_installed()) {
