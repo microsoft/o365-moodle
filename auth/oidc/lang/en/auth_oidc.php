@@ -169,7 +169,9 @@ $string['customclaims_help'] = 'Space-separated list of custom claim names from 
 <li>Claims must exist in your IdP\'s token configuration (e.g., Keycloak protocol mappers, Azure AD optional/custom claims)</li>
 <li>If a claim doesn\'t exist in the token, field mapping will silently skip it - no error will be shown</li>
 <li>Claim names are case-sensitive and can only contain alphanumeric characters, hyphens, and underscores</li>
-<li>Examples: <code>employee_type department costCenter custom_role</code></li>
+<li>A claim name cannot be a reserved name, such as a standard JWT/OpenID Connect claim (e.g., <code>sub</code>, <code>email</code>), one specific to Microsoft Entra ID (e.g., <code>oid</code>, <code>upn</code>, <code>roles</code>) or Keycloak (e.g., <code>realm_access</code>, <code>resource_access</code>), or an existing field mapping option</li>
+<li>Examples: <code>employee_type badge_number costCenter custom_role</code></li>
+<li>At login, custom claims are always read from the token, whether or not Microsoft Graph is also used. During the scheduled user sync task, there is no user token to read from, so a custom claim is only synced when its name also happens to be a selectable Microsoft Graph user property, such as a directory extension attribute (e.g., <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). A custom claim that Microsoft Graph rejects is skipped for that sync run, with a warning in the task log, rather than failing the whole sync.</li>
 </ul>';
 $string['secretexpiryrecipients'] = 'Secret Expiry Notification Recipients';
 $string['secretexpiryrecipients_help'] = 'A comma-separated list of email addresses to send secret expiry notifications to.<br/>
@@ -280,7 +282,7 @@ $string['error_endpoint_mismatch_auth_endpoint'] = 'The configured authorization
 $string['error_endpoint_mismatch_token_endpoint'] = 'The configured token endpoint does not match the configured IdP type. For "Microsoft Entra ID (v1.0)" use a v1.0 endpoint (e.g. https://login.microsoftonline.com/organizations/oauth2/token). For "Microsoft identity platform (v2.0)" use a v2.0 endpoint (e.g. https://login.microsoftonline.com/organizations/oauth2/v2.0/token).';
 $string['error_tenant_specific_endpoint_required'] = 'When using "Microsoft identity platform (v2.0)" IdP type and "Certificate" authentication method, tenant specific endpoint (i.e. not common/organizations/consumers) is required.';
 $string['error_empty_oidcresource'] = 'Resource cannot be empty when using Microsoft Entra ID (v1.0) or other types of IdP.';
-$string['error_invalid_custom_claim'] = 'Invalid custom claim name. Custom claims can only contain alphanumeric characters, hyphens, and underscores.';
+$string['error_invalid_custom_claim'] = 'Invalid custom claim name(s): {$a}. Custom claim names can only contain alphanumeric characters, hyphens, and underscores, and cannot be a reserved claim name (e.g. a standard JWT/OpenID Connect claim, or one specific to Microsoft Entra ID or Keycloak) or an existing field mapping option.';
 $string['error_masked_secret_not_changed'] = 'Please enter a new value or uncheck the "Change" checkbox to keep the current value.';
 $string['auth_settings_validation_error'] = 'Invalid authentication settings detected. The following configuration issues must be resolved to ensure successful authentication:';
 $string['error_secretexpiryrecipients_invalid'] = 'The following secret expiry notification recipients are not valid email addresses: {$a}';
