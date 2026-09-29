@@ -453,6 +453,71 @@ function auth_oidc_delete_token(int $tokenid): void {
 }
 
 /**
+ * Get the list of reserved claim and field names that cannot be used as a custom claim name.
+ *
+ * A custom claim configured with one of these names would either silently do nothing (the name
+ * already carries a specific meaning in the token or in this plugin, so the intended value would
+ * never come through) or collide with an existing field mapping option. The list combines:
+ *  - Standard JWT (RFC 7519) and OpenID Connect Core registered claims, which any compliant
+ *    identity provider may issue with these specific meanings.
+ *  - Claims specific to Microsoft Entra ID (Azure AD) v1.0/v2.0 access and ID tokens.
+ *  - Claims specific to Keycloak access and ID tokens.
+ *  - Claim names this plugin's "Binding username claim" setting reads directly from the token.
+ *  - Remote field names this plugin already assigns a specific meaning to (see
+ *    auth_oidc_get_remote_fields()).
+ *
+ * @return array Lower-cased reserved claim and field names.
+ */
+function auth_oidc_get_reserved_custom_claim_names(): array {
+    // RFC 7519 JWT registered claims, and OpenID Connect Core standard claims.
+    $standardclaims = [
+        'iss', 'sub', 'aud', 'exp', 'nbf', 'iat', 'jti',
+        'name', 'given_name', 'family_name', 'middle_name', 'nickname', 'preferred_username',
+        'profile', 'picture', 'website', 'email', 'email_verified', 'gender', 'birthdate',
+        'zoneinfo', 'locale', 'phone_number', 'phone_number_verified', 'address', 'updated_at',
+        'auth_time', 'nonce', 'acr', 'amr', 'azp', 'at_hash', 'c_hash', 'sid',
+    ];
+
+    // Claims specific to Microsoft Entra ID (Azure AD) tokens.
+    $microsoftclaims = [
+        'aio', 'acrs', 'altsecid', 'appid', 'appidacr', 'azpacr', 'ctry', 'fwd', 'group', 'groups',
+        'idp', 'idtyp', 'in_corp', 'ipaddr', 'login_hint', 'oid', 'onprem_sid', 'platf', 'puid',
+        'pwd_exp', 'pwd_url', 'rh', 'roles', 'scp', 'tenant_ctry', 'tid', 'unique_name', 'upn',
+        'uti', 'ver', 'verified_primary_email', 'verified_secondary_email', 'vnet', 'wids',
+        'xms_cc', 'xms_edov', 'xms_pdl', 'xms_pl', 'xms_tpl',
+    ];
+
+    // Claims specific to Keycloak tokens (standard claims above cover most of the rest).
+    $keycloakclaims = ['typ', 'session_state', 'allowed-origins', 'realm_access', 'resource_access', 'scope'];
+
+    // Claim names this plugin's "Binding username claim" setting reads directly from the token
+    // (see loginflow\base::get_oidc_username_from_token_claim()); most of its options are already
+    // covered above, except this one, which is specific to on-premises Active Directory claim
+    // mapping (e.g. ADFS or an AD Connect-derived claim rule).
+    $bindingusernameclaims = ['samaccountname'];
+
+    // Remote field names this plugin already assigns a specific meaning to; see
+    // auth_oidc_get_remote_fields() and auth_oidc_get_email_remote_fields().
+    $pluginfields = [
+        'bindingusernameclaim', 'objectid', 'userprincipalname', 'displayname', 'givenname',
+        'surname', 'mail', 'onpremisessamaccountname', 'streetaddress', 'city', 'postalcode',
+        'state', 'country', 'jobtitle', 'department', 'companyname', 'preferredlanguage',
+        'employeeid', 'businessphones', 'faxnumber', 'mobilephone', 'officelocation',
+        'preferredname', 'manager', 'manager_email', 'teams', 'sds_school_id', 'sds_school_name',
+        'sds_school_role', 'sds_student_externalid', 'sds_student_birthdate', 'sds_student_grade',
+        'sds_student_graduationyear', 'sds_student_studentnumber', 'sds_teacher_externalid',
+        'sds_teacher_teachernumber',
+    ];
+    for ($i = 1; $i <= 15; $i++) {
+        $pluginfields[] = 'extensionattribute' . $i;
+    }
+
+    $reserved = array_merge($standardclaims, $microsoftclaims, $keycloakclaims, $bindingusernameclaims, $pluginfields);
+
+    return array_values(array_unique(array_map('strtolower', $reserved)));
+}
+
+/**
  * Get validated custom claim names from configuration.
  *
  * Parses the customclaims configuration, validates claim name format, and returns
@@ -470,11 +535,17 @@ function auth_oidc_get_validated_custom_claim_names() {
     $customclaims = array_filter(array_map('trim', explode(' ', $customclaimsconfig)));
     $customclaims = array_unique($customclaims);
 
+    $reserved = auth_oidc_get_reserved_custom_claim_names();
+
     $validated = [];
     foreach ($customclaims as $claimname) {
         // Validate claim name format (alphanumeric, underscore, hyphen only).
         if (!preg_match('/^[a-zA-Z0-9_-]+$/', $claimname)) {
             debugging("Invalid custom claim name skipped: $claimname", DEBUG_DEVELOPER);
+            continue;
+        }
+        if (in_array(strtolower($claimname), $reserved, true)) {
+            debugging("Reserved custom claim name skipped: $claimname", DEBUG_DEVELOPER);
             continue;
         }
         $validated[] = $claimname;
@@ -1117,6 +1188,42 @@ function auth_oidc_validate_secret_expiry_recipients(string $value): array {
     }
 
     return $invalidemails;
+}
+
+/**
+ * Validate the "custom claims" setting value.
+ *
+ * The value is a space-separated list of custom claim names to be read from the identity
+ * provider's ID token and made available in the field mapping list. Empty entries and
+ * surrounding whitespace are ignored, and an empty list is valid. Each remaining entry must
+ * contain only alphanumeric characters, hyphens, and underscores, and must not be a reserved
+ * claim or field name (see auth_oidc_get_reserved_custom_claim_names()) - for example a standard
+ * JWT/OpenID Connect claim, a Microsoft Entra ID or Keycloak specific claim, or an existing field
+ * mapping option. A reserved name would either never carry the intended value, or shadow an
+ * existing field mapping option.
+ *
+ * @param string $value The raw setting value.
+ * @return array List of entries that are not valid claim names. Empty when every entry is valid.
+ */
+function auth_oidc_validate_custom_claims(string $value): array {
+    $reserved = auth_oidc_get_reserved_custom_claim_names();
+
+    $invalidclaims = [];
+    foreach (explode(' ', $value) as $claim) {
+        $claim = trim($claim);
+        if ($claim === '') {
+            continue;
+        }
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $claim)) {
+            $invalidclaims[] = $claim;
+            continue;
+        }
+        if (in_array(strtolower($claim), $reserved, true)) {
+            $invalidclaims[] = $claim;
+        }
+    }
+
+    return $invalidclaims;
 }
 
 /**
