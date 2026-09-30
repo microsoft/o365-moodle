@@ -134,6 +134,18 @@ class block_microsoft extends block_base {
     }
 
     /**
+     * Check whether a link in the course section of the block is enabled by the admin settings.
+     *
+     * Settings which have never been saved default to enabled, so sites upgrading keep their existing links.
+     *
+     * @param string $name The name of the setting.
+     * @return bool
+     */
+    protected function is_course_setting_enabled(string $name): bool {
+        return !empty($this->globalconfig->$name ?? 1);
+    }
+
+    /**
      * Get contents of the course section in the block.
      *
      * @return string
@@ -141,7 +153,7 @@ class block_microsoft extends block_base {
     protected function get_course_content() {
         global $COURSE;
 
-        if ($COURSE->id == SITEID) {
+        if ($COURSE->id == SITEID || !$this->is_course_setting_enabled('settings_showcourselinks')) {
             return '';
         }
 
@@ -154,7 +166,10 @@ class block_microsoft extends block_base {
         $items = [];
 
         // Link to course sync options.
-        if (has_capability('local/o365:teamowner', $this->page->context)) {
+        if (
+            $this->is_course_setting_enabled('settings_showcourseconfiguresync') &&
+            has_capability('local/o365:teamowner', $this->page->context)
+        ) {
             $coursesyncsetting = get_config('local_o365', 'coursesync');
             $allowedmanageteamsyncpercourse = get_config('local_o365', 'course_sync_per_course');
             if ($coursesyncsetting == 'oncustom' && $allowedmanageteamsyncpercourse) {
@@ -182,7 +197,10 @@ class block_microsoft extends block_base {
                     // Links to course features.
                     $microsoft365urls = utils::get_course_microsoft_365_urls($courseid);
                     foreach (['team', 'conversations', 'onedrive', 'calendar', 'notebook'] as $feature) {
-                        if (!isset($microsoft365urls[$feature])) {
+                        if (
+                            !isset($microsoft365urls[$feature]) ||
+                            !$this->is_course_setting_enabled('settings_showcourse' . $feature)
+                        ) {
                             continue;
                         }
 
@@ -200,7 +218,10 @@ class block_microsoft extends block_base {
                     }
 
                     // Link to course reset options.
-                    if (has_capability('moodle/course:reset', $this->page->context)) {
+                    if (
+                        $this->is_course_setting_enabled('settings_showcoursereset') &&
+                        has_capability('moodle/course:reset', $this->page->context)
+                    ) {
                         switch (get_config('local_o365', 'course_reset_teams')) {
                             case COURSE_SYNC_RESET_SITE_SETTING_PER_COURSE:
                                 // Allow user to configure reset actions.
