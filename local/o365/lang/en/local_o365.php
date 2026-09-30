@@ -994,6 +994,7 @@ $string['task_processmatchqueue_err_o365useralreadyconnected'] = 'Microsoft 365 
 // Capabilities.
 $string['o365:manageconnectionlink'] = 'Manage Connection Link';
 $string['o365:manageconnectionunlink'] = 'Manage Connection Unlink';
+$string['o365:managecoursesync'] = 'Enable or disable Teams sync for courses via web services';
 $string['o365:viewgroups'] = 'View links to Microsoft 365 services in the Microsoft block in courses with sync enabled';
 $string['o365:managegroups'] = 'View links to Microsoft 365 services and management options in the Microsoft block in courses with sync enabled';
 $string['o365:teammember'] = 'Team member';
