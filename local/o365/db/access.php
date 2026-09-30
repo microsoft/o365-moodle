@@ -75,4 +75,10 @@ $capabilities = [
             'student' => CAP_ALLOW,
         ],
     ],
+    'local/o365:managecoursesync' => [
+        'riskbitmask' => RISK_CONFIG,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => [],
+    ],
 ];
