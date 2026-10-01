@@ -48,9 +48,6 @@ try {
     if ($showdetails) {
         // Display error details when debug display is enabled.
         $errormessage = $e->getMessage();
-        if (!empty($e->debuginfo)) {
-            $errormessage .= ' (' . $e->debuginfo . ')';
-        }
     } else {
         // Show generic error message to prevent information disclosure.
         $errormessage = get_string('errorauthgeneral', 'auth_oidc');
@@ -63,7 +60,11 @@ try {
 
     echo $OUTPUT->header();
     echo $OUTPUT->notification($errormessage, 'error');
-    echo $OUTPUT->single_button(new url('/login/index.php'), get_string('login'), 'get');
+    if (!empty($e->link)) {
+        echo $OUTPUT->single_button(new url($e->link), get_string('continue'), 'get');
+    } else {
+        echo $OUTPUT->single_button(new url('/login/index.php'), get_string('login'), 'get');
+    }
     echo $OUTPUT->footer();
     exit;
 }
