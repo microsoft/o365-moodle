@@ -158,7 +158,7 @@ class authcode extends base {
         $error = optional_param('error', '', PARAM_TEXT);
         $errordescription = optional_param('error_description', '', PARAM_TEXT);
         $silentloginmode = get_config('auth_oidc', 'silentloginmode');
-        $selectaccount = false;
+        $selectaccount = empty(optional_param('state', '', PARAM_RAW)) && optional_param('selectaccount', 0, PARAM_BOOL);
         if ($silentloginmode) {
             if ($error == 'login_required') {
                 // If silent login mode is enabled and the error is 'login_required', redirect to the login page.
@@ -1108,7 +1108,8 @@ class authcode extends base {
                     $eventdata = ['other' => ['username' => $username, 'reason' => $failurereason]];
                     $event = \core\event\user_login_failed::create($eventdata);
                     $event->trigger();
-                    throw new moodle_exception('errorauthloginfailednouser', 'auth_oidc', null, null, '1');
+                    $retryurl = new url('/auth/oidc/', ['selectaccount' => 1]);
+                    throw new moodle_exception('errorauthloginfailednouser', 'auth_oidc', $retryurl, $username);
                 }
             }
 

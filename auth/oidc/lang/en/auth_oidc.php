@@ -114,6 +114,9 @@ $string['cfg_err_invalidauthendpoint'] = 'Invalid Authorization Endpoint';
 $string['cfg_err_invalidtokenendpoint'] = 'Invalid Token Endpoint';
 $string['cfg_err_invalidclientid'] = 'Invalid client ID';
 $string['cfg_err_invalidclientsecret'] = 'Invalid client secret';
+$string['cfg_forceselectaccount_key'] = 'Always show account selection';
+$string['cfg_forceselectaccount_desc'] = 'If enabled, users are always asked to choose which account to sign in with, instead of being signed in automatically with the account active in their browser. Useful when users have several accounts, for example a student and an admin account.<br/>
+Silent Login Mode takes precedence: while it is enabled, the account selection is not forced when signing in silently.';
 $string['cfg_forceredirect_key'] = 'Force redirect';
 $string['cfg_forceredirect_desc'] = 'If enabled, will skip the login index page and redirect to the OpenID Connect page. Can be bypassed with ?noredirect=1 URL param';
 $string['cfg_stateexpiry_key'] = 'Login state expiry (minutes)';
@@ -237,7 +240,7 @@ $string['errorauthdisconnectinvalidmethod'] = 'Invalid login method received.';
 $string['errorauthdisconnectifmanual'] = 'If using the manual login method, enter credentials below.';
 $string['errorauthgeneral'] = 'There was a problem logging you in. Please contact your administrator for assistance.';
 $string['errorauthinvalididtoken'] = 'Invalid id_token received.';
-$string['errorauthloginfailednouser'] = 'Invalid login: User not found in Moodle. If this site has the "authpreventaccountcreation" setting enabled, this may mean you need an administrator to create an account for you first.';
+$string['errorauthloginfailednouser'] = 'Invalid login: You signed in as "{$a}", but this account was not found in Moodle. If this site has the "authpreventaccountcreation" setting enabled, this may mean you need an administrator to create an account for you first. If you have more than one account, select Continue to sign in with a different one.';
 $string['errorauthloginfaileddupemail'] = 'Invalid login: An existing account on this Moodle has the same email address as the account you try to create, and "Allow accounts with same email" (allowaccountssameemail) setting is disabled.';
 $string['errorauthnoauthcode'] = 'No authorization code was received from the identity server. The error logs may have more information.';
 $string['errorauthnocredsandendpoints'] = 'Please configure OpenID Connect client credentials and endpoints.';
