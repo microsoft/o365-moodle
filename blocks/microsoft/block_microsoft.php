@@ -130,6 +130,11 @@ class block_microsoft extends block_base {
             $html .= '<p>' . html_writer::link(new url('/local/o365/ucp.php?action=connecttoken'), $langlogin) . '</p>';
         }
 
+        $customlinkitems = $this->get_custom_link_items(false);
+        if ($customlinkitems) {
+            $html .= html_writer::alist($customlinkitems);
+        }
+
         return $html;
     }
 
@@ -533,6 +538,11 @@ class block_microsoft extends block_base {
             }
         }
 
+        // Custom links configured by the site administrator.
+        foreach ($this->get_custom_link_items(true) as $customlinkitem) {
+            $items[] = $customlinkitem;
+        }
+
         // Configure Outlook Sync.
         if (!empty($this->globalconfig->settings_showoutlooksync)) {
             $outlookurl = new url('/local/o365/ucp.php?action=calendar');
@@ -635,9 +645,44 @@ class block_microsoft extends block_base {
             $items[] = $link;
         }
 
+        foreach ($this->get_custom_link_items(false) as $customlinkitem) {
+            $items[] = $customlinkitem;
+        }
+
         $html .= html_writer::alist($items);
 
         return $html;
+    }
+
+    /**
+     * Get the custom links configured by the site administrator, rendered as HTML links.
+     *
+     * @param bool $connected Whether the user is connected to Microsoft 365. Links set to show only for connected
+     *                        users are skipped when this is false.
+     * @return string[] Array of link HTML, or empty array if no custom links are configured.
+     */
+    protected function get_custom_link_items(bool $connected): array {
+        $items = [];
+
+        foreach (block_microsoft_get_custom_links() as $customlink) {
+            if (!$customlink['showall'] && !$connected) {
+                continue;
+            }
+
+            $customlinkattrs = [
+                'target' => $customlink['target'],
+                'class' => 'servicelink block_microsoft_customlink',
+            ];
+            if ($customlink['target'] === '_blank') {
+                $customlinkattrs['rel'] = 'noopener noreferrer';
+            }
+            if ($customlink['iconurl'] !== null) {
+                $customlinkattrs['style'] = 'background-image: url("' . $customlink['iconurl'] . '");';
+            }
+            $items[] = html_writer::link($customlink['url'], s($customlink['name']), $customlinkattrs);
+        }
+
+        return $items;
     }
 
     /**
