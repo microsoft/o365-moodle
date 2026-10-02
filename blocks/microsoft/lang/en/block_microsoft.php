@@ -27,7 +27,7 @@
 // phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder -- The strings are organised by features.
 // phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment -- The strings are organised by features.
 
-$string['pluginname'] = 'Microsoft block';
+$string['pluginname'] = 'Microsoft';
 $string['contactadmin'] = 'Contact administrator for more information.';
 $string['error_nomoodlenotebook'] = 'Could not find your Moodle notebook.';
 $string['error_urlrequiredwhenenabled'] = 'This URL must be configured, since the "Show" option above is enabled.';
@@ -192,6 +192,24 @@ $string['error_course_sync_disabled'] = 'The course is not configured to be sync
 $string['linkcourserequest'] = 'Request course from Teams';
 $string['settings_courserequest'] = 'Request course from Teams';
 $string['settings_courserequest_desc'] = 'Request a new course from Microsoft Teams. After approval, the course will be created and connected to a Team. Microsoft Team members will be enrolled in the course.';
+
+$string['customlinks'] = 'Custom links';
+$string['customlink_addanother'] = 'Add another link';
+$string['customlink_delete'] = 'Delete this link';
+$string['customlink_error_url'] = 'Enter a valid URL starting with http:// or https://';
+$string['customlink_icon'] = 'Icon';
+$string['customlink_name'] = 'Name';
+$string['customlink_nochanges'] = 'No custom links were entered, so there is nothing to save.';
+$string['customlink_showall'] = 'Also show to users who are not connected to Microsoft 365';
+$string['customlink_target'] = 'Open link in';
+$string['customlink_url'] = 'URL';
+$string['customlink_visibility'] = 'Visibility';
+$string['settings_header_general'] = 'General';
+$string['settings_pageheading'] = 'Microsoft block configuration';
+$string['settings_customlinkheading'] = 'Link {$a}';
+$string['settings_customlinktarget_blank'] = 'New window or tab';
+$string['settings_customlinktarget_self'] = 'Same window';
+$string['settings_customlinks_desc'] = 'Add your own links (e.g. an internal chatbot or intranet site) to the block. The name, URL and icon of each link are required. To remove a link, tick "Delete this link" and save.';
 
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
