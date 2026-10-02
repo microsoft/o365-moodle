@@ -2431,6 +2431,57 @@ class main {
     }
 
     /**
+     * Get the lowercased domains of all additional tenants configured in local_o365, including legacy ones.
+     *
+     * @return array Domain names as keys.
+     */
+    private function get_additional_tenant_domains(): array {
+        $domains = [];
+        $tenants = json_decode((string) get_config('local_o365', 'multitenants'), true);
+        $configureddomains = [];
+        if (is_array($tenants)) {
+            foreach ($tenants as $tenantdomains) {
+                $configureddomains = array_merge($configureddomains, (array) $tenantdomains);
+            }
+        }
+
+        // Legacy configuration is a flat array of domains.
+        $legacydomains = json_decode((string) get_config('local_o365', 'legacymultitenants'), true);
+        if (is_array($legacydomains)) {
+            $configureddomains = array_merge($configureddomains, $legacydomains);
+        }
+
+        foreach ($configureddomains as $domain) {
+            if (is_string($domain) && trim($domain) !== '') {
+                $domains[core_text::strtolower(trim($domain))] = true;
+            }
+        }
+
+        return $domains;
+    }
+
+    /**
+     * Check whether a Moodle user belongs to an additional tenant, based on the domain of their Entra identifier.
+     *
+     * @param stdClass $user Record having o365name and username.
+     * @param array $additionaltenantdomains Result of get_additional_tenant_domains().
+     * @return bool
+     */
+    private function is_additional_tenant_user(stdClass $user, array $additionaltenantdomains): bool {
+        if (empty($additionaltenantdomains)) {
+            return false;
+        }
+
+        $identifier = !empty($user->o365name) ? $user->o365name : $user->username;
+        $atpos = strrpos($identifier, '@');
+        if ($atpos === false) {
+            return false;
+        }
+
+        return isset($additionaltenantdomains[core_text::strtolower(substr($identifier, $atpos + 1))]);
+    }
+
+    /**
      * Process all user status changes in a single pass through Moodle users.
      *
      * Combines reenable and suspend logic into one query to minimize memory overhead
@@ -2477,7 +2528,9 @@ class main {
         }
 
         // Single query: join with temp table to identify reenable candidates, and identify suspend candidates.
-        $sql = 'SELECT u.id, u.username, u.suspended, etmp.accountenabled, obj.objectid,
+        $additionaltenantdomains = $this->get_additional_tenant_domains();
+
+        $sql = 'SELECT u.id, u.username, u.suspended, etmp.accountenabled, obj.objectid, obj.o365name,
                        CASE WHEN etmp.objectid IS NOT NULL THEN 1 ELSE 0 END AS isinentra
                   FROM {user} u
                   JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
@@ -2490,6 +2543,11 @@ class main {
         $usersrs = $DB->get_recordset_sql($sql, $params);
 
         foreach ($usersrs as $user) {
+            if (!$user->isinentra && $this->is_additional_tenant_user($user, $additionaltenantdomains)) {
+                // The Entra user list only covers the hosting tenant, so users from additional tenants are never in it.
+                continue;
+            }
+
             if ($user->isinentra) {
                 if ($user->suspended) {
                     // User is in Entra and currently suspended - check if they should be reenabled, either because
