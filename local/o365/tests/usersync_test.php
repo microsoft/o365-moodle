@@ -606,6 +606,85 @@ final class usersync_test extends advanced_testcase {
     }
 
     /**
+     * Test that users from additional tenants are neither suspended nor deleted, while hosting tenant users still are.
+     *
+     * @covers \local_o365\feature\usersync\main::process_user_status_from_temp_table
+     * @covers \local_o365\feature\usersync\main::get_additional_tenant_domains
+     * @covers \local_o365\feature\usersync\main::is_additional_tenant_user
+     */
+    public function test_process_user_status_skips_additional_tenant_users(): void {
+        global $DB;
+
+        set_config('multitenants', json_encode(['tenant-2' => ['Example.ac.at', 'other.example.ac.at']]), 'local_o365');
+        set_config('legacymultitenants', json_encode(['legacy.example.org']), 'local_o365');
+
+        $users = [
+            'hosting' => ['upn' => 'hosting@host.example.com', 'suspended' => 0],
+            'additional' => ['upn' => 'user@EXAMPLE.ac.at', 'suspended' => 0],
+            'additionalsuspended' => ['upn' => 'old@other.example.ac.at', 'suspended' => 1],
+            'hostingsuspended' => ['upn' => 'gone@host.example.com', 'suspended' => 1],
+            'legacy' => ['upn' => 'user@legacy.example.org', 'suspended' => 0],
+        ];
+        foreach ($users as $key => $data) {
+            $user = $this->getDataGenerator()->create_user();
+            $user->auth = 'oidc';
+            $user->suspended = $data['suspended'];
+            $DB->update_record('user', $user);
+            $users[$key]['id'] = $user->id;
+
+            $DB->insert_record('local_o365_objects', (object) [
+                'type' => 'user',
+                'moodleid' => $user->id,
+                'objectid' => 'entra-' . $key,
+                'o365name' => $data['upn'],
+                'timecreated' => time(),
+                'timemodified' => time(),
+            ]);
+        }
+
+        // Deleting needs the list of soft-deleted Entra users, so serve an empty one from a mock HTTP client.
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response(json_encode(['value' => []]));
+        $apiclient = new unified($this->get_mock_token(), $httpclient);
+        $usersync = $this->getMockBuilder(main::class)->onlyMethods(['construct_user_api'])->getMock();
+        $usersync->method('construct_user_api')->willReturn($apiclient);
+        $temptablename = $usersync->create_entra_users_temp_table();
+
+        try {
+            // Empty temp table - none of the users are in the hosting tenant's Entra user list.
+            [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                false, // Do not re-enable.
+                true, // Suspend deleted users.
+                true, // Delete suspended users.
+                false, // Do not suspend on disabled accounts.
+                false  // Do not check account status.
+            );
+
+            $this->assertEquals(0, $reenabled);
+            $this->assertEquals(1, $suspended);
+            $this->assertEquals(1, $deleted);
+
+            // Hosting tenant users are suspended / deleted as before.
+            $this->assertEquals(1, $DB->get_field('user', 'suspended', ['id' => $users['hosting']['id']]));
+            $this->assertEquals(1, $DB->get_field('user', 'deleted', ['id' => $users['hostingsuspended']['id']]));
+
+            // Additional tenant users are untouched, matching domains case-insensitively.
+            $additional = $DB->get_record('user', ['id' => $users['additional']['id']]);
+            $this->assertEquals(0, $additional->suspended);
+            $this->assertEquals(0, $additional->deleted);
+            $legacy = $DB->get_record('user', ['id' => $users['legacy']['id']]);
+            $this->assertEquals(0, $legacy->suspended);
+            $this->assertEquals(0, $legacy->deleted);
+            $additionalsuspended = $DB->get_record('user', ['id' => $users['additionalsuspended']['id']]);
+            $this->assertEquals(1, $additionalsuspended->suspended);
+            $this->assertEquals(0, $additionalsuspended->deleted);
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
      * Test that 'disabledsyncsuspend' independently suspends a user present in Entra with accountEnabled=false,
      * without needing 'suspend' or 'reenable' enabled, and leaves an enabled user alone. This behaviour lives
      * exclusively in userenabledstatussync (not in the regular usersync task), so a disabled Entra account is
