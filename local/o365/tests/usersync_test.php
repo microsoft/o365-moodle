@@ -675,6 +675,66 @@ final class usersync_test extends advanced_testcase {
     }
 
     /**
+     * Test that 'groupsyncsuspend' suspends an enabled user present in Entra but not in the user sync group, leaves
+     * in-group users alone, and does not re-enable a suspended user who is still not in the group.
+     *
+     * @covers \local_o365\feature\usersync\main::process_user_status_from_temp_table
+     */
+    public function test_process_user_status_groupsyncsuspend(): void {
+        global $DB;
+
+        $ingroupuser = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 0]);
+        $outsideuser = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 0]);
+        $outsidesuspendeduser = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 1]);
+
+        $users = ['ingroup' => $ingroupuser, 'outside' => $outsideuser, 'outsidesuspended' => $outsidesuspendeduser];
+        foreach ($users as $key => $user) {
+            $DB->insert_record('local_o365_objects', (object) [
+                'type' => 'user',
+                'moodleid' => $user->id,
+                'objectid' => 'entra-user-' . $key,
+                'o365name' => $user->email,
+                'timecreated' => time(),
+                'timemodified' => time(),
+            ]);
+        }
+
+        $usersync = new main();
+        $temptablename = $usersync->create_entra_users_temp_table();
+
+        try {
+            $DB->insert_records($temptablename, [
+                (object) ['objectid' => 'entra-user-ingroup', 'accountenabled' => 1, 'ingroup' => 1],
+                (object) ['objectid' => 'entra-user-outside', 'accountenabled' => 1, 'ingroup' => 0],
+                (object) ['objectid' => 'entra-user-outsidesuspended', 'accountenabled' => 1, 'ingroup' => 0],
+            ]);
+
+            [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                true, // Re-enable users reappearing in Entra (must still be blocked for out-of-group users).
+                false,
+                false,
+                false,
+                false,
+                true // Suspend users not in the user sync group.
+            );
+
+            $this->assertEquals(0, $reenabled);
+            $this->assertEquals(1, $suspended);
+            $this->assertEquals(0, $deleted);
+            $this->assertEquals(0, $DB->get_field('user', 'suspended', ['id' => $ingroupuser->id]));
+            $this->assertEquals(1, $DB->get_field('user', 'suspended', ['id' => $outsideuser->id]));
+            $this->assertEquals(1, $DB->get_field('user', 'suspended', ['id' => $outsidesuspendeduser->id]));
+
+            // Without the option, the out-of-group suspended user is re-enabled as usual.
+            [$reenabled] = $usersync->process_user_status_from_temp_table($temptablename, true, false, false, false, false);
+            $this->assertEquals(2, $reenabled);
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
      * Test that 'disabledsyncreenable' independently re-enables a suspended user present in Entra with
      * accountEnabled=true, without needing 'reenable' enabled, and leaves a still-disabled user suspended.
      *
