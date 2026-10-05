@@ -27,7 +27,6 @@ $string['cachedef_unifiedgroupfolderids'] = 'Microsoft 365 Repository - Unified 
 $string['configplugin'] = 'Configure Microsoft 365 Repository';
 $string['controlledsharelinkdesc'] = 'Shared copy (organization members only)';
 $string['copiedfile'] = 'Copy of file';
-$string['coursegroup'] = 'Disable Groups (Courses) folder in file picker';
 $string['defaultgroupsfolder'] = 'Course Files';
 $string['directlinkdesc'] = 'Direct link (existing permissions)';
 $string['enableanonymousshare'] = 'Enable "{$a}" option';
@@ -95,6 +94,7 @@ $string['enableanonymoussharewarning'] = '<div class="alert alert-info"><strong>
 </tbody>
 </table>
 For best compatibility with all display options, consider copying the file to Moodle instead.</div>';
+$string['enablecoursegroup'] = 'Enable Groups (Courses) folder in file picker';
 $string['enabledirectlink'] = 'Enable "{$a}" option';
 $string['enabledirectlink_help'] = 'When checked, users can add a direct link to a file in their OneDrive instead of copying it to Moodle. The file remains in OneDrive and Moodle stores only a reference link.
 
@@ -147,6 +147,12 @@ $string['enabledirectlinkwarning'] = '<div class="alert alert-info"><strong>Note
 </tbody>
 </table>
 For best compatibility, consider copying the file to Moodle instead of using a direct link.</div>';
+$string['enableinternal'] = 'Enable "{$a}" option';
+$string['enableinternal_help'] = 'When checked (the default), users can choose to copy a file from OneDrive into Moodle. Uncheck this, and enable the "Link to the file" and/or "Create an access controlled link to the file" options below, to force users to link to files instead.
+
+At least one of the three file linking options must be enabled.';
+$string['enableonedrivegroup'] = 'Enable My OneDrive folder in file picker';
+$string['enabletrendinggroup'] = 'Enable Files Trending Around Me folder in file picker';
 
 $string['erroraccessdenied'] = 'Access denied';
 $string['errorauthoidcnotconfig'] = 'Please configure the OpenID Connect authentication plugin before attempting to use the Microsoft 365 repository.';
@@ -154,6 +160,7 @@ $string['errorbadclienttype'] = 'Invalid client type.';
 $string['errorbadpath'] = 'Bad Path';
 $string['errorcoursenotfound'] = 'Course not found';
 $string['errorencodingreference'] = 'Failed to encode file reference';
+$string['errornofilelinkoption'] = 'At least one file linking option must be enabled.';
 $string['erroro365required'] = 'This file is currently only available to Microsoft 365 users.';
 $string['errorwhiledownload'] = 'An error occurred while downloading the file';
 $string['errorwhilesharing'] = 'An error occurred while creating a sharable link';
@@ -165,10 +172,8 @@ $string['invalidfilereference'] = 'Invalid or malformed file reference';
 $string['myfiles'] = 'My OneDrive';
 $string['notconfigured'] = '<p class="error">To use this plugin, you must first configure the <a href="{$a}/admin/settings.php?section=local_o365">Microsoft 365 plugins</a></p>';
 $string['office365:view'] = 'View Microsoft 365 repository';
-$string['onedrivegroup'] = 'Disable My OneDrive folder in file picker';
 $string['pluginname'] = 'Microsoft 365';
 $string['pluginname_help'] = 'A Microsoft 365 Repository';
 $string['privacy:metadata'] = 'This plugin communicates with the Microsoft 365 OneDrive API as the current user. Any files uploaded will be sent to the remote server';
 $string['trendingaround'] = 'Files Trending Around Me';
-$string['trendinggroup'] = 'Disable Files Trending Around Me folder in file picker';
 $string['upload'] = 'Upload New File';

@@ -56,5 +56,22 @@ function xmldb_repository_office365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025100600.01, 'repository', 'office365');
     }
 
+    if ($oldversion < 2026042000.02) {
+        // Keep the "Make a copy of the file" option enabled on existing sites.
+        if (get_config('office365', 'enableinternal') === false) {
+            set_config('enableinternal', 1, 'office365');
+        }
+
+        // Migrate the old 'disable' folder settings to 'enable' settings with flipped logic.
+        foreach (['coursegroup', 'onedrivegroup', 'trendinggroup'] as $folder) {
+            $olddisabled = get_config('office365', $folder);
+            set_config('enable' . $folder, empty($olddisabled) ? 1 : 0, 'office365');
+            unset_config($folder, 'office365');
+        }
+
+        // Savepoint reached.
+        upgrade_plugin_savepoint(true, 2026042000.02, 'repository', 'office365');
+    }
+
     return true;
 }

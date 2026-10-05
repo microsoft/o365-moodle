@@ -15,20 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Office365 Repository
- * @package repository_office365
- * @author James McQuillan <james.mcquillan@remote-learner.net>
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * Post-install script for repository_office365.
+ *
+ * @package    repository_office365
+ * @copyright  2026 Microsoft, Inc.
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Set default configuration on install.
+ *
+ * @return bool True on success.
+ */
+function xmldb_repository_office365_install() {
+    set_config('enableinternal', 1, 'office365');
+    set_config('enablecoursegroup', 1, 'office365');
+    set_config('enableonedrivegroup', 1, 'office365');
+    set_config('enabletrendinggroup', 1, 'office365');
 
-$plugin->version = 2026042000.02;
-$plugin->requires = 2026042000;
-$plugin->release = '5.2.0';
-$plugin->component = 'repository_office365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->dependencies = [
-    'local_o365' => 2026042000,
-];
+    return true;
+}
