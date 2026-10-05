@@ -675,6 +675,203 @@ final class usersync_test extends advanced_testcase {
     }
 
     /**
+     * Test that 'groupsyncsuspend' suspends an enabled user present in Entra but not in the user sync group, leaves
+     * in-group users alone, and does not re-enable a suspended user who is still not in the group.
+     *
+     * @covers \local_o365\feature\usersync\main::process_user_status_from_temp_table
+     */
+    public function test_process_user_status_groupsyncsuspend(): void {
+        global $DB;
+
+        $ingroupuser = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 0]);
+        $outsideuser = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 0]);
+        $outsidesuspendeduser = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 1]);
+
+        $users = ['ingroup' => $ingroupuser, 'outside' => $outsideuser, 'outsidesuspended' => $outsidesuspendeduser];
+        foreach ($users as $key => $user) {
+            $DB->insert_record('local_o365_objects', (object) [
+                'type' => 'user',
+                'moodleid' => $user->id,
+                'objectid' => 'entra-user-' . $key,
+                'o365name' => $user->email,
+                'timecreated' => time(),
+                'timemodified' => time(),
+            ]);
+        }
+
+        $usersync = new main();
+        $temptablename = $usersync->create_entra_users_temp_table();
+
+        try {
+            $DB->insert_records($temptablename, [
+                (object) ['objectid' => 'entra-user-ingroup', 'accountenabled' => 1, 'ingroup' => 1],
+                (object) ['objectid' => 'entra-user-outside', 'accountenabled' => 1, 'ingroup' => 0],
+                (object) ['objectid' => 'entra-user-outsidesuspended', 'accountenabled' => 1, 'ingroup' => 0],
+            ]);
+
+            [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                true, // Re-enable users reappearing in Entra (must still be blocked for out-of-group users).
+                false,
+                false,
+                false,
+                false,
+                true // Suspend users not in the user sync group.
+            );
+
+            $this->assertEquals(0, $reenabled);
+            $this->assertEquals(1, $suspended);
+            $this->assertEquals(0, $deleted);
+            $this->assertEquals(0, $DB->get_field('user', 'suspended', ['id' => $ingroupuser->id]));
+            $this->assertEquals(1, $DB->get_field('user', 'suspended', ['id' => $outsideuser->id]));
+            $this->assertEquals(1, $DB->get_field('user', 'suspended', ['id' => $outsidesuspendeduser->id]));
+
+            // Without the option, the out-of-group suspended user is re-enabled as usual.
+            [$reenabled] = $usersync->process_user_status_from_temp_table($temptablename, true, false, false, false, false);
+            $this->assertEquals(2, $reenabled);
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
+     * Test that mark_group_members_in_temp_table() flags only group members and owners as in the group, and returns false
+     * without touching the temp table when no group filter is set, the API throws, or the group has no members.
+     *
+     * @covers \local_o365\feature\usersync\main::mark_group_members_in_temp_table
+     */
+    public function test_mark_group_members_in_temp_table(): void {
+        global $DB;
+
+        $apiclient = new class {
+            /**
+             * Group member batches passed to the callback.
+             *
+             * @var array
+             */
+            public array $batches = [];
+
+            /**
+             * Whether to throw an exception instead of returning members.
+             *
+             * @var bool
+             */
+            public bool $throw = false;
+
+            /**
+             * Group ID the helper requested, and the fields it asked for.
+             *
+             * @var array
+             */
+            public array $requested = [];
+
+            /**
+             * Emit the configured member batches.
+             *
+             * @param string $groupid Group object ID.
+             * @param callable $callback Batch callback.
+             * @param string|array $params Requested user fields.
+             * @return int
+             */
+            public function process_group_members_batched(string $groupid, callable $callback, $params = 'default'): int {
+                $this->requested = [$groupid, $params];
+                if ($this->throw) {
+                    throw new \moodle_exception('generalexceptionmessage', 'error', '', 'API error');
+                }
+                $total = 0;
+                foreach ($this->batches as $batch) {
+                    $callback($batch);
+                    $total += count($batch);
+                }
+                return $total;
+            }
+        };
+
+        $usersync = new class ($apiclient) extends main {
+            /**
+             * Test API client.
+             *
+             * @var object
+             */
+            private object $testapiclient;
+
+            /**
+             * Constructor.
+             *
+             * @param object $apiclient Test API client.
+             */
+            public function __construct(object $apiclient) {
+                $this->testapiclient = $apiclient;
+            }
+
+            /**
+             * Return the test API client.
+             *
+             * @return object
+             */
+            public function construct_user_api() {
+                return $this->testapiclient;
+            }
+        };
+
+        $groupid = '11111111-1111-1111-1111-111111111111';
+        $temptablename = $usersync->create_entra_users_temp_table();
+
+        $getflags = function () use ($DB, $temptablename): array {
+            return $DB->get_records_menu($temptablename, [], 'objectid', 'objectid, ingroup');
+        };
+
+        try {
+            $DB->insert_records($temptablename, [
+                (object) ['objectid' => 'entra-member', 'accountenabled' => 1],
+                (object) ['objectid' => 'entra-owner', 'accountenabled' => 1],
+                (object) ['objectid' => 'entra-outside', 'accountenabled' => 1],
+            ]);
+            $allingroup = ['entra-member' => 1, 'entra-owner' => 1, 'entra-outside' => 1];
+            $this->assertEquals($allingroup, $getflags(), 'Users default to being flagged as in the group.');
+
+            // No group filter configured: returns false and leaves flags untouched.
+            set_config('usersyncgroupfilter', '', 'local_o365');
+            $apiclient->batches = [[['id' => 'entra-member']]];
+            $this->assertFalse($usersync->mark_group_members_in_temp_table($temptablename));
+            $this->assertEquals($allingroup, $getflags());
+            $this->assertEmpty($apiclient->requested, 'The API must not be called without a group filter.');
+
+            set_config('usersyncgroupfilter', $groupid, 'local_o365');
+
+            // API error: returns false and leaves flags untouched.
+            $apiclient->throw = true;
+            $this->assertFalse($usersync->mark_group_members_in_temp_table($temptablename));
+            $this->assertEquals($allingroup, $getflags());
+            $apiclient->throw = false;
+
+            // Empty group: returns false and leaves flags untouched, so nobody is suspended.
+            $apiclient->batches = [];
+            $this->assertFalse($usersync->mark_group_members_in_temp_table($temptablename));
+            $this->assertEquals($allingroup, $getflags());
+
+            // Members and owners across batches (ignoring entries without an ID) are flagged; everyone else is reset.
+            $apiclient->batches = [[['id' => 'entra-member'], ['name' => 'no id']], [['id' => 'entra-owner']]];
+            $this->assertTrue($usersync->mark_group_members_in_temp_table($temptablename));
+            $this->assertEquals(
+                ['entra-member' => 1, 'entra-owner' => 1, 'entra-outside' => 0],
+                $getflags()
+            );
+            $this->assertEquals([$groupid, ['id']], $apiclient->requested);
+
+            // A later run with a different membership resets previously flagged users.
+            $apiclient->batches = [[['id' => 'entra-owner']]];
+            $this->assertTrue($usersync->mark_group_members_in_temp_table($temptablename));
+            $this->assertEquals(
+                ['entra-member' => 0, 'entra-owner' => 1, 'entra-outside' => 0],
+                $getflags()
+            );
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
      * Test that 'disabledsyncreenable' independently re-enables a suspended user present in Entra with
      * accountEnabled=true, without needing 'reenable' enabled, and leaves a still-disabled user suspended.
      *
