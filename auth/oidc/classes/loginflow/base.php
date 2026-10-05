@@ -342,7 +342,7 @@ class base {
             $remotefield = $fieldmapping['field_map'];
             $behavior = $fieldmapping['update_local'];
 
-            if ($behavior !== 'on' . $eventtype && $behavior !== 'always') {
+            if (!auth_oidc_fieldmap_applies_to_event($behavior, $eventtype)) {
                 // Field mapping doesn't apply to this event type.
                 continue;
             }

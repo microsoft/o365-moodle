@@ -328,6 +328,27 @@ function auth_oidc_connectioncapability($userid, $mode = 'connect', $require = f
 }
 
 /**
+ * Determine whether a field mapping's "update local" behaviour applies to an event.
+ *
+ * Event types are 'create' (user being created, on login or by user sync), 'login' (existing user logging in) and 'usersync'
+ * (existing user updated by the user sync task).
+ *
+ * @param string $behavior The field mapping's update_local value: 'always', 'oncreate', 'onlogin' or 'oncreate_usersync'.
+ * @param string $eventtype 'create', 'login' or 'usersync'.
+ * @return bool
+ */
+function auth_oidc_fieldmap_applies_to_event(string $behavior, string $eventtype): bool {
+    $behaviorevents = [
+        'always' => ['create', 'login', 'usersync'],
+        'oncreate' => ['create'],
+        'onlogin' => ['login', 'usersync'],
+        'oncreate_usersync' => ['create', 'usersync'],
+    ];
+
+    return isset($behaviorevents[$behavior]) && in_array($eventtype, $behaviorevents[$behavior], true);
+}
+
+/**
  * Determine if local_o365 plugins is installed.
  *
  * @return bool
@@ -751,6 +772,9 @@ function auth_oidc_display_auth_lock_options(
         'oncreate' => get_string('update_oncreate', 'auth'),
         'onlogin' => $onlogintext,
     ];
+    if (auth_oidc_is_local_365_installed()) {
+        $updatelocaloptions['oncreate_usersync'] = get_string('update_oncreate_and_usersync', 'auth_oidc');
+    }
 
     $updateextoptions = [
         '0' => get_string('update_never', 'auth'),
