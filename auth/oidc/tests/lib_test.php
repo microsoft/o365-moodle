@@ -72,4 +72,44 @@ final class lib_test extends advanced_testcase {
 
         $this->assertSame($expected, auth_oidc_validate_secret_expiry_recipients($value));
     }
+
+    /**
+     * Data provider for {@see self::test_fieldmap_applies_to_event()}.
+     *
+     * @return array
+     */
+    public static function fieldmap_applies_to_event_provider(): array {
+        return [
+            'always on create' => ['always', 'create', true],
+            'always on login' => ['always', 'login', true],
+            'always on usersync' => ['always', 'usersync', true],
+            'oncreate on create' => ['oncreate', 'create', true],
+            'oncreate on login' => ['oncreate', 'login', false],
+            'oncreate on usersync' => ['oncreate', 'usersync', false],
+            'onlogin on create' => ['onlogin', 'create', false],
+            'onlogin on login' => ['onlogin', 'login', true],
+            'onlogin on usersync' => ['onlogin', 'usersync', true],
+            'oncreate_usersync on create' => ['oncreate_usersync', 'create', true],
+            'oncreate_usersync on login' => ['oncreate_usersync', 'login', false],
+            'oncreate_usersync on usersync' => ['oncreate_usersync', 'usersync', true],
+            'unknown behaviour' => ['unknown', 'create', false],
+            'unknown event' => ['always', 'unknown', false],
+        ];
+    }
+
+    /**
+     * Test auth_oidc_fieldmap_applies_to_event().
+     *
+     * @dataProvider fieldmap_applies_to_event_provider
+     * @param string $behavior
+     * @param string $eventtype
+     * @param bool $expected
+     * @return void
+     * @covers ::auth_oidc_fieldmap_applies_to_event
+     */
+    public function test_fieldmap_applies_to_event(string $behavior, string $eventtype, bool $expected): void {
+        require_once(__DIR__ . '/../lib.php');
+
+        $this->assertSame($expected, auth_oidc_fieldmap_applies_to_event($behavior, $eventtype));
+    }
 }
