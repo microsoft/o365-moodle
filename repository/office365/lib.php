@@ -135,20 +135,22 @@ class repository_office365 extends repository {
         $breadcrumb = [['name' => $this->name, 'path' => '/']];
 
         $unifiedactive = false;
+        $myfilesactive = false;
         $trendingactive = false;
-        $trendingdisabled = get_config('office365', 'trendinggroup');
+        $trendingenabled = get_config('office365', 'enabletrendinggroup');
         if ($this->unifiedconfigured === true) {
             $unifiedtoken = $this->get_unified_token();
             if (!empty($unifiedtoken)) {
                 $unifiedactive = true;
-                $trendingactive = (empty($trendingdisabled)) ? true : false;
+                $myfilesactive = !empty(get_config('office365', 'enableonedrivegroup'));
+                $trendingactive = !empty($trendingenabled);
             }
         }
 
         $courses = enrol_get_users_courses($USER->id, true);
         $showgroups = false;
-        $coursegroupdisabled = get_config('office365', 'coursegroup');
-        if (unified::is_configured() === true  && empty($coursegroupdisabled)) {
+        $coursegroupenabled = get_config('office365', 'enablecoursegroup');
+        if (unified::is_configured() === true  && !empty($coursegroupenabled)) {
             foreach ($courses as $course) {
                 if (\local_o365\feature\coursesync\utils::is_course_sync_enabled($course->id)) {
                     $showgroups = true;
@@ -158,7 +160,7 @@ class repository_office365 extends repository {
         }
 
         if (strpos($path, '/my/') === 0) {
-            if ($unifiedactive === true) {
+            if ($myfilesactive === true) {
                 // Path is in my files.
                 [$list, $breadcrumb] = $this->get_listing_my_unified(substr($path, 3));
             }
@@ -173,7 +175,7 @@ class repository_office365 extends repository {
                 [$list, $breadcrumb] = $this->get_listing_trending_unified(substr($path, 9));
             }
         } else {
-            if ($unifiedactive === true) {
+            if ($myfilesactive === true) {
                 $list[] = [
                     'title' => get_string('myfiles', 'repository_office365'),
                     'path' => '/my/',
@@ -834,7 +836,7 @@ class repository_office365 extends repository {
      * @return int
      */
     public function supported_returntypes() {
-        $returntypes = FILE_INTERNAL;
+        $returntypes = 0;
 
         // Check if direct link option is enabled.
         $enabledirectlink = get_config('office365', 'enabledirectlink');
@@ -847,6 +849,11 @@ class repository_office365 extends repository {
         $enableanonymousshare = get_config('office365', 'enableanonymousshare');
         if (!empty($enableanonymousshare)) {
             $returntypes |= FILE_CONTROLLED_LINK;
+        }
+
+        // The copy option is on unless the admin unchecked it; keep it as a fallback when no link option is enabled.
+        if (!empty(get_config('office365', 'enableinternal')) || $returntypes === 0) {
+            $returntypes |= FILE_INTERNAL;
         }
 
         return $returntypes;
@@ -1621,6 +1628,10 @@ class repository_office365 extends repository {
             array_push($errors, get_string('notconfigured', 'repository_office365', $CFG->wwwroot));
         }
 
+        if (empty($data['enableinternal']) && empty($data['enabledirectlink']) && empty($data['enableanonymousshare'])) {
+            $errors['enableinternal'] = get_string('errornofilelinkoption', 'repository_office365');
+        }
+
         return $errors;
     }
 
@@ -1638,15 +1649,23 @@ class repository_office365 extends repository {
         }
 
         parent::type_config_form($mform);
-        $mform->addElement('checkbox', 'coursegroup', get_string('coursegroup', 'repository_office365'));
-        $mform->setType('coursegroup', PARAM_INT);
-        $mform->addElement('checkbox', 'onedrivegroup', get_string('onedrivegroup', 'repository_office365'));
-        $mform->setType('onedrivegroup', PARAM_INT);
-        $mform->addElement('checkbox', 'trendinggroup', get_string('trendinggroup', 'repository_office365'));
-        $mform->setType('trendinggroup', PARAM_INT);
+        $mform->addElement('checkbox', 'enablecoursegroup', get_string('enablecoursegroup', 'repository_office365'));
+        $mform->setType('enablecoursegroup', PARAM_INT);
+        $mform->addElement('checkbox', 'enableonedrivegroup', get_string('enableonedrivegroup', 'repository_office365'));
+        $mform->setType('enableonedrivegroup', PARAM_INT);
+        $mform->addElement('checkbox', 'enabletrendinggroup', get_string('enabletrendinggroup', 'repository_office365'));
+        $mform->setType('enabletrendinggroup', PARAM_INT);
 
         // File linking options.
         $mform->addElement('header', 'filelinking', get_string('filelinkingheader', 'repository_office365'));
+
+        $mform->addElement(
+            'checkbox',
+            'enableinternal',
+            get_string('enableinternal', 'repository_office365', get_string('makefileinternal', 'repository'))
+        );
+        $mform->setType('enableinternal', PARAM_INT);
+        $mform->addHelpButton('enableinternal', 'enableinternal', 'repository_office365');
 
         $mform->addElement(
             'checkbox',
@@ -1683,6 +1702,14 @@ class repository_office365 extends repository {
       * @return array
       */
     public static function get_type_option_names() {
-        return ['coursegroup', 'onedrivegroup', 'trendinggroup', 'enabledirectlink', 'enableanonymousshare', 'pluginname'];
+        return [
+            'enablecoursegroup',
+            'enableonedrivegroup',
+            'enabletrendinggroup',
+            'enableinternal',
+            'enabledirectlink',
+            'enableanonymousshare',
+            'pluginname',
+        ];
     }
 }
