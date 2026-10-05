@@ -148,6 +148,7 @@ $string['settings_usersync_delete'] = 'Delete previously synced accounts in Mood
 $string['settings_usersync_reenable'] = 'Re-enable suspended accounts for users in Microsoft Entra ID';
 $string['settings_usersync_disabledsyncsuspend'] = 'Suspend accounts in Moodle when disabled in Microsoft Entra ID';
 $string['settings_usersync_disabledsyncreenable'] = 'Re-enable accounts in Moodle when re-enabled in Microsoft Entra ID';
+$string['settings_usersync_groupsyncsuspend'] = 'Suspend accounts in Moodle when not in the configured user sync group';
 $string['settings_usersync_match'] = 'Match preexisting Moodle users with same-named accounts in Microsoft Entra ID';
 $string['settings_usersync_matchswitchauth'] = 'Switch matched users to Microsoft 365 (OpenID Connect) authentication';
 $string['settings_usersync_appassign'] = 'Assign users to application during sync';
@@ -452,7 +453,7 @@ $string['settings_usersyncgroupfilter_details'] = 'When a group object ID (GUID)
 (2) New Moodle accounts will only be created for users who are members or owners of the group<br>
 (3) Moodle accounts for non-member users will no longer receive updates and may become out-of-sync with Microsoft 365<br>
 (4) Users disabled in Microsoft 365 will still be suspended in Moodle by the enabled-status sync, which runs independently of group filtering<br>
-(5) Removing a user from the group stops future syncs for that account but does not delete or suspend their Moodle account<br><br>
+(5) Removing a user from the group stops future syncs for that account. Their Moodle account is not deleted, and is only suspended if the "Suspend accounts in Moodle when not in the configured user sync group" option is enabled, which suspends every synced user who is not in the group, whether or not they were ever in it<br><br>
 <strong>Incremental (delta) sync limitation:</strong> Microsoft Graph does not support delta queries on group membership endpoints. When this setting is configured, delta syncs will perform a full group-member sync instead of an incremental update. This is correct behaviour but may be slower than a normal delta sync.<br><br>
 Validate the group object ID before saving. Enter the group object ID (GUID).';
 $string['settings_usersyncgroupfilter_validation_error'] = 'Invalid group ID format. The group ID must be a valid GUID (e.g., 550e8400-e29b-41d4-a716-446655440000).';
@@ -1023,6 +1024,8 @@ $string['help_user_reenable'] = 'Re-enable Accounts Help';
 $string['help_user_reenable_help'] = 'This will re-enable suspended Moodle accounts if they are returned from Microsoft Entra ID.';
 $string['help_user_disabledsyncsuspend'] = 'Suspend Accounts On Disable Help';
 $string['help_user_disabledsyncsuspend_help'] = 'This will suspend users in Moodle if their connected accounts in Microsoft Entra ID are prevented from logging in (disabled), without changing whether they are automatically re-enabled if their Microsoft Entra ID account is enabled again. Use the "Re-enable accounts in Moodle when re-enabled in Microsoft Entra ID" option below to control that separately.';
+$string['help_user_groupsyncsuspend'] = 'Suspend Accounts Not In Sync Group Help';
+$string['help_user_groupsyncsuspend_help'] = 'This will suspend users in Moodle if they are still active in Microsoft Entra ID but are not members or owners of the group configured in the "User sync group filter" setting. The check is on current membership only: it also suspends existing synced users who were never in the group, not just users who left it, so review your group before enabling this option. This option is only available when a user sync group filter is configured. To avoid mass suspension, nothing is suspended if the group is found to be empty or its members cannot be retrieved. Suspended users are not re-enabled while they are not in the group.';
 $string['help_user_disabledsyncreenable'] = 'Re-enable Accounts On Enable Help';
 $string['help_user_disabledsyncreenable_help'] = 'This will unsuspend suspended users in Moodle if their connected accounts in Microsoft Entra ID are allowed to log in (enabled) again.';
 $string['help_user_match'] = 'Match Accounts Help';
