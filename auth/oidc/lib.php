@@ -535,6 +535,8 @@ function auth_oidc_get_remote_fields() {
             'companyName' => get_string('settings_fieldmap_field_companyName', 'auth_oidc'),
             'preferredLanguage' => get_string('settings_fieldmap_field_preferredLanguage', 'auth_oidc'),
             'employeeId' => get_string('settings_fieldmap_field_employeeId', 'auth_oidc'),
+            'employeeType' => get_string('settings_fieldmap_field_employeeType', 'auth_oidc'),
+            'accountEnabled' => get_string('settings_fieldmap_field_accountEnabled', 'auth_oidc'),
             'businessPhones' => get_string('settings_fieldmap_field_businessPhones', 'auth_oidc'),
             'faxNumber' => get_string('settings_fieldmap_field_faxNumber', 'auth_oidc'),
             'mobilePhone' => get_string('settings_fieldmap_field_mobilePhone', 'auth_oidc'),
