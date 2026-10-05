@@ -1035,9 +1035,9 @@ class unified extends o365api {
     protected function get_default_user_fields(bool $guestuser = false): array {
         $defaultfields =
             ['id', 'userPrincipalName', 'displayName', 'givenName', 'surname', 'mail', 'streetAddress', 'city', 'postalCode',
-                'state', 'country', 'jobTitle', 'department', 'companyName', 'preferredLanguage', 'employeeId', 'businessPhones',
-                'faxNumber', 'mobilePhone', 'officeLocation', 'manager', 'teams', 'roles', 'groups', 'accountEnabled',
-                'onPremisesExtensionAttributes', 'onPremisesSamAccountName'];
+                'state', 'country', 'jobTitle', 'department', 'companyName', 'preferredLanguage', 'employeeId', 'employeeType',
+                'businessPhones', 'faxNumber', 'mobilePhone', 'officeLocation', 'manager', 'teams', 'roles', 'groups',
+                'accountEnabled', 'onPremisesExtensionAttributes', 'onPremisesSamAccountName'];
         if (!$guestuser) {
             $defaultfields[] = 'preferredName';
         }
