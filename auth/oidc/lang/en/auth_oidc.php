@@ -169,7 +169,8 @@ $string['customclaims_help'] = 'Space-separated list of custom claim names from 
 <li>Claims must exist in your IdP\'s token configuration (e.g., Keycloak protocol mappers, Azure AD optional/custom claims)</li>
 <li>If a claim doesn\'t exist in the token, field mapping will silently skip it - no error will be shown</li>
 <li>Claim names are case-sensitive and can only contain alphanumeric characters, hyphens, and underscores</li>
-<li>A claim name cannot be a reserved name, such as a standard JWT/OpenID Connect claim (e.g., <code>sub</code>, <code>email</code>), one specific to Microsoft Entra ID (e.g., <code>oid</code>, <code>upn</code>, <code>roles</code>) or Keycloak (e.g., <code>realm_access</code>, <code>resource_access</code>), or an existing field mapping option</li>
+<li>A claim name cannot be a reserved name, such as a standard JWT/OpenID Connect claim (e.g., <code>sub</code>, <code>email</code>), one specific to Microsoft Entra ID (e.g., <code>oid</code>, <code>upn</code>) or Keycloak (e.g., <code>realm_access</code>, <code>resource_access</code>), or an existing field mapping option</li>
+<li>The <code>roles</code> claim (App roles in Microsoft Entra ID tokens) and the <code>groups</code> claim (group IDs) are allowed. They are listed as "roles (token claim)" and "groups (token claim)" in field mapping, separate from the built-in "Roles" and "Groups" options, which map Microsoft Entra directory roles and group names from Microsoft Graph. Claims containing a list of values are stored as a comma-separated list</li>
 <li>Examples: <code>employee_type badge_number costCenter custom_role</code></li>
 <li>At login, custom claims are always read from the token, whether or not Microsoft Graph is also used. During the scheduled user sync task, there is no user token to read from, so a custom claim is only synced when its name also happens to be a selectable Microsoft Graph user property, such as a directory extension attribute (e.g., <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). A custom claim that Microsoft Graph rejects is skipped for that sync run, with a warning in the task log, rather than failing the whole sync.</li>
 </ul>';
@@ -397,6 +398,7 @@ $string['settings_fieldmap_field_manager_email'] = 'Manager email';
 $string['settings_fieldmap_field_teams'] = 'Teams';
 $string['settings_fieldmap_field_groups'] = 'Groups';
 $string['settings_fieldmap_field_roles'] = 'Roles';
+$string['settings_fieldmap_field_tokenclaim'] = '{$a} (token claim)';
 $string['settings_fieldmap_field_onPremisesSamAccountName'] = 'On-premises SAM account name';
 $string['settings_fieldmap_field_extensionattribute'] = 'Extension attribute {$a}';
 $string['settings_fieldmap_field_sds_school_id'] = 'SDS school ID ({$a})';

@@ -203,4 +203,65 @@ final class lib_test extends advanced_testcase {
             $this->assertDebuggingCalledCount(count($expecteddebugging), $expecteddebugging);
         }
     }
+
+    /**
+     * Data provider for {@see self::test_custom_claim_value_to_string()}.
+     *
+     * @return array
+     */
+    public static function custom_claim_value_to_string_provider(): array {
+        return [
+            'string' => ['Teacher', 'Teacher'],
+            'integer' => [5, '5'],
+            'null' => [null, null],
+            'empty string' => ['', null],
+            'list of values' => [['Teacher', 'Manager'], 'Teacher,Manager'],
+            'list with empty and nested values' => [['Teacher', '', ['nested']], 'Teacher'],
+            'empty list' => [[], null],
+            'list of nested values only' => [[['nested']], null],
+        ];
+    }
+
+    /**
+     * Test auth_oidc_custom_claim_value_to_string().
+     *
+     * @dataProvider custom_claim_value_to_string_provider
+     * @param mixed $value
+     * @param string|null $expected
+     * @return void
+     * @covers ::auth_oidc_custom_claim_value_to_string
+     */
+    public function test_custom_claim_value_to_string($value, ?string $expected): void {
+        $this->resetAfterTest(true);
+
+        require_once(__DIR__ . '/../lib.php');
+
+        $this->assertSame($expected, auth_oidc_custom_claim_value_to_string($value));
+    }
+
+    /**
+     * Test the "roles" and "groups" custom claims are valid and exposed under a prefixed key, next to the built-in fields.
+     *
+     * @return void
+     * @covers ::auth_oidc_process_custom_claims
+     * @covers ::auth_oidc_validate_custom_claims
+     */
+    public function test_roles_and_groups_custom_claims_exposed_with_prefixed_key(): void {
+        $this->resetAfterTest(true);
+
+        require_once(__DIR__ . '/../lib.php');
+
+        $this->assertSame([], auth_oidc_validate_custom_claims('roles groups employee_type'));
+
+        set_config('customclaims', 'roles groups employee_type', 'auth_oidc');
+
+        $remotefields = auth_oidc_process_custom_claims(['roles' => 'Roles', 'groups' => 'Groups', 'mail' => 'Email']);
+
+        $this->assertSame('Roles', $remotefields['roles']);
+        $this->assertSame('Groups', $remotefields['groups']);
+        $this->assertSame('employee_type', $remotefields['employee_type']);
+        $this->assertSame('roles (token claim)', $remotefields[auth_oidc_get_custom_claim_prefixed_key('roles')]);
+        $this->assertSame('groups (token claim)', $remotefields[auth_oidc_get_custom_claim_prefixed_key('groups')]);
+        $this->assertArrayNotHasKey(auth_oidc_get_custom_claim_prefixed_key('employee_type'), $remotefields);
+    }
 }

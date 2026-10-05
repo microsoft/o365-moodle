@@ -1092,6 +1092,11 @@ class unified extends o365api {
                 if (isset($fieldmapping['field_map']) && !empty($fieldmapping['field_map'])) {
                     $remotefield = $fieldmapping['field_map'];
 
+                    if (auth_oidc_is_custom_claim_prefixed_key($remotefield)) {
+                        // Token claims colliding with built-in fields are not Graph properties.
+                        continue;
+                    }
+
                     // Handle extension attributes.
                     if (strpos($remotefield, 'extensionAttribute') === 0) {
                         $mappedfields[] = 'onPremisesExtensionAttributes';
