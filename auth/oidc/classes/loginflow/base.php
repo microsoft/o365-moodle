@@ -825,12 +825,17 @@ class base {
         }
 
         foreach ($customclaims as $claimname) {
-            if (isset($userdata[$claimname])) {
+            $claimvalue = auth_oidc_custom_claim_value_to_string($token->claim($claimname));
+            if ($claimvalue === null) {
                 continue;
             }
 
-            $claimvalue = $token->claim($claimname);
-            if (is_scalar($claimvalue) && $claimvalue !== null && $claimvalue !== '') {
+            $prefixedkey = auth_oidc_get_custom_claim_prefixed_key($claimname);
+            if (!isset($userdata[$prefixedkey])) {
+                $userdata[$prefixedkey] = $claimvalue;
+            }
+
+            if (!isset($userdata[$claimname])) {
                 $userdata[$claimname] = $claimvalue;
             }
         }
