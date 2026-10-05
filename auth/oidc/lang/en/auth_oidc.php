@@ -362,6 +362,7 @@ $string['errorusermatched'] = 'The Microsoft 365 account "{$a->entraidupn}" is a
 // User mapping options.
 $string['update_oncreate_and_onlogin'] = 'On creation and every login';
 $string['update_oncreate_and_onlogin_and_usersync'] = 'On creation, every login, and every user sync task run';
+$string['update_oncreate_and_usersync'] = 'On creation and every user sync task run';
 $string['update_onlogin_and_usersync'] = 'On every login and every user sync task run';
 
 // Remote fields.
