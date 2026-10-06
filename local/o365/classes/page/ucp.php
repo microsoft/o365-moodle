@@ -103,7 +103,7 @@ class ucp extends base {
                     );
                     $o365calendars = $calsync->get_calendars();
                 }
-            } else {
+            } else if (!empty($usersetting->o365calid)) {
                 $updatecalendar = true;
                 foreach ($o365calendars as $o365calendar) {
                     if ($o365calendar['name'] === $SITE->fullname) {
@@ -180,15 +180,15 @@ class ucp extends base {
             foreach ($existingsubsrs as $existingsubrec) {
                 if ($existingsubrec->caltype === 'site') {
                     $defaultdata['sitecal']['checked'] = '1';
-                    $defaultdata['sitecal']['syncwith'] = $existingsubrec->o365calid;
+                    $defaultdata['sitecal']['syncwith'] = $existingsubrec->o365calid ?: $primarycalid;
                     $defaultdata['sitecal']['syncbehav'] = $existingsubrec->syncbehav;
                 } else if ($existingsubrec->caltype === 'user') {
                     $defaultdata['usercal']['checked'] = '1';
-                    $defaultdata['usercal']['syncwith'] = $existingsubrec->o365calid;
+                    $defaultdata['usercal']['syncwith'] = $existingsubrec->o365calid ?: $primarycalid;
                     $defaultdata['usercal']['syncbehav'] = $existingsubrec->syncbehav;
                 } else if ($existingsubrec->caltype === 'course') {
                     $defaultdata['coursecal'][$existingsubrec->caltypeid]['checked'] = '1';
-                    $defaultdata['coursecal'][$existingsubrec->caltypeid]['syncwith'] = $existingsubrec->o365calid;
+                    $defaultdata['coursecal'][$existingsubrec->caltypeid]['syncwith'] = $existingsubrec->o365calid ?: $primarycalid;
                     $defaultdata['coursecal'][$existingsubrec->caltypeid]['syncbehav'] = $existingsubrec->syncbehav;
                 }
             }
