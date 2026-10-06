@@ -696,6 +696,14 @@ $string['settings_sds_suspend_enrolment_desc'] = 'When this option is enabled, u
 <b>Note:</b> Teachers are never suspended or unenrolled by SDS sync. This setting only affects students.';
 $string['settings_sds_enable_course_sync'] = 'Enable two-way course sync';
 $string['settings_sds_enable_course_sync_desc'] = 'When enabled, each Moodle course created from an SDS class will be linked to its Microsoft 365 group in the database, activating the full Microsoft 365 course sync integration (Teams, files, calendar, etc.) for that course. If the SDS class already has a Team, a Teams association record is also created.';
+$string['settings_sds_course_field_mailnickname'] = 'Mail nickname (mailNickname)';
+$string['settings_sds_course_field_displayname'] = 'Display name (displayName)';
+$string['settings_sds_course_field_classcode'] = 'Class code (classCode)';
+$string['settings_sds_course_field_externalname'] = 'External name (externalName)';
+$string['settings_sds_course_shortname_field'] = 'Course short name source';
+$string['settings_sds_course_shortname_field_desc'] = 'The SDS class property used as the short name of newly created Moodle courses. Moodle requires course short names to be unique. If the chosen property is empty, or its value is already used by a course linked to another SDS class, the mail nickname is used instead. Changing this setting does not rename courses that have already been created.';
+$string['settings_sds_course_fullname_field'] = 'Course full name source';
+$string['settings_sds_course_fullname_field_desc'] = 'The SDS class property used as the full name of newly created Moodle courses. If the chosen property is empty, the display name is used instead. Changing this setting does not rename courses that have already been created.';
 $string['settings_sds_categorize_by_subject'] = 'Categorize courses by subject';
 $string['settings_sds_categorize_by_subject_desc'] = 'When enabled, courses will be organized into subject-based categories within each school category. The subject name is extracted from the class information in SDS. When disabled, all courses are placed directly in the school category.';
 $string['settings_sds_ignore_past_courses'] = 'Ignore expired/past classes';
