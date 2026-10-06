@@ -426,6 +426,16 @@ $string['settings_course_request_enrolment_member_role_desc'] = 'The role that w
 
 // Settings section headings of the "Advanced" tab.
 $string['settings_header_tools'] = 'Tools';
+$string['settings_secthead_calsync'] = 'Calendar sync';
+$string['settings_calsyncsubscribemode'] = 'Calendar sync subscription';
+$string['settings_calsyncsubscribemode_details'] = 'Controls whether users have to turn on Outlook calendar sync themselves.<ul><li><b>Opt-in</b>: users enable calendar sync and tick the calendars to sync on their calendar sync settings page.</li><li><b>Opt-out</b>: users connected to Microsoft 365 automatically get calendar sync enabled and are subscribed to the calendars chosen below (for courses, all courses they are enrolled in, now and in future), syncing from Moodle to their primary Outlook calendar. Users can still change or turn this off on their calendar sync settings page, and users who turn calendar sync off are not subscribed again.</li></ul>Switching back to "Opt-in" does not remove existing subscriptions.';
+$string['settings_calsyncsubscribetypes'] = 'Calendars to subscribe users to automatically';
+$string['settings_calsyncsubscribetypes_details'] = 'Only applies to "Opt-out". Choose which Moodle calendars connected users are subscribed to automatically. Subscribing everyone to the site calendar adds every user as an attendee of each site event, so it is not selected by default.';
+$string['settings_calsyncsubscribetypes_site'] = 'Site calendar';
+$string['settings_calsyncsubscribetypes_user'] = 'Personal calendar';
+$string['settings_calsyncsubscribetypes_course'] = 'Course calendars (all courses the user is enrolled in)';
+$string['settings_calsyncsubscribemode_optin'] = 'Opt-in (users enable calendar sync themselves)';
+$string['settings_calsyncsubscribemode_optout'] = 'Opt-out (enable calendar sync for all connected users automatically)';
 $string['settings_secthead_advanced'] = 'Advanced Settings';
 $string['settings_secthead_advanced_desc'] = 'These settings control other features of the plugin suite. Be careful! These may cause unintended effects.';
 
@@ -910,6 +920,7 @@ $string['privacy:metadata:local_o365_calsettings'] = 'Information about calendar
 $string['privacy:metadata:local_o365_calsettings:user_id'] = 'The ID of the Moodle user';
 $string['privacy:metadata:local_o365_calsettings:o365calid'] = 'The ID of the calendar in Microsoft 365';
 $string['privacy:metadata:local_o365_calsettings:timecreated'] = 'The time the record was created.';
+$string['privacy:metadata:preference:calsync_initialised'] = 'Whether the user\'s Outlook calendar sync choices have been initialised, so they are not enabled automatically again.';
 
 // Page "Microsoft 365 / Moodle Control Panel" in the Microsoft block.
 $string['ucp_title'] = 'Microsoft 365 / Moodle Control Panel';
@@ -979,6 +990,7 @@ $string['task_coursemembershipsync'] = 'Sync Microsoft Teams owners and members 
 $string['task_sds_sync'] = 'Sync with SDS';
 $string['task_syncusers'] = 'Sync users from Microsoft Entra ID';
 $string['task_syncusersphotostimezones'] = 'Sync user photos and timezones from Microsoft Entra ID';
+$string['task_calsyncautosubscribe'] = 'Automatically enable calendar sync for connected users';
 $string['task_userenabledstatussync'] = 'Suspend/re-enable/delete users based on Microsoft Entra ID status';
 $string['task_processmatchqueue'] = 'Process Match Queue';
 $string['task_notifysecretexpiry'] = 'Notify site admin about Microsoft Entra ID app secret expiry';
