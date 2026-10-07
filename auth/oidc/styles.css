@@ -16,7 +16,8 @@
     font-family: 'Courier New', Courier, monospace;
 }
 
-.path-admin-auth-oidc .warning_header {
+.path-admin-auth-oidc .warning_header,
+.auth_oidc_warning {
     border: 1px solid #f00;
     background-color: #ffe5e5;
     padding: 10px;
@@ -43,7 +44,7 @@
     color: #f00;
 }
 
-.path-admin-auth-oidc .code {
+.auth_oidc_code {
     font-family: 'Courier New', Courier, monospace;
     white-space: pre;
 }
