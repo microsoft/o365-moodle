@@ -34,6 +34,8 @@ use core_privacy\local\request\contextlist;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\core_userlist_provider;
 use core_privacy\local\request\plugin\provider as plugin_provider;
+use core_privacy\local\request\user_preference_provider;
+use core_privacy\local\request\transform;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 use stdClass;
@@ -44,7 +46,8 @@ use stdClass;
 class provider implements
     core_userlist_provider,
     metadata_provider,
-    plugin_provider {
+    plugin_provider,
+    user_preference_provider {
     /**
      * Returns metadata about this system.
      *
@@ -127,7 +130,30 @@ class provider implements
             );
         }
 
+        $collection->add_user_preference(
+            \local_o365\feature\calsync\autosubscribe::PREF_INITIALISED,
+            'privacy:metadata:preference:calsync_initialised'
+        );
+
         return $collection;
+    }
+
+    /**
+     * Export all user preferences for the plugin.
+     *
+     * @param int $userid The ID of the user whose preferences should be exported.
+     */
+    public static function export_user_preferences(int $userid) {
+        $name = \local_o365\feature\calsync\autosubscribe::PREF_INITIALISED;
+        $value = get_user_preferences($name, null, $userid);
+        if ($value !== null) {
+            writer::export_user_preference(
+                'local_o365',
+                $name,
+                transform::yesno($value),
+                get_string('privacy:metadata:preference:calsync_initialised', 'local_o365')
+            );
+        }
     }
 
     /**

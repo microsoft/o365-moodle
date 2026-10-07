@@ -621,6 +621,48 @@ if ($hassiteconfig) {
             $desc
         ));
 
+        // Calendar sync section.
+        $label = new lang_string('settings_secthead_calsync', 'local_o365');
+        $advancedsettings->add(new admin_setting_heading('local_o365_section_calsync', $label, ''));
+
+        $label = new lang_string('settings_calsyncsubscribemode', 'local_o365');
+        $desc = new lang_string('settings_calsyncsubscribemode_details', 'local_o365');
+        $advancedsettings->add(new admin_setting_configselect(
+            'local_o365/calsyncsubscribemode',
+            $label,
+            $desc,
+            \local_o365\feature\calsync\autosubscribe::MODE_OPTIN,
+            [
+                \local_o365\feature\calsync\autosubscribe::MODE_OPTIN =>
+                    new lang_string('settings_calsyncsubscribemode_optin', 'local_o365'),
+                \local_o365\feature\calsync\autosubscribe::MODE_OPTOUT =>
+                    new lang_string('settings_calsyncsubscribemode_optout', 'local_o365'),
+            ]
+        ));
+
+        $label = new lang_string('settings_calsyncsubscribetypes', 'local_o365');
+        $desc = new lang_string('settings_calsyncsubscribetypes_details', 'local_o365');
+        $advancedsettings->add(new admin_setting_configmulticheckbox(
+            'local_o365/calsyncsubscribetypes',
+            $label,
+            $desc,
+            array_fill_keys(\local_o365\feature\calsync\autosubscribe::DEFAULT_TYPES, 1),
+            [
+                \local_o365\feature\calsync\autosubscribe::TYPE_SITE =>
+                    new lang_string('settings_calsyncsubscribetypes_site', 'local_o365'),
+                \local_o365\feature\calsync\autosubscribe::TYPE_USER =>
+                    new lang_string('settings_calsyncsubscribetypes_user', 'local_o365'),
+                \local_o365\feature\calsync\autosubscribe::TYPE_COURSE =>
+                    new lang_string('settings_calsyncsubscribetypes_course', 'local_o365'),
+            ]
+        ));
+        $advancedsettings->hide_if(
+            'local_o365/calsyncsubscribetypes',
+            'local_o365/calsyncsubscribemode',
+            'eq',
+            \local_o365\feature\calsync\autosubscribe::MODE_OPTIN
+        );
+
         // Advanced settings section.
         $label = new lang_string('settings_secthead_advanced', 'local_o365');
         $desc = new lang_string('settings_secthead_advanced_desc', 'local_o365');
