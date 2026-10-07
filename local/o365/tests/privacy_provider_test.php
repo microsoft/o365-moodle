@@ -31,6 +31,7 @@ use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 use core_privacy\tests\provider_testcase;
+use local_o365\feature\usersync\main;
 use local_o365\privacy\provider;
 use stdClass;
 
@@ -71,6 +72,56 @@ final class privacy_provider_test extends provider_testcase {
         // Check that a context is returned and is the expected context.
         $usercontext = user::instance($user->id);
         $this->assertEquals($usercontext->id, $contextlist->get_contextids()[0]);
+    }
+
+    /**
+     * Check that the suspended time user preference is exported, and on its own counts as user data.
+     *
+     * @covers \local_o365\privacy\provider::export_user_preferences
+     * @covers \local_o365\privacy\provider::get_contexts_for_userid
+     */
+    public function test_suspended_time_preference_export(): void {
+        $user = $this->getDataGenerator()->create_user();
+        $this->assertEmpty(provider::get_contexts_for_userid($user->id));
+
+        $suspendedtime = time() - DAYSECS;
+        set_user_preference(main::SUSPENDED_TIME_PREFERENCE, $suspendedtime, $user);
+
+        $contextlist = provider::get_contexts_for_userid($user->id);
+        $this->assertCount(1, $contextlist);
+
+        provider::export_user_preferences($user->id);
+        $writer = writer::with_context(user::instance($user->id));
+        $this->assertTrue($writer->has_any_data());
+        $exported = $writer->get_user_preferences('local_o365');
+        $this->assertTrue(isset($exported->{main::SUSPENDED_TIME_PREFERENCE}));
+    }
+
+    /**
+     * Check that the suspended time user preference is deleted with the rest of the user's data.
+     *
+     * @covers \local_o365\privacy\provider::delete_data_for_user
+     */
+    public function test_suspended_time_preference_deletion(): void {
+        global $DB;
+
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+        set_user_preference(main::SUSPENDED_TIME_PREFERENCE, time(), $user1);
+        set_user_preference(main::SUSPENDED_TIME_PREFERENCE, time(), $user2);
+
+        $user1context = user::instance($user1->id);
+        $approved = new approved_contextlist($user1, 'local_o365', [$user1context->id]);
+        provider::delete_data_for_user($approved);
+
+        $this->assertFalse($DB->record_exists('user_preferences', [
+            'userid' => $user1->id,
+            'name' => main::SUSPENDED_TIME_PREFERENCE,
+        ]));
+        $this->assertTrue($DB->record_exists('user_preferences', [
+            'userid' => $user2->id,
+            'name' => main::SUSPENDED_TIME_PREFERENCE,
+        ]));
     }
 
     /**
