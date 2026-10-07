@@ -395,6 +395,11 @@ if ($hassiteconfig) {
             $courseroleoptions
         ));
 
+        // Create a private channel for each Moodle group.
+        $label = new lang_string('settings_coursesync_group_channels', 'local_o365');
+        $desc = new lang_string('settings_coursesync_group_channels_details', 'local_o365');
+        $coursesyncsettings->add(new admin_setting_configcheckbox('local_o365/coursesyncgroupchannels', $label, $desc, '0'));
+
         // Team / group name section.
         $coursesyncsettings->add(new admin_setting_heading(
             'local_o365_section_team_name',
