@@ -187,7 +187,7 @@ if ($form->is_cancelled()) {
         if ($isgraphapiconnected) {
             // First, delete the existing application token and purge cache.
             unset_config('apptokens', 'local_o365');
-            unset_config('azuresetupresult', 'local_o365');
+            unset_config('verifysetupresult', 'local_o365');
             purge_all_caches();
 
             // Then show the message to the user with instructions to update the application token.
