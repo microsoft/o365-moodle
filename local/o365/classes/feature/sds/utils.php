@@ -66,6 +66,51 @@ class utils {
     }
 
     /**
+     * Return the list of SDS schools for use on the plugin settings page.
+     *
+     * The result is cached for the duration of the request, so the Graph API is called at most once no matter how many
+     * settings rely on it. This lets the settings page defer the Graph API call until the SDS page is actually rendered,
+     * rather than every time the full admin tree is built (for example on /admin/search.php).
+     *
+     * @return array [$status, $schools] where $status is one of 'ok', 'notconnected', 'noschools' or 'error', and
+     *               $schools is an array of [schoolid => displayname, ...] (empty unless $status is 'ok').
+     */
+    public static function get_settings_schools(): array {
+        static $cache = null;
+
+        if ($cache !== null) {
+            return $cache;
+        }
+
+        $apiclient = static::get_apiclient();
+        if (!$apiclient) {
+            $cache = ['notconnected', []];
+            return $cache;
+        }
+
+        try {
+            $schools = $apiclient->get_schools();
+        } catch (moodle_exception $e) {
+            $cache = ['error', []];
+            return $cache;
+        }
+
+        if (empty($schools)) {
+            $cache = ['noschools', []];
+            return $cache;
+        }
+
+        $result = [];
+        foreach ($schools as $school) {
+            $result[$school['id']] = $school['displayName'];
+        }
+
+        $cache = ['ok', $result];
+
+        return $cache;
+    }
+
+    /**
      * Return the configuration status of SDS profile sync, and the name of the school if configured.
      *
      * @param unified|null $apiclient
