@@ -48,7 +48,44 @@ class observers {
     }
 
     /**
+     * Handle user_enrolment_created event to automatically subscribe the user to the course calendar.
+     *
+     * Only applies when the site is set to subscribe users automatically (opt-out), and never for users who have
+     * turned calendar sync off.
+     *
+     * @param \core\event\user_enrolment_created $event The triggered event.
+     * @return bool Success/Failure.
+     */
+    public static function handle_user_enrolment_created(\core\event\user_enrolment_created $event) {
+        global $DB;
+
+        if (!autosubscribe::is_optout_mode() || \local_o365\utils::is_connected() !== true) {
+            return false;
+        }
+
+        $userid = $event->relateduserid;
+        $courseid = $event->courseid;
+
+        if (empty($userid) || empty($courseid) || !\local_o365\utils::is_o365_connected($userid)) {
+            return true;
+        }
+
+        autosubscribe::initialise_user($userid);
+
+        if (
+            in_array(autosubscribe::TYPE_COURSE, autosubscribe::get_subscribe_types()) &&
+            $DB->record_exists('local_o365_calsettings', ['user_id' => $userid])
+        ) {
+            autosubscribe::subscribe_course($userid, $courseid);
+        }
+
+        return true;
+    }
+
+    /**
      * Handle user_enrolment_deleted event to clean up calendar subscriptions.
+     *
+     * Subscriptions are kept if the user is still actively enrolled in the course through another enrolment method.
      *
      * @param \core\event\user_enrolment_deleted $event The triggered event.
      * @return bool Success/Failure.
@@ -63,6 +100,12 @@ class observers {
         $courseid = $event->courseid;
 
         if (empty($userid) || empty($courseid)) {
+            return true;
+        }
+
+        // The user may still be actively enrolled through another enrolment method.
+        $coursecontext = \core\context\course::instance($courseid, IGNORE_MISSING);
+        if ($coursecontext && is_enrolled($coursecontext, $userid, '', true)) {
             return true;
         }
 
