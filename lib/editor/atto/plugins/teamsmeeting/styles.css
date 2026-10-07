@@ -1,6 +1,62 @@
-.atto_form .meeting-app #meetingapp {
+.atto_teamsmeeting-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, .5);
+    z-index: 100000;
+}
+
+.atto_teamsmeeting-modal {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-width: 95vw;
+    max-height: 95vh;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, .3);
+}
+
+.atto_teamsmeeting-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .75rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.atto_teamsmeeting-modal-title {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.atto_teamsmeeting-modal-close {
+    padding: 0 .25rem;
+    border: 0;
+    background: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.atto_teamsmeeting-sentinel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+}
+
+#meetingapp {
     display: block;
-    height: 420px;
-    width: 600px;
+    width: 620px;
+    max-width: 100%;
+    height: 480px;
+    border: 0;
     background-color: #f3f2f1;
 }

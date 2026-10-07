@@ -24,16 +24,19 @@
 
 $string['addlink'] = 'Add link';
 $string['createteamsmeeting'] = 'Create Teams meeting';
+$string['dialogueend'] = 'End of dialogue';
+$string['dialoguestart'] = 'Start of dialogue';
+$string['editteamsmeeting'] = 'Teams meeting';
 $string['gotomeeting'] = 'Go to meeting';
 $string['iframe_not_found'] = 'Meeting not found!';
 $string['legacy_setting_warning'] = '<div class="alert alert-warning">WARNING: The Meetings app deployed at https://enovation.ie/msteams is deprecated and will be removed soon. A new app has been created at https://enomsteams.z16.web.core.windows.net.</div>';
 $string['meetingcreatedsuccess'] = 'Meeting "{$a}" was created successfully!';
 $string['meetingdataretention'] = 'Meeting data retention (days)';
 $string['meetingdataretention_desc'] = 'Number of days to keep stored meeting links before the scheduled cleanup task deletes them. Set to 0 to keep meeting data indefinitely.';
-$string['meetingoptions'] = 'Meeting Options';
+$string['meetingdetails'] = 'Meeting "{$a}"';
+$string['meetingoptions'] = 'Meeting options';
 $string['meetingsapplink'] = 'Meetings App URL';
 $string['meetingsapplink_desc'] = 'This is URL of meeting app location';
-$string['meetingurl'] = 'Your meeting URL';
 $string['openinnewwindow'] = 'Open in new window';
 $string['pluginname'] = 'Teams Meeting';
 $string['privacy:metadata:atto_teamsmeeting'] = 'Information about the Teams meetings created through the Atto editor button.';
