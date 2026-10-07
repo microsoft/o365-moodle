@@ -26,6 +26,10 @@ use core\context\course;
 
 defined('MOODLE_INTERNAL') || die();
 
+// Render_page_layout() only pulls $CFG, $SITE and $USER into this included file's scope, so
+// $SESSION must be declared explicitly here to be readable below.
+global $SESSION;
+
 require_once($CFG->libdir . '/behat/lib.php');
 
 if (isloggedin()) {
@@ -65,6 +69,7 @@ $templatecontext = [
         'hasregionmainsettingsmenu' => !empty($regionmainsettingsmenu),
         'course_page' => $coursepage,
         'is_course_overview' => $iscourseoverview,
+        'teamsthemeforced' => !empty($SESSION->local_o365_teamstheme),
 ];
 
 echo $OUTPUT->render_from_template('theme_boost_o365teams/columns2', $templatecontext);
