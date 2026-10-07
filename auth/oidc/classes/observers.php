@@ -26,6 +26,7 @@
 namespace auth_oidc;
 
 use auth_oidc\loginflow\authcode;
+use core\event\config_log_created;
 use core\event\user_deleted;
 use core\event\user_loggedout;
 
@@ -66,6 +67,29 @@ class observers {
         }
 
         (new authcode())->clear_csrf_cookie();
+
+        return true;
+    }
+
+    /**
+     * Handle config_log_created event - react to changes of the plugin's application configuration.
+     *
+     * When the configured client (application) ID changes, the plugin is authenticating against a
+     * different application registration, so every stored OIDC token is bound to the old application
+     * and can no longer be used. Clear the token table so affected users re-authenticate on their
+     * next login and fresh tokens are stored.
+     *
+     * @param config_log_created $event The triggered event.
+     * @return bool Success/Failure.
+     */
+    public static function handle_config_log_created(config_log_created $event) {
+        global $DB;
+
+        $other = $event->get_data()['other'] ?? [];
+
+        if (($other['plugin'] ?? '') === 'auth_oidc' && ($other['name'] ?? '') === 'clientid') {
+            $DB->delete_records('auth_oidc_token');
+        }
 
         return true;
     }
