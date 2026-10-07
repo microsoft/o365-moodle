@@ -585,6 +585,14 @@ class main {
 
                     if (static::is_resource_not_exist_exception($e->getMessage())) {
                         if (stripos($e->getMessage(), $groupobjectid) !== false) {
+                            if ($isnewlycreated && $retrycounter < API_CALL_RETRY_LIMIT) {
+                                // A group created in this run can briefly appear missing because of Azure AD propagation
+                                // delay, so keep retrying until the retry limit is reached.
+                                $this->mtrace('Newly created group not yet accessible. Will retry.', $baselevel + 2);
+                                $retrycounter++;
+                                continue;
+                            }
+
                             // The non-existing resource is the group - nothing more can be done for it this run.
                             if (!in_array($groupobjectid, $this->groupsnotfound)) {
                                 $this->groupsnotfound[] = $groupobjectid;
