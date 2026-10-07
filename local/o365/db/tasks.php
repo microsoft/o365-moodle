@@ -135,6 +135,15 @@ $tasks = [
         'month' => '*',
     ],
     [
+        'classname' => 'local_o365\task\groupchannelsync',
+        'blocking' => 0,
+        'minute' => '*/10',
+        'hour' => '*',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*',
+    ],
+    [
         'classname' => 'local_o365\task\checkinvalidconfiglog',
         'blocking' => 0,
         'minute' => '0',
