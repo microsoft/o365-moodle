@@ -193,3 +193,43 @@ $settings->hide_if(
     'block_microsoft/settings_showvivalearning',
     'notchecked'
 );
+
+// Settings to show the course links in the block.
+$label = new lang_string('settings_showcourselinks', 'block_microsoft');
+$desc = new lang_string('settings_showcourselinks_desc', 'block_microsoft');
+$settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showcourselinks', $label, $desc, 1));
+
+$label = new lang_string('settings_showcourseconfiguresync', 'block_microsoft');
+$desc = new lang_string('settings_showcourseconfiguresync_desc', 'block_microsoft');
+$settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showcourseconfiguresync', $label, $desc, 1));
+$settings->hide_if('block_microsoft/settings_showcourseconfiguresync', 'block_microsoft/settings_showcourselinks', 'notchecked');
+
+$label = new lang_string('settings_showcourseteam', 'block_microsoft');
+$desc = new lang_string('settings_showcourseteam_desc', 'block_microsoft');
+$settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showcourseteam', $label, $desc, 1));
+$settings->hide_if('block_microsoft/settings_showcourseteam', 'block_microsoft/settings_showcourselinks', 'notchecked');
+
+$label = new lang_string('settings_showcourseconversations', 'block_microsoft');
+$desc = new lang_string('settings_showcourseconversations_desc', 'block_microsoft');
+$settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showcourseconversations', $label, $desc, 1));
+$settings->hide_if('block_microsoft/settings_showcourseconversations', 'block_microsoft/settings_showcourselinks', 'notchecked');
+
+$label = new lang_string('settings_showcourseonedrive', 'block_microsoft');
+$desc = new lang_string('settings_showcourseonedrive_desc', 'block_microsoft');
+$settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showcourseonedrive', $label, $desc, 1));
+$settings->hide_if('block_microsoft/settings_showcourseonedrive', 'block_microsoft/settings_showcourselinks', 'notchecked');
+
+$label = new lang_string('settings_showcoursecalendar', 'block_microsoft');
+$desc = new lang_string('settings_showcoursecalendar_desc', 'block_microsoft');
+$settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showcoursecalendar', $label, $desc, 1));
+$settings->hide_if('block_microsoft/settings_showcoursecalendar', 'block_microsoft/settings_showcourselinks', 'notchecked');
+
+$label = new lang_string('settings_showcoursenotebook', 'block_microsoft');
+$desc = new lang_string('settings_showcoursenotebook_desc', 'block_microsoft');
+$settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showcoursenotebook', $label, $desc, 1));
+$settings->hide_if('block_microsoft/settings_showcoursenotebook', 'block_microsoft/settings_showcourselinks', 'notchecked');
+
+$label = new lang_string('settings_showcoursereset', 'block_microsoft');
+$desc = new lang_string('settings_showcoursereset_desc', 'block_microsoft');
+$settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showcoursereset', $label, $desc, 1));
+$settings->hide_if('block_microsoft/settings_showcoursereset', 'block_microsoft/settings_showcourselinks', 'notchecked');
