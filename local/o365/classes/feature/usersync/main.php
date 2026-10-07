@@ -145,17 +145,15 @@ class main {
      */
     public static function is_enabled() {
         $usersyncsettings = get_config('local_o365', 'usersync');
-        if (!empty($usersyncsettings)) {
-            $usersyncsettings = explode(',', $usersyncsettings);
-            $realsyncoptions = ['create', 'update', 'suspend', 'reenable', 'disabledsyncsuspend', 'disabledsyncreenable',
-                'matchswitchauth', 'appassign', 'photosync', 'tzsync'];
-            if (!empty(array_intersect($usersyncsettings, $realsyncoptions))) {
-                // At least one sync option is enabled.
-                return true;
-            }
-        } else {
+        if (empty($usersyncsettings)) {
             return false;
         }
+
+        $usersyncsettings = explode(',', $usersyncsettings);
+        $realsyncoptions = ['create', 'update', 'suspend', 'reenable', 'disabledsyncsuspend', 'disabledsyncreenable',
+            'match', 'matchswitchauth', 'appassign', 'photosync', 'tzsync'];
+
+        return !empty(array_intersect($usersyncsettings, $realsyncoptions));
     }
 
     /**
