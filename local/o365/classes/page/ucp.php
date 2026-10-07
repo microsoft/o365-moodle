@@ -374,13 +374,7 @@ class ucp extends base {
         if (is_enabled_auth('oidc')) {
             $options = html_writer::start_div('local_o365_connectionoption');
             $header = html_writer::tag('h4', get_string('ucp_connection_entraidlogin', 'local_o365'));
-            $loginflow = get_config('auth_oidc', 'loginflow');
-            switch ($loginflow) {
-                case 'authcode':
-                case 'rocreds':
-                    $header .= get_string('ucp_connection_entraidlogin_desc_' . $loginflow, 'local_o365', $opname);
-                    break;
-            }
+            $header .= get_string('ucp_connection_entraidlogin_desc_authcode', 'local_o365', $opname);
 
             switch ($connectiontype) {
                 case 'entraidlogin':
