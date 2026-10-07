@@ -698,7 +698,7 @@ class authcode extends base {
                                                  FROM {user}
                                                 WHERE username = ?
                                                       AND id != ?',
-                [$oidcusername, $USER->id]
+                [trim(core_text::strtolower((string) $oidcusername)), $USER->id]
             );
 
             if (!empty($userrec)) {
