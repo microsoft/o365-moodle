@@ -56,5 +56,27 @@ function xmldb_repository_office365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024100720.01, 'repository', 'office365');
     }
 
+    if ($oldversion < 2024100735.01) {
+        // The migration above only converted 'disabledirectlink' / 'disableanonymousshare' when those
+        // legacy settings had been explicitly saved. Sites that never opened the repository type
+        // settings form (the common case, since the previous default already allowed both options)
+        // never had those settings stored, so the migration silently skipped them. Those sites ended
+        // up with 'enabledirectlink' / 'enableanonymousshare' unset, which the new opt-in logic treats
+        // as disabled, even though the options were enabled by default before this change.
+        //
+        // Restore the original enabled-by-default behaviour wherever the new setting is still unset,
+        // without touching sites that have already explicitly configured it either way.
+        if (get_config('office365', 'enabledirectlink') === false) {
+            set_config('enabledirectlink', 1, 'office365');
+        }
+
+        if (get_config('office365', 'enableanonymousshare') === false) {
+            set_config('enableanonymousshare', 1, 'office365');
+        }
+
+        // Savepoint reached.
+        upgrade_plugin_savepoint(true, 2024100735.01, 'repository', 'office365');
+    }
+
     return true;
 }
