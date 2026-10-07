@@ -31,8 +31,10 @@ define(['jquery'], function($) {
          *
          * @param {string} ajaxUrl The AJAX endpoint URL for server-side processing
          * @param {boolean} isEditable Whether the page is editable
+         * @param {string} regexLabel Label for the "search as regex" checkbox
+         * @param {string} regexTitle Tooltip text for the "search as regex" checkbox
          */
-        init: function(ajaxUrl, isEditable) {
+        init: function(ajaxUrl, isEditable, regexLabel, regexTitle) {
             // Expose Moodle's jQuery globally so DataTables attaches to the correct instance
             window.jQuery = $;
 
@@ -65,13 +67,32 @@ define(['jquery'], function($) {
                         "columnDefs": [
                             {"orderable": true, "searchable": true, "targets": 0},
                             {"orderable": true, "searchable": true, "targets": 1},
-                            {"orderable": false, "searchable": false, "targets": 2},
-                            {"orderable": false, "searchable": false, "targets": 3}
+                            {"orderable": true, "searchable": true, "targets": 2},
+                            {"orderable": false, "searchable": false, "targets": 3},
+                            {"orderable": false, "searchable": false, "targets": 4}
                         ],
                         "drawCallback": function() {
                             if (!isEditable) {
                                 $("input.course_sync_enabled").prop("disabled", true);
                             }
+                        },
+                        "initComplete": function() {
+                            // Add a checkbox next to the search box to let the search be treated as a regex.
+                            var api = this.api();
+                            var checkboxId = "coursesynccustom_regex_search";
+                            var $label = $("<label>", {
+                                "for": checkboxId,
+                                "class": "ml-2",
+                                "style": "font-weight: normal; margin-left: 1em;",
+                                "title": regexTitle
+                            });
+                            var $checkbox = $("<input>", {"type": "checkbox", "id": checkboxId});
+                            $label.append($checkbox).append(document.createTextNode(" " + regexLabel));
+                            $(api.table().container()).find(".dataTables_filter").append($label);
+
+                            $checkbox.on("change", function() {
+                                api.search(api.search(), $(this).is(":checked")).draw();
+                            });
                         }
                     });
 
