@@ -17,7 +17,10 @@
 namespace local_o365;
 
 use advanced_testcase;
+use core\component;
 use dml_exception;
+use local_o365\tests\mockhttpclient;
+use moodle_exception;
 
 /**
  * Unit tests for the class utils
@@ -172,5 +175,44 @@ final class utils_test extends advanced_testcase {
         set_config('entratenant', '', 'local_o365');
         set_config('entratenantid', 'set', 'local_o365');
         $this->assertTrue(utils::is_active_apponlyaccess());
+    }
+
+    /**
+     * When an application token can't be obtained, the exception carries the reason returned by the token endpoint.
+     *
+     * @return void
+     * @covers ::get_application_token
+     */
+    public function test_get_application_token_failure_includes_reason(): void {
+        $this->resetAfterTest();
+        $pluginslist = component::get_plugin_list('auth');
+        if (!array_key_exists('oidc', $pluginslist)) {
+            $this->markTestSkipped('auth_oidc needs to be installed to use this test!');
+        }
+
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+        set_config('clientid', 'clientid', 'auth_oidc');
+        set_config('clientsecret', 'clientsecret', 'auth_oidc');
+        set_config('clientauthmethod', AUTH_OIDC_AUTH_METHOD_SECRET, 'auth_oidc');
+        set_config('entratenant', 'wrong.example.org', 'local_o365');
+
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response(json_encode([
+            'error' => 'invalid_request',
+            'error_description' => "AADSTS90002: Tenant not found.\r\nTrace ID: 1234",
+        ]));
+
+        try {
+            utils::get_application_token(
+                'https://graph.microsoft.com',
+                oauth2\clientdata::instance_from_oidc(),
+                $httpclient,
+                true
+            );
+            $this->fail('Expected exception was not thrown.');
+        } catch (moodle_exception $e) {
+            $this->assertEquals('errorcannotgettoken', $e->errorcode);
+            $this->assertEquals('invalid_request: AADSTS90002: Tenant not found. Trace ID: 1234', $e->debuginfo);
+        }
     }
 }

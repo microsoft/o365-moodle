@@ -28,6 +28,7 @@ namespace local_o365\rest;
 use advanced_testcase;
 use core\component;
 use dml_exception;
+use local_o365\oauth2\apptoken;
 use local_o365\oauth2\token;
 use local_o365\tests\mockhttpclient;
 use moodle_exception;
@@ -112,6 +113,111 @@ final class unified_test extends advanced_testcase {
 
         set_config('chineseapi', '1', 'local_o365');
         $this->assertTrue(unified::use_chinese_api());
+    }
+
+    /**
+     * Configure auth_oidc so that application tokens can be requested.
+     *
+     * @return void
+     */
+    private function setup_oidc_for_apptoken(): void {
+        $pluginslist = component::get_plugin_list('auth');
+        if (!array_key_exists('oidc', $pluginslist)) {
+            $this->markTestSkipped('auth_oidc needs to be installed to use this test!');
+        }
+
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+        set_config('clientid', 'clientid', 'auth_oidc');
+        set_config('clientsecret', 'clientsecret', 'auth_oidc');
+        set_config('clientauthmethod', AUTH_OIDC_AUTH_METHOD_SECRET, 'auth_oidc');
+    }
+
+    /**
+     * A tenant is valid if it issues an application token, and the tenant being tested is used in the request.
+     *
+     * @return void
+     * @covers ::test_tenant
+     */
+    public function test_test_tenant_valid(): void {
+        $this->resetAfterTest();
+        $this->setup_oidc_for_apptoken();
+        set_config('entratenant', 'saved.example.com', 'local_o365');
+
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response(json_encode(['token_type' => 'Bearer', 'access_token' => 'token', 'expires_in' => 3600]));
+
+        $this->assertTrue(unified::test_tenant('tested.example.com', $httpclient));
+
+        $requests = $httpclient->get_requests();
+        $this->assertCount(1, $requests);
+        $this->assertStringContainsString('/tested.example.com/', $requests[0]['url']);
+
+        // The tested tenant is not saved, and no token is stored.
+        $this->assertEquals('saved.example.com', get_config('local_o365', 'entratenant'));
+        $this->assertEmpty(get_config('local_o365', 'apptokens'));
+    }
+
+    /**
+     * A tenant is invalid if it does not issue an application token.
+     *
+     * @return void
+     * @covers ::test_tenant
+     */
+    public function test_test_tenant_invalid(): void {
+        $this->resetAfterTest();
+        $this->setup_oidc_for_apptoken();
+
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response(json_encode([
+            'error' => 'invalid_request',
+            'error_description' => 'AADSTS90002: Tenant not found.',
+        ]));
+
+        $this->assertFalse(unified::test_tenant('wrong.example.org', $httpclient));
+        $this->assertEquals(
+            'invalid_request: AADSTS90002: Tenant not found.',
+            apptoken::get_last_error()
+        );
+    }
+
+    /**
+     * A tenant is invalid if the token endpoint does not return JSON, and the reason names the endpoint.
+     *
+     * @return void
+     * @covers ::test_tenant
+     */
+    public function test_test_tenant_invalid_response(): void {
+        $this->resetAfterTest();
+        $this->setup_oidc_for_apptoken();
+
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response('<html>Bad gateway</html>');
+
+        $this->assertFalse(unified::test_tenant('tested.example.com', $httpclient));
+        $this->assertStringContainsString('/tested.example.com/', apptoken::get_last_error());
+        $this->assertStringStartsWith('No valid response received from ', apptoken::get_last_error());
+    }
+
+    /**
+     * An empty tenant is invalid, and no request is made.
+     *
+     * @return void
+     * @covers ::test_tenant
+     */
+    public function test_test_tenant_empty(): void {
+        $this->resetAfterTest();
+        $this->setup_oidc_for_apptoken();
+
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response(json_encode(['error' => 'invalid_request', 'error_description' => 'Tenant not found.']));
+        $this->assertFalse(unified::test_tenant('wrong.example.org', $httpclient));
+        $this->assertNotEmpty(apptoken::get_last_error());
+
+        // The reason of the previous failure is not carried over to a check that makes no request.
+        $httpclient = new mockhttpclient();
+        $this->assertFalse(unified::test_tenant('  ', $httpclient));
+        $this->assertEmpty($httpclient->get_requests());
+        $this->assertSame('', apptoken::get_last_error());
     }
 
     /**
