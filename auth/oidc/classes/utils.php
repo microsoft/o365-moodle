@@ -312,24 +312,19 @@ class utils {
     }
 
     /**
-     * Migrate a site's selected stock icon to the custom icon setting if it used one of the
-     * icon choices that have been removed from the icon selector.
+     * Migrate a site's selected stock icon if it used one of the icon choices that have been
+     * removed from the icon selector.
      *
      * The 'auth_oidc/icon' setting stores a "component:pix" identifier. The set of stock
-     * choices has been reduced to a handful of icons relevant to this plugin; any site that had
-     * selected one of the removed choices (all generic core Moodle icons) needs that icon copied
-     * into the custom icon file area so the login page keeps showing the same image.
+     * choices has been reduced to a handful of icons relevant to this plugin. A removed choice
+     * that has a direct Microsoft-branded replacement is remapped to it; any other removed
+     * choice was a generic core Moodle icon with no plugin-specific meaning and is reset to the
+     * plugin's default icon.
      *
-     * Safe to call more than once: once a site has been migrated (or its 'icon' setting was
-     * never one of the removed choices), every subsequent call is a no-op, since the checks
-     * above always return early once either 'auth_oidc/icon' is empty/unset or
-     * 'auth_oidc/customicon' is populated. The file and config writes are wrapped in a
-     * delegated transaction so a failure partway through can't leave those two settings out of
-     * sync with each other, which is what the early-return checks rely on.
+     * Safe to call more than once: once a site's 'icon' setting is no longer one of the removed
+     * choices every subsequent call is a no-op.
      */
     public static function migrate_removed_icon_choices(): void {
-        global $CFG, $DB;
-
         $currenticon = get_config('auth_oidc', 'icon');
         if (empty($currenticon)) {
             return;
@@ -364,50 +359,58 @@ class utils {
             return;
         }
 
-        $parts = explode(':', $currenticon, 2);
-        if (count($parts) !== 2) {
+        // Every other removed choice was a generic core Moodle icon (a lock, an arrow, a
+        // person, ...) with no Microsoft-specific meaning. Core ships these as SVG only, and
+        // the custom icon file area deliberately rejects SVG (see
+        // AUTH_OIDC_CUSTOMICON_ALLOWED_EXTENSIONS in lib.php), so the original image cannot be
+        // preserved. Fall back to the plugin's default icon.
+        set_config('icon', 'auth_oidc:microsoft_365', 'auth_oidc');
+    }
+
+    /**
+     * Undo a custom login icon migration that produced an icon the login page cannot render.
+     *
+     * An earlier version of {@see self::migrate_removed_icon_choices()} copied the site's
+     * chosen core stock icon into the 'auth_oidc/customicon' file area. Core stock icons are
+     * SVG, which auth_oidc_initialize_customicon() refuses to publish to pix_plugins/ (see
+     * AUTH_OIDC_CUSTOMICON_ALLOWED_EXTENSIONS), so those sites are left with a 'customicon'
+     * setting that looks populated but shows an empty icon on the login page.
+     *
+     * This detects that state - a stored custom icon named 'migrated_*' whose extension is not
+     * one auth_oidc_initialize_customicon() can publish - clears it, removes any stale published
+     * file, and restores the default stock icon. It is a no-op on any other site.
+     */
+    public static function repair_failed_icon_migration(): void {
+        global $CFG, $DB;
+
+        require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
+        $customicon = get_config('auth_oidc', 'customicon');
+        if (empty($customicon) || !preg_match('#^/migrated_.+\.([^.]+)$#', $customicon, $matches)) {
             return;
         }
-        [, $pix] = $parts;
-
-        $sourcefile = null;
-        $extension = null;
-        foreach (['svg', 'png', 'gif', 'jpg', 'jpeg'] as $candidateextension) {
-            $candidatefile = "{$CFG->dirroot}/pix/{$pix}.{$candidateextension}";
-            if (file_exists($candidatefile)) {
-                $sourcefile = $candidatefile;
-                $extension = $candidateextension;
-                break;
-            }
-        }
-        if ($sourcefile === null) {
-            // Can't locate the source image for the removed choice, so there is nothing to copy.
+        if (in_array(strtolower($matches[1]), AUTH_OIDC_CUSTOMICON_ALLOWED_EXTENSIONS, true)) {
+            // The migrated icon uses a publishable format, so it renders correctly. Leave it be.
             return;
         }
 
         $systemcontext = system::instance();
         $fs = get_file_storage();
-        $filename = 'migrated_' . clean_param(str_replace('/', '_', $pix), PARAM_FILE) . '.' . $extension;
-        $filerecord = [
-            'contextid' => $systemcontext->id,
-            'component' => 'auth_oidc',
-            'filearea' => 'customicon',
-            'itemid' => 0,
-            'filepath' => '/',
-            'filename' => $filename,
-        ];
 
-        // Wrapped in a transaction so a failure partway through (e.g. the file write succeeding
-        // but a config write failing) can't leave 'icon' and 'customicon' out of sync, which
-        // would break the early-return guards above on any later call.
+        // Config and file writes are wrapped together so a later call still sees a consistent
+        // state (both cleared, or neither) if this fails partway through.
         $transaction = $DB->start_delegated_transaction();
         $fs->delete_area_files($systemcontext->id, 'auth_oidc', 'customicon', 0);
-        $fs->create_file_from_pathname($filerecord, $sourcefile);
-        set_config('customicon', '/' . $filename, 'auth_oidc');
-        unset_config('icon', 'auth_oidc');
+        unset_config('customicon', 'auth_oidc');
+        set_config('icon', 'auth_oidc:microsoft_365', 'auth_oidc');
         $transaction->allow_commit();
 
-        require_once($CFG->dirroot . '/auth/oidc/lib.php');
-        auth_oidc_initialize_customicon('/' . $filename);
+        // Drop any icon that a previously-valid extension had published, then rebuild caches so
+        // the login page stops pointing at it.
+        $publishedicons = glob($CFG->dataroot . '/pix_plugins/auth/oidc/0/customicon.*');
+        foreach ($publishedicons ?: [] as $publishedicon) {
+            @unlink($publishedicon);
+        }
+        theme_reset_all_caches();
     }
 }
