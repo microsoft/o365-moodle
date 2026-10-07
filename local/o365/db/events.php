@@ -29,6 +29,12 @@ defined('MOODLE_INTERNAL') || die();
 $observers = [
     // Calendar sync.
     [
+        'eventname'   => '\core\event\user_enrolment_created',
+        'callback'    => '\local_o365\feature\calsync\observers::handle_user_enrolment_created',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
         'eventname'   => '\core\event\user_enrolment_deleted',
         'callback'    => '\local_o365\feature\calsync\observers::handle_user_enrolment_deleted',
         'priority'    => 200,

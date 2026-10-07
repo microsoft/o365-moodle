@@ -136,6 +136,11 @@ class provider implements
             'privacy:metadata:preference:suspendedtime'
         );
 
+        $collection->add_user_preference(
+            \local_o365\feature\calsync\autosubscribe::PREF_INITIALISED,
+            'privacy:metadata:preference:calsync_initialised'
+        );
+
         return $collection;
     }
 
@@ -152,6 +157,17 @@ class provider implements
                 main::SUSPENDED_TIME_PREFERENCE,
                 transform::datetime((int) $suspendedtime),
                 get_string('privacy:metadata:preference:suspendedtime', 'local_o365')
+            );
+        }
+
+        $calsyncpref = \local_o365\feature\calsync\autosubscribe::PREF_INITIALISED;
+        $calsyncinitialised = get_user_preferences($calsyncpref, null, $userid);
+        if ($calsyncinitialised !== null) {
+            writer::export_user_preference(
+                'local_o365',
+                $calsyncpref,
+                transform::yesno($calsyncinitialised),
+                get_string('privacy:metadata:preference:calsync_initialised', 'local_o365')
             );
         }
     }
