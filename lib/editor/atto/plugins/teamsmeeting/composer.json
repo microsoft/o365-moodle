@@ -1,0 +1,23 @@
+{
+    "name": "enovation/moodle-atto_teamsmeeting",
+    "description": "Teams Meeting plugin for the Moodle Atto editor.",
+    "type": "moodle-atto",
+    "keywords": [
+        "moodle",
+        "teams",
+        "atto"
+    ],
+    "homepage": "https://github.com/enovation/moodle-atto_teamsmeeting",
+    "license": "GPL-3.0-or-later",
+    "support": {
+        "issues": "https://github.com/microsoft/o365-moodle/issues",
+        "source": "https://github.com/enovation/moodle-atto_teamsmeeting",
+        "docs": "https://docs.moodle.org/en/Microsoft_365"
+    },
+    "require": {
+        "composer/installers": "^1.0 || ^2.0"
+    },
+    "extra": {
+        "installer-name": "teamsmeeting"
+    }
+}

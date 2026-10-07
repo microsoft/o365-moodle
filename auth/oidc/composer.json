@@ -1,0 +1,24 @@
+{
+    "name": "microsoft/moodle-auth_oidc",
+    "description": "OpenID Connect authentication plugin for Moodle, part of the Microsoft 365 plugin suite.",
+    "type": "moodle-auth",
+    "keywords": [
+        "moodle",
+        "oidc",
+        "openid-connect",
+        "entra-id"
+    ],
+    "homepage": "https://github.com/microsoft/o365-moodle",
+    "license": "GPL-3.0-or-later",
+    "support": {
+        "issues": "https://github.com/microsoft/o365-moodle/issues",
+        "source": "https://github.com/microsoft/o365-moodle",
+        "docs": "https://docs.moodle.org/en/Microsoft_365"
+    },
+    "require": {
+        "composer/installers": "^1.0 || ^2.0"
+    },
+    "extra": {
+        "installer-name": "oidc"
+    }
+}
