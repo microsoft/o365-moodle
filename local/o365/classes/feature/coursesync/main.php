@@ -93,6 +93,21 @@ class main {
      * @var bool whether the tenant has education license.
      */
     private $haseducationlicense = false;
+    /**
+     * @var array Object IDs of groups that Microsoft Graph reported as non-existent during this run, so that
+     * further calls against them are skipped instead of repeatedly failing.
+     */
+    private $groupsnotfound = [];
+    /**
+     * @var array Object IDs of groups created during this run, which may not be fully visible to Graph yet and
+     * therefore warrant extra propagation retries.
+     */
+    private $newgroups = [];
+    /**
+     * @var array Object IDs of users that Microsoft Graph reported as non-existent during this run, so that
+     * further attempts to add them to a group are skipped.
+     */
+    private $usersnotfound = [];
 
     /**
      * Constructor.
@@ -411,20 +426,18 @@ class main {
         array $members,
         int $baselevel = 3
     ): bool {
-        global $SESSION;
         if (empty($owners) && empty($members)) {
             $this->mtrace('Skip adding owners / members to the group. Reason: No users to add.', $baselevel);
             return false;
         }
 
         // Whether this group was just created in this run (prone to Azure AD propagation delay).
-        $isnewlycreated = isset($SESSION->o365_newly_created_groups) &&
-            in_array($groupobjectid, $SESSION->o365_newly_created_groups);
+        $isnewlycreated = in_array($groupobjectid, $this->newgroups);
 
         // Fetch existing owners, retrying for newly created groups to handle Azure AD propagation delay.
         $existingowners = [];
         $this->mtrace('Get existing owners of group with ID ' . $groupobjectid, $baselevel);
-        if (isset($SESSION->o365_groups_not_exist) && in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
+        if (in_array($groupobjectid, $this->groupsnotfound)) {
             $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
         } else {
             $fetchretry = 0;
@@ -454,12 +467,11 @@ class main {
                             $baselevel + 1
                         );
                         if (
-                            isset($SESSION->o365_groups_not_exist) && isset($SESSION->o365_newly_created_groups) &&
                             static::is_resource_not_exist_exception($e->getMessage()) &&
                             stripos($e->getMessage(), $groupobjectid) !== false
                         ) {
-                            if (!in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                                $SESSION->o365_groups_not_exist[] = $groupobjectid;
+                            if (!in_array($groupobjectid, $this->groupsnotfound)) {
+                                $this->groupsnotfound[] = $groupobjectid;
                             }
                             $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
                         }
@@ -473,7 +485,7 @@ class main {
         // Fetch existing members, retrying for newly created groups to handle Azure AD propagation delay.
         $existingmembers = [];
         $this->mtrace('Get existing members of group with ID ' . $groupobjectid, $baselevel);
-        if (isset($SESSION->o365_groups_not_exist) && in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
+        if (in_array($groupobjectid, $this->groupsnotfound)) {
             $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
         } else {
             $fetchretry = 0;
@@ -503,12 +515,11 @@ class main {
                             $baselevel + 1
                         );
                         if (
-                            isset($SESSION->o365_groups_not_exist) &&
                             static::is_resource_not_exist_exception($e->getMessage()) &&
                             stripos($e->getMessage(), $groupobjectid) !== false
                         ) {
-                            if (!in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                                $SESSION->o365_groups_not_exist[] = $groupobjectid;
+                            if (!in_array($groupobjectid, $this->groupsnotfound)) {
+                                $this->groupsnotfound[] = $groupobjectid;
                             }
                             $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
                         }
@@ -533,70 +544,168 @@ class main {
 
         foreach ($userchunks as $key => $userchunk) {
             $role = array_keys($userchunk)[0];
-            $users = reset($userchunk);
+            $users = array_values(reset($userchunk));
+
+            if (in_array($groupobjectid, $this->groupsnotfound)) {
+                $this->mtrace('Group does not exist. Skipping remaining chunks.', $baselevel + 1);
+                break;
+            }
+
+            // Drop users already known not to exist in this run.
+            $users = array_values(array_diff($users, $this->usersnotfound));
+            if (empty($users)) {
+                continue;
+            }
+
+            $this->mtrace('Chunk ' . ($key + 1) . ', adding ' . count($users) . ' users as ' . $role, $baselevel + 1);
+
+            $chunkdone = false;
+            $groupmissing = false;
             $retrycounter = 0;
-            while ($retrycounter <= API_CALL_RETRY_LIMIT) {
+            while (!$chunkdone && $retrycounter <= API_CALL_RETRY_LIMIT) {
                 if ($retrycounter) {
-                    $this->mtrace('Retry #' . $retrycounter, $baselevel + 1);
+                    $this->mtrace('Retry #' . $retrycounter, $baselevel + 2);
                     sleep(10);
                 }
 
                 try {
-                    $this->mtrace('Chunk ' . ($key + 1) . ', adding ' . count($users) . ' users as ' . $role, $baselevel + 1);
-
-                    if (isset($SESSION->o365_groups_not_exist)) {
-                        if (in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                            $this->mtrace('Group does not exist. Skipping.', $baselevel + 2);
-                            break;
-                        }
-                    }
-
                     $response = $this->graphclient->add_chunk_users_to_group($groupobjectid, $role, $users);
                     if ($response) {
                         if ($role == 'owner') {
                             $owneradded = true;
                         }
+                        $chunkdone = true;
                     } else {
-                        $this->mtrace('Invalid bulk group owners/members addition request', $baselevel + 2);
+                        // A non-exception failure (unexpected response code): retry, then fall back to per-user adds.
+                        $this->mtrace('Bulk owners / members addition returned an unexpected response.', $baselevel + 2);
+                        $retrycounter++;
                     }
-
-                    break;
                 } catch (moodle_exception $e) {
                     $this->mtrace('Error: ' . $e->getMessage(), $baselevel + 2);
-                    if (
-                        isset($SESSION->o365_groups_not_exist) && isset($SESSION->o365_newly_created_groups) &&
-                        isset($SESSION->o365_users_not_exist)
-                    ) {
-                        if (static::is_resource_not_exist_exception($e->getMessage())) {
-                            if (stripos($e->getMessage(), $groupobjectid) !== false) {
-                                // The non-existing resource is the group.
-                                if (!in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                                    $SESSION->o365_groups_not_exist[] = $groupobjectid;
-                                }
 
-                                $this->mtrace('Group does not exist. Skip retries.', $baselevel + 2);
-                                break;
-                            } else {
-                                // The non-existing resource is a user.
-                                $useroid = \local_o365\utils::extract_guid_from_error_message($e->getMessage());
-                                if (!empty($useroid) && !in_array($useroid, $SESSION->o365_users_not_exist)) {
-                                    $SESSION->o365_users_not_exist[] = $useroid;
-                                    $this->mtrace('User ' . $useroid . ' does not exist. Skip retries.', $baselevel + 2);
-                                } else {
-                                    $this->mtrace('User does not exist. Skip retries.', $baselevel + 2);
-                                }
-
-                                break;
+                    if (static::is_resource_not_exist_exception($e->getMessage())) {
+                        if (stripos($e->getMessage(), $groupobjectid) !== false) {
+                            // The non-existing resource is the group - nothing more can be done for it this run.
+                            if (!in_array($groupobjectid, $this->groupsnotfound)) {
+                                $this->groupsnotfound[] = $groupobjectid;
                             }
+                            $this->mtrace('Group does not exist. Skip retries.', $baselevel + 2);
+                            $chunkdone = true;
+                            $groupmissing = true;
+                            break;
+                        }
+
+                        // The non-existing resource is a user. Graph rejects the whole request when any single
+                        // reference is invalid, so drop the offending user and retry the rest of the chunk.
+                        $useroid = \local_o365\utils::extract_guid_from_error_message($e->getMessage());
+                        if (!empty($useroid) && in_array($useroid, $users)) {
+                            if (!in_array($useroid, $this->usersnotfound)) {
+                                $this->usersnotfound[] = $useroid;
+                            }
+                            $this->mtrace('User ' . $useroid . ' does not exist. Removing from chunk.', $baselevel + 2);
+                            $users = array_values(array_diff($users, [$useroid]));
+                            if (empty($users)) {
+                                $chunkdone = true;
+                            }
+                            // Retry immediately with the reduced chunk (not counted as a backoff retry).
+                            continue;
                         }
                     }
 
                     $retrycounter++;
                 }
             }
+
+            if ($groupmissing) {
+                break;
+            }
+
+            if (!$chunkdone && !empty($users)) {
+                // The bulk request kept failing for a reason that is not a single missing user (e.g. one user is
+                // already an owner / member, or a transient error affecting one reference). Fall back to adding the
+                // users one by one so that a single bad reference does not block the whole chunk.
+                $fallbackmessage = 'Bulk add failed; falling back to individual add for ' . count($users) . ' user(s).';
+                $this->mtrace($fallbackmessage, $baselevel + 1);
+                if ($this->add_users_to_group_individually($groupobjectid, $role, $users, $baselevel + 2)) {
+                    if ($role == 'owner') {
+                        $owneradded = true;
+                    }
+                }
+            }
         }
 
         return $owneradded;
+    }
+
+    /**
+     * Add each of the given users to the group one at a time.
+     *
+     * Used as a fallback when a bulk add request is rejected because of a single bad user reference: Microsoft
+     * Graph rejects the entire request in that case, so one stale or already-present object ID would otherwise
+     * block every other user in the same chunk. "Already exists" errors are treated as success, and users that no
+     * longer exist are recorded so they are skipped for the rest of the run.
+     *
+     * @param string $groupobjectid
+     * @param string $role 'owner' or 'member'.
+     * @param array $userobjectids
+     * @param int $baselevel
+     * @return bool Whether at least one user ended up present as the requested role.
+     */
+    private function add_users_to_group_individually(
+        string $groupobjectid,
+        string $role,
+        array $userobjectids,
+        int $baselevel = 4
+    ): bool {
+        $added = false;
+
+        foreach ($userobjectids as $userobjectid) {
+            if (in_array($userobjectid, $this->usersnotfound)) {
+                continue;
+            }
+
+            if (in_array($groupobjectid, $this->groupsnotfound)) {
+                break;
+            }
+
+            try {
+                if ($role === 'owner') {
+                    $this->add_owner_to_group($groupobjectid, $userobjectid);
+                } else {
+                    $this->add_member_to_group($groupobjectid, $userobjectid);
+                }
+                $this->mtrace('Added ' . $userobjectid . ' as ' . $role . '.', $baselevel);
+                $added = true;
+            } catch (moodle_exception $e) {
+                $message = $e->getMessage();
+
+                if (stripos($message, 'already exist') !== false) {
+                    // The user is already an owner / member - the intended end state is already in place.
+                    $added = true;
+                    continue;
+                }
+
+                if (static::is_resource_not_exist_exception($message)) {
+                    if (stripos($message, $groupobjectid) !== false) {
+                        if (!in_array($groupobjectid, $this->groupsnotfound)) {
+                            $this->groupsnotfound[] = $groupobjectid;
+                        }
+                        $this->mtrace('Group does not exist. Aborting individual add.', $baselevel);
+                        break;
+                    }
+
+                    if (!in_array($userobjectid, $this->usersnotfound)) {
+                        $this->usersnotfound[] = $userobjectid;
+                    }
+                    $this->mtrace('User ' . $userobjectid . ' does not exist. Skipping.', $baselevel);
+                    continue;
+                }
+
+                $this->mtrace('Error adding ' . $userobjectid . ' as ' . $role . ': ' . $message, $baselevel);
+            }
+        }
+
+        return $added;
     }
 
     /**
@@ -752,7 +861,7 @@ class main {
      * @return array|false
      */
     private function create_team_from_education_group(string $groupobjectid, stdClass $course, int $baselevel = 3) {
-        global $DB, $SESSION;
+        global $DB;
 
         $now = time();
 
@@ -768,8 +877,7 @@ class main {
 
         // Whether this group was just created in this run (prone to Azure AD propagation delay), meaning
         // an owner was already confirmed added even though a read-after-write owner check may still lag.
-        $isnewlycreated = isset($SESSION->o365_newly_created_groups) &&
-            in_array($groupobjectid, $SESSION->o365_newly_created_groups);
+        $isnewlycreated = in_array($groupobjectid, $this->newgroups);
 
         $templateconfig = $this->get_team_template_with_fallback('educationClass');
         $currenttemplate = $templateconfig['template'];
@@ -784,11 +892,9 @@ class main {
         $skipgenericretrymessage = false;
 
         while ($retrycounter <= API_CALL_RETRY_LIMIT) {
-            if (isset($SESSION->o365_groups_not_exist)) {
-                if (in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                    $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
-                    break;
-                }
+            if (in_array($groupobjectid, $this->groupsnotfound)) {
+                $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
+                break;
             }
 
             if ($retrycounter) {
@@ -869,32 +975,27 @@ class main {
                             $baselevel + 1
                         );
 
-                        if (
-                            isset($SESSION->o365_groups_not_exist) && isset($SESSION->o365_newly_created_groups) &&
-                            isset($SESSION->o365_users_not_exist)
-                        ) {
-                            if (!in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                                if (static::is_resource_not_exist_exception($e->getMessage())) {
-                                    if (stripos($e->getMessage(), $groupobjectid) !== false) {
-                                        // The non-existing resource is the group.
-                                        if (!in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                                            $SESSION->o365_groups_not_exist[] = $groupobjectid;
-                                        }
-
-                                        $this->mtrace('Group does not exist. Skip retries.', $baselevel + 2);
-                                        break;
-                                    } else {
-                                        // The non-existing resource is a user.
-                                        $useroid = \local_o365\utils::extract_guid_from_error_message($e->getMessage());
-                                        if (!empty($useroid) && !in_array($useroid, $SESSION->o365_users_not_exist)) {
-                                            $SESSION->o365_users_not_exist[] = $useroid;
-                                            $this->mtrace('User ' . $useroid . ' does not exist. Skip retries.', $baselevel + 2);
-                                        } else {
-                                            $this->mtrace('User does not exist. Skip retries.', $baselevel + 2);
-                                        }
-
-                                        break;
+                        if (!in_array($groupobjectid, $this->groupsnotfound)) {
+                            if (static::is_resource_not_exist_exception($e->getMessage())) {
+                                if (stripos($e->getMessage(), $groupobjectid) !== false) {
+                                    // The non-existing resource is the group.
+                                    if (!in_array($groupobjectid, $this->groupsnotfound)) {
+                                        $this->groupsnotfound[] = $groupobjectid;
                                     }
+
+                                    $this->mtrace('Group does not exist. Skip retries.', $baselevel + 2);
+                                    break;
+                                } else {
+                                    // The non-existing resource is a user.
+                                    $useroid = \local_o365\utils::extract_guid_from_error_message($e->getMessage());
+                                    if (!empty($useroid) && !in_array($useroid, $this->usersnotfound)) {
+                                        $this->usersnotfound[] = $useroid;
+                                        $this->mtrace('User ' . $useroid . ' does not exist. Skip retries.', $baselevel + 2);
+                                    } else {
+                                        $this->mtrace('User does not exist. Skip retries.', $baselevel + 2);
+                                    }
+
+                                    break;
                                 }
                             }
                         }
@@ -949,7 +1050,7 @@ class main {
      * @return array|false The team object record or false on failure.
      */
     private function create_plc_team_directly(stdClass $course, int $baselevel = 2): array|false {
-        global $DB, $SESSION;
+        global $DB;
 
         $now = time();
 
@@ -1057,8 +1158,8 @@ class main {
 
         // Register the new group as newly created so that add_group_owners_and_members_to_group will apply
         // retry logic when the group is not yet accessible due to Azure AD propagation delay.
-        if (isset($SESSION->o365_newly_created_groups) && !in_array($groupobjectid, $SESSION->o365_newly_created_groups)) {
-            $SESSION->o365_newly_created_groups[] = $groupobjectid;
+        if (!in_array($groupobjectid, $this->newgroups)) {
+            $this->newgroups[] = $groupobjectid;
         }
 
         // Add owners/members to the group (best-effort: the group may not yet be fully propagated in Azure AD).
@@ -1094,7 +1195,7 @@ class main {
      * @return array|false
      */
     private function create_team_from_standard_group(string $groupobjectid, stdClass $course, int $baselevel = 3) {
-        global $DB, $SESSION;
+        global $DB;
 
         $now = time();
 
@@ -1106,8 +1207,7 @@ class main {
 
         // Whether this group was just created in this run (prone to Azure AD propagation delay), meaning
         // an owner was already confirmed added even though a read-after-write owner check may still lag.
-        $isnewlycreated = isset($SESSION->o365_newly_created_groups) &&
-            in_array($groupobjectid, $SESSION->o365_newly_created_groups);
+        $isnewlycreated = in_array($groupobjectid, $this->newgroups);
 
         $templateconfig = $this->get_team_template_with_fallback('standard');
         $currenttemplate = $templateconfig['template'];
@@ -1154,11 +1254,9 @@ class main {
                 $retrycounter++;
             } else {
                 try {
-                    if (isset($SESSION->o365_groups_not_exist)) {
-                        if (in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                            $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
-                            break;
-                        }
+                    if (in_array($groupobjectid, $this->groupsnotfound)) {
+                        $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
+                        break;
                     }
 
                     $response = $this->graphclient->create_team_from_group($groupobjectid, $currenttemplate);
@@ -1222,32 +1320,27 @@ class main {
 
                     $this->mtrace('Could not create team from group. Reason: ' . $e->getMessage(), $baselevel + 1);
 
-                    if (
-                        isset($SESSION->o365_groups_not_exist) && isset($SESSION->o365_newly_created_groups) &&
-                        isset($SESSION->o365_users_not_exist)
-                    ) {
-                        if (!in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                            if (static::is_resource_not_exist_exception($e->getMessage())) {
-                                if (stripos($e->getMessage(), $groupobjectid) !== false) {
-                                    // The non-existing resource is the group.
-                                    if (!in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                                        $SESSION->o365_groups_not_exist[] = $groupobjectid;
-                                    }
-
-                                    $this->mtrace('Group does not exist. Skip retries.', $baselevel + 2);
-                                    break;
-                                } else {
-                                    // The non-existing resource is a user.
-                                    $useroid = \local_o365\utils::extract_guid_from_error_message($e->getMessage());
-                                    if (!empty($useroid) && !in_array($useroid, $SESSION->o365_users_not_exist)) {
-                                        $SESSION->o365_users_not_exist[] = $useroid;
-                                        $this->mtrace('User ' . $useroid . ' does not exist. Skip retries.', $baselevel + 2);
-                                    } else {
-                                        $this->mtrace('User does not exist. Skip retries.', $baselevel + 2);
-                                    }
-
-                                    break;
+                    if (!in_array($groupobjectid, $this->groupsnotfound)) {
+                        if (static::is_resource_not_exist_exception($e->getMessage())) {
+                            if (stripos($e->getMessage(), $groupobjectid) !== false) {
+                                // The non-existing resource is the group.
+                                if (!in_array($groupobjectid, $this->groupsnotfound)) {
+                                    $this->groupsnotfound[] = $groupobjectid;
                                 }
+
+                                $this->mtrace('Group does not exist. Skip retries.', $baselevel + 2);
+                                break;
+                            } else {
+                                // The non-existing resource is a user.
+                                $useroid = \local_o365\utils::extract_guid_from_error_message($e->getMessage());
+                                if (!empty($useroid) && !in_array($useroid, $this->usersnotfound)) {
+                                    $this->usersnotfound[] = $useroid;
+                                    $this->mtrace('User ' . $useroid . ' does not exist. Skip retries.', $baselevel + 2);
+                                } else {
+                                    $this->mtrace('User does not exist. Skip retries.', $baselevel + 2);
+                                }
+
+                                break;
                             }
                         }
                     }
@@ -1476,8 +1569,6 @@ class main {
      * @return bool True if group creation succeeds, or False if it fails.
      */
     public function create_group_for_course(stdClass $course, int $baselevel = 2): bool {
-        global $SESSION;
-
         $this->mtrace('Process course #' . $course->id, $baselevel);
 
         // Check if a direct team creation template is configured (educationStaff, educationProfessionalLearningCommunity).
@@ -1489,9 +1580,7 @@ class main {
                 return false;
             }
 
-            if (isset($SESSION->o365_newly_created_groups)) {
-                $SESSION->o365_newly_created_groups[] = $teamobject['objectid'];
-            }
+            $this->newgroups[] = $teamobject['objectid'];
 
             $this->mtrace('Finished processing course #' . $course->id, $baselevel);
             return true;
@@ -1525,9 +1614,7 @@ class main {
             }
         }
 
-        if (isset($SESSION->o365_newly_created_groups)) {
-            $SESSION->o365_newly_created_groups[] = $groupobject['objectid'];
-        }
+        $this->newgroups[] = $groupobject['objectid'];
 
         $groupcreatedtime = time();
 
@@ -1589,7 +1676,7 @@ class main {
      *  - Create Teams if appropriate.
      */
     private function process_courses_without_teams() {
-        global $DB, $SESSION;
+        global $DB;
 
         $this->mtrace('Process courses without teams...', 1);
 
@@ -1639,10 +1726,8 @@ class main {
             $members = utils::get_team_member_object_ids_by_course_id($course->id, $owners);
 
             // Verify that at least one owner exists.
-            if (isset($SESSION->o365_users_not_exist)) {
-                $owners = array_diff($owners, $SESSION->o365_users_not_exist);
-                $members = array_diff($members, $SESSION->o365_users_not_exist);
-            }
+            $owners = array_diff($owners, $this->usersnotfound);
+            $members = array_diff($members, $this->usersnotfound);
 
             $ownerexists = false;
             foreach ($owners as $owner) {
@@ -1652,19 +1737,15 @@ class main {
                         $ownerexists = true;
                         break;
                     } else {
-                        if (isset($SESSION->o365_users_not_exist)) {
-                            if (!in_array($owner, $SESSION->o365_users_not_exist)) {
-                                $SESSION->o365_users_not_exist[] = $owner;
-                            }
+                        if (!in_array($owner, $this->usersnotfound)) {
+                            $this->usersnotfound[] = $owner;
                         }
                     }
                 } catch (moodle_exception $e) {
-                    if (isset($SESSION->o365_users_not_exist)) {
-                        if (static::is_resource_not_exist_exception($e->getMessage())) {
-                            $useroid = \local_o365\utils::extract_guid_from_error_message($e->getMessage());
-                            if (!empty($useroid) && !in_array($useroid, $SESSION->o365_users_not_exist)) {
-                                $SESSION->o365_users_not_exist[] = $useroid;
-                            }
+                    if (static::is_resource_not_exist_exception($e->getMessage())) {
+                        $useroid = \local_o365\utils::extract_guid_from_error_message($e->getMessage());
+                        if (!empty($useroid) && !in_array($useroid, $this->usersnotfound)) {
+                            $this->usersnotfound[] = $useroid;
                         }
                     }
                 }
@@ -2942,11 +3023,11 @@ class main {
      * @return void
      */
     public function save_not_found_groups(): void {
-        global $DB, $SESSION;
+        global $DB;
 
         $this->mtrace('Save non-existing groups to groups cache...');
-        if ($SESSION->o365_groups_not_exist) {
-            foreach ($SESSION->o365_groups_not_exist as $groupid) {
+        if ($this->groupsnotfound) {
+            foreach ($this->groupsnotfound as $groupid) {
                 if ($existingrecord = $DB->get_record('local_o365_groups_cache', ['objectid' => $groupid])) {
                     if (!$existingrecord->not_found_since) {
                         $existingrecord->not_found_since = time();
