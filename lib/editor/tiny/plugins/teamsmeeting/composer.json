@@ -1,0 +1,23 @@
+{
+    "name": "enovation/moodle-tiny_teamsmeeting",
+    "description": "Teams Meeting plugin for the Moodle TinyMCE editor.",
+    "type": "moodle-tiny",
+    "keywords": [
+        "moodle",
+        "teams",
+        "tinymce"
+    ],
+    "homepage": "https://github.com/enovation/moodle-tiny_teamsmeeting",
+    "license": "GPL-3.0-or-later",
+    "support": {
+        "issues": "https://github.com/microsoft/o365-moodle/issues",
+        "source": "https://github.com/enovation/moodle-tiny_teamsmeeting",
+        "docs": "https://docs.moodle.org/en/Microsoft_365"
+    },
+    "require": {
+        "composer/installers": "^1.0 || ^2.0"
+    },
+    "extra": {
+        "installer-name": "teamsmeeting"
+    }
+}
