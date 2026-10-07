@@ -853,7 +853,7 @@ class main {
      *
      * @param array $entraiduserdata User data from Microsoft Entra ID.
      * @param stdClass $user Moodle user data.
-     * @param string $eventtype 'login', or 'create'
+     * @param string $eventtype 'login', 'create' or 'usersync'
      *
      * @return stdClass Modified Moodle user data.
      */
@@ -960,7 +960,7 @@ class main {
             $remotefield = $fieldmapping['field_map'];
             $behavior = $fieldmapping['update_local'];
 
-            if ($behavior !== 'on' . $eventtype && $behavior !== 'always') {
+            if (!auth_oidc_fieldmap_applies_to_event($behavior, $eventtype)) {
                 // Field mapping doesn't apply to this event type.
                 continue;
             }
@@ -1059,7 +1059,10 @@ class main {
         }
 
         // Validate language sync.
-        if (array_key_exists('lang', $fieldmappings) && ($behavior === 'on' . $eventtype || $behavior === 'always')) {
+        if (
+            array_key_exists('lang', $fieldmappings) &&
+            auth_oidc_fieldmap_applies_to_event($fieldmappings['lang']['update_local'], $eventtype)
+        ) {
             if (!get_string_manager()->translation_exists($originallangsetting, false)) {
                 $originallangsetting = $CFG->lang;
             }
@@ -1136,7 +1139,7 @@ class main {
             foreach ($fieldmappings as $fieldmapping) {
                 $remotefield = $fieldmapping['field_map'];
                 if (!in_array($remotefield, $idtokenfields)) {
-                    if ($fieldmapping['update_local'] == 'always' || $fieldmapping['update_local'] == 'on' . $eventtype) {
+                    if (auth_oidc_fieldmap_applies_to_event($fieldmapping['update_local'], $eventtype)) {
                         return true;
                     }
                 }
@@ -1380,7 +1383,7 @@ class main {
      * @return bool An boolean indicating that was created Moodle user.
      */
     public function update_user_from_entra_id_data($entraiduserdata, $fullexistinguser) {
-        $existinguser = static::apply_configured_fieldmap($entraiduserdata, $fullexistinguser, 'login');
+        $existinguser = static::apply_configured_fieldmap($entraiduserdata, $fullexistinguser, 'usersync');
 
         if (!empty($existinguser->email)) {
             if (email_is_not_allowed($existinguser->email)) {
