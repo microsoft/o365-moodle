@@ -767,6 +767,33 @@ if ($hassiteconfig) {
                 '0'
             ));
 
+            // SDS course short name and full name mapping.
+            $coursenamefieldoptions = [
+                'mailNickname' => new lang_string('settings_sds_course_field_mailnickname', 'local_o365'),
+                'displayName' => new lang_string('settings_sds_course_field_displayname', 'local_o365'),
+                'classCode' => new lang_string('settings_sds_course_field_classcode', 'local_o365'),
+                'externalName' => new lang_string('settings_sds_course_field_externalname', 'local_o365'),
+            ];
+            $label = new lang_string('settings_sds_course_shortname_field', 'local_o365');
+            $desc = new lang_string('settings_sds_course_shortname_field_desc', 'local_o365');
+            $sdssettings->add(new admin_setting_configselect(
+                'local_o365/sdscourseshortnamefield',
+                $label,
+                $desc,
+                'mailNickname',
+                $coursenamefieldoptions
+            ));
+
+            $label = new lang_string('settings_sds_course_fullname_field', 'local_o365');
+            $desc = new lang_string('settings_sds_course_fullname_field_desc', 'local_o365');
+            $sdssettings->add(new admin_setting_configselect(
+                'local_o365/sdscoursefullnamefield',
+                $label,
+                $desc,
+                'displayName',
+                $coursenamefieldoptions
+            ));
+
             // SDS ignore past courses.
             $label = new lang_string('settings_sds_ignore_past_courses', 'local_o365');
             $desc = new lang_string('settings_sds_ignore_past_courses_desc', 'local_o365');
