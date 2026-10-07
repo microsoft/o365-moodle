@@ -604,6 +604,16 @@ if ($hassiteconfig) {
         )
     );
 
+    // Force account selection.
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'auth_oidc/forceselectaccount',
+            get_string('cfg_forceselectaccount_key', 'auth_oidc'),
+            get_string('cfg_forceselectaccount_desc', 'auth_oidc'),
+            0
+        )
+    );
+
     // Domain hint.
     $settings->add(
         new admin_setting_configtext(
