@@ -130,6 +130,9 @@ class subscriptions extends \moodleform {
     ) {
         global $DB, $USER;
 
+        // The user has made their own choice, so never enable calendar sync for them automatically.
+        \local_o365\feature\calsync\autosubscribe::mark_initialised($USER->id);
+
         // Determine outlook calendar setting check.
         $usersetting = $DB->get_record('local_o365_calsettings', ['user_id' => $USER->id]);
         if (!empty($fromform->settingcal) && empty($usersetting)) {
@@ -142,6 +145,9 @@ class subscriptions extends \moodleform {
             $newsetting['id'] = $DB->insert_record('local_o365_calsettings', (object)$newsetting);
         } else if (empty($fromform->settingcal) && !empty($usersetting)) {
             $DB->delete_records('local_o365_calsettings', ['user_id' => $USER->id]);
+        } else if (!empty($usersetting) && empty($usersetting->o365calid) && !empty($sitecalenderid)) {
+            // Enabled automatically before the site calendar existed in Outlook.
+            $DB->set_field('local_o365_calsettings', 'o365calid', $sitecalenderid, ['id' => $usersetting->id]);
         }
 
         // Determine and organize existing subscriptions.
@@ -274,10 +280,10 @@ class subscriptions extends \moodleform {
 
         $todelete = (empty($fromform->settingcal)) ? $existingcoursesubs : array_diff_key($existingcoursesubs, $newcoursesubs);
         $toadd = (empty($fromform->settingcal)) ? [] : array_diff_key($newcoursesubs, $existingcoursesubs);
-        foreach ($todelete as $courseid => $unused) {
+        foreach ($todelete as $courseid => $existingsub) {
             $DB->delete_records('local_o365_calsub', ['user_id' => $USER->id, 'caltype' => 'course', 'caltypeid' => $courseid]);
             $eventdata = [
-                'objectid' => $USER->id,
+                'objectid' => $existingsub->id,
                 'userid' => $USER->id,
                 'other' => ['caltype' => 'course', 'caltypeid' => $courseid],
             ];
@@ -303,9 +309,9 @@ class subscriptions extends \moodleform {
                     'timecreated' => time(),
                     'isprimary' => ($syncwith == $primarycalid) ? '1' : '0',
                 ];
-                $DB->insert_record('local_o365_calsub', (object)$newsub);
+                $newsubid = $DB->insert_record('local_o365_calsub', (object)$newsub);
                 $eventdata = [
-                    'objectid' => $USER->id,
+                    'objectid' => $newsubid,
                     'userid' => $USER->id,
                     'other' => ['caltype' => 'course', 'caltypeid' => $courseid],
                 ];
@@ -331,7 +337,7 @@ class subscriptions extends \moodleform {
                     ];
                     $DB->update_record('local_o365_calsub', (object)$updatedrec);
                     $eventdata = [
-                        'objectid' => $USER->id,
+                        'objectid' => $existingcoursesubs[$courseid]->id,
                         'userid' => $USER->id,
                         'other' => ['caltype' => 'course', 'caltypeid' => $courseid],
                     ];
