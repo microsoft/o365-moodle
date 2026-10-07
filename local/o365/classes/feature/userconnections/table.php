@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Search results table.
+ * User connections table data source and row renderer.
  *
  * @package local_o365
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,96 +25,41 @@
 namespace local_o365\feature\userconnections;
 
 use core\url;
-
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-
-require_once($CFG->libdir . '/tablelib.php');
+use html_writer;
 
 /**
- * Search results table.
+ * User connections table data source and row renderer.
+ *
+ * The manage user connections page renders an empty HTML table and loads its rows through DataTables server-side
+ * processing (the "userconnections_ajax" mode of local_o365\page\acp). This class centralises the base query used to
+ * fetch the connection data and the rendering of each column so the page and the AJAX endpoint stay in sync.
  */
-class table extends \table_sql {
+class table {
     /**
-     * @var object|null
-     */
-    protected $having = null;
-
-    /**
-     * Constructor.
+     * Get the translated header for each column.
      *
-     * @param int $uniqueid This is a unique string used as a key when storing table properties in the session.
+     * @return array Map of column key => header string.
      */
-    public function __construct($uniqueid) {
-        global $USER, $DB;
-        parent::__construct($uniqueid);
-        $this->sql = new \stdClass();
-        $this->set_columns();
-        $this->having = (object)['sql' => '', 'params' => []];
-    }
-
-    /**
-     * Set the table's columns.
-     */
-    public function set_columns() {
-        $columns = [
-            'userlastname' => get_string('acp_userconnections_column_muser', 'local_o365'),
-            'o365username' => get_string('acp_userconnections_column_o365user', 'local_o365'),
+    public static function get_column_headers(): array {
+        return [
+            'muser' => get_string('acp_userconnections_column_muser', 'local_o365'),
+            'o365user' => get_string('acp_userconnections_column_o365user', 'local_o365'),
             'usinglogin' => get_string('acp_userconnections_column_usinglogin', 'local_o365'),
             'status' => get_string('acp_userconnections_column_status', 'local_o365'),
             'actions' => get_string('acp_userconnections_column_actions', 'local_o365'),
         ];
-        $this->define_columns(array_keys($columns));
-        $this->define_headers(array_values($columns));
-        $this->sortable(true, 'userlastname', SORT_ASC);
-        $this->no_sorting('status');
-        $this->no_sorting('actions');
-        $this->no_sorting('usinglogin');
     }
 
     /**
-     * Set custom "where" Sql. Useful for filtering.
+     * Get the base SQL and parameters used to fetch user connection data.
      *
-     * @param string $sql The SQL snippet.
-     * @param array $params Parameters used in the SQL snippet.
-     */
-    public function set_where($sql, $params) {
-        $sql = preg_replace('#\:ex\_text[0-9]+#', '?', $sql);
-        $this->where = (object)[
-            'sql' => $sql,
-            'params' => array_values($params),
-        ];
-    }
-
-    /**
-     * Set custom "having" Sql. Useful for filtering.
+     * The query joins the Moodle user table with the OpenID Connect token, the local_o365 connection and the
+     * local_o365 object tables. Callers can append additional filtering to the returned WHERE clause (the query ends
+     * with a WHERE condition) using the "aotok", "o365match" and "objects" aliases.
      *
-     * @param string $sql The SQL snippet.
-     * @param array $params Parameters used in the SQL snippet.
+     * @return array [string $sql, array $params]
      */
-    public function set_having($sql, $params) {
-        $sql = preg_replace('#\:ex\_text[0-9]+#', '?', $sql);
-        $this->having = (object)[
-            'sql' => $sql,
-            'params' => array_values($params),
-        ];
-    }
-
-    /**
-     * Query the db. Store results in the table object for use by build_table.
-     *
-     * @param int $pagesize The amount of results per page.
-     * @param bool $useinitialsbar Whether to use the initials bar.
-     */
-    public function query_db($pagesize, $useinitialsbar = true) {
-        global $DB;
-
-        $customsql = $this->where->sql;
-        $customparams = $this->where->params;
-        $customhaving = $this->having->sql;
-        $customhavingparams = $this->having->params;
-
+    public static function get_base_sql(): array {
         $columns = [
             'u.id AS userid',
             'u.firstname AS userfirstname',
@@ -130,180 +75,185 @@ class table extends \table_sql {
             'objects.o365name AS objectso365name',
             'COALESCE(aotok.oidcusername, o365match.entraidupn, objects.o365name) AS o365username',
         ];
-        $sql = 'SELECT ' . implode(',', $columns) . '
+
+        $sql = 'SELECT ' . implode(', ', $columns) . '
                   FROM {user} u
              LEFT JOIN {auth_oidc_token} aotok ON aotok.userid = u.id
              LEFT JOIN {local_o365_connections} o365match ON o365match.muserid = u.id
-             LEFT JOIN {local_o365_objects} objects ON objects.moodleid = u.id AND type = ?
-                 WHERE u.deleted = 0 AND u.username != ?';
-        $params = ['user', 'guest'];
+             LEFT JOIN {local_o365_objects} objects ON objects.moodleid = u.id AND objects.type = :o365objecttype
+                 WHERE u.deleted = 0 AND u.username <> :o365guestusername';
+        $params = ['o365objecttype' => 'user', 'o365guestusername' => 'guest'];
 
-        if (!empty($customsql)) {
-            $sql .= ' AND ' . $customsql;
-            $params = array_merge($params, $customparams);
-        }
-
-        if (!empty($customhaving)) {
-            // Move the "HAVING" part to a sub-query because it causes error in PostgreSQL.
-            $sql = "SELECT org.* FROM (" . $sql . ") AS org WHERE " . $customhaving;
-            $params = array_merge($params, $customhavingparams);
-        }
-
-        $totalresults = $DB->count_records_sql('SELECT count(1) from (' . $sql . ') a', $params);
-        if ($useinitialsbar) {
-            $this->initialbars($totalresults > $pagesize);
-        }
-
-        $this->pagesize($pagesize, $totalresults);
-
-        // Sorting.
-        $sort = $this->get_sql_sort();
-        if (!empty($sort)) {
-            $sort = 'ORDER BY ' . $sort;
-            $sql .= ' ' . $sort;
-        }
-
-        $start = $this->get_page_start();
-        $limit = $this->get_page_size();
-        $this->rawdata = $DB->get_records_sql($sql, $params, $start, $limit);
+        return [$sql, $params];
     }
 
     /**
-     * Process the usinglogin column.
+     * Get the SQL snippet used to apply the DataTables free-text search box.
      *
-     * @param object $values Contains object with all the values of record.
-     * @return $string Return column value.
+     * The snippet operates on the aliases produced by get_base_sql(), so it must be applied to a query that wraps
+     * that base query as a sub-query.
+     *
+     * @param string $search The search term entered by the user.
+     * @return array [string $sql, array $params]
      */
-    public function col_usinglogin($values) {
-        if (!empty($values->toko365username) || !empty($values->objectso365name)) {
+    public static function get_search_sql(string $search): array {
+        global $DB;
+
+        $search = trim($search);
+        if ($search === '') {
+            return ['', []];
+        }
+
+        $fullname = $DB->sql_concat('userfirstname', "' '", 'userlastname');
+        $fields = [$fullname, 'userfirstname', 'userlastname', 'o365username'];
+
+        $conditions = [];
+        $params = [];
+        $likeparam = '%' . $DB->sql_like_escape($search) . '%';
+        foreach ($fields as $i => $field) {
+            $placeholder = 'o365ucsearch' . $i;
+            $conditions[] = $DB->sql_like($field, ':' . $placeholder, false, false);
+            $params[$placeholder] = $likeparam;
+        }
+
+        return ['(' . implode(' OR ', $conditions) . ')', $params];
+    }
+
+    /**
+     * Render the "Moodle user" column.
+     *
+     * @param \stdClass $row A row returned by the base query.
+     * @return string
+     */
+    public static function render_muser(\stdClass $row): string {
+        $userdata = [
+            'firstname' => $row->userfirstname,
+            'firstnamephonetic' => $row->userfirstnamephonetic,
+            'lastname' => $row->userlastname,
+            'lastnamephonetic' => $row->userlastnamephonetic,
+            'middlename' => $row->usermiddlename,
+            'alternatename' => $row->useralternatename,
+        ];
+        $viewurl = new url('/user/view.php', ['id' => $row->userid]);
+        return html_writer::link($viewurl, fullname((object) $userdata));
+    }
+
+    /**
+     * Render the "Microsoft 365 user" column.
+     *
+     * @param \stdClass $row A row returned by the base query.
+     * @return string
+     */
+    public static function render_o365user(\stdClass $row): string {
+        return s($row->o365username ?? '');
+    }
+
+    /**
+     * Render the "Using login" column.
+     *
+     * @param \stdClass $row A row returned by the base query.
+     * @return string
+     */
+    public static function render_usinglogin(\stdClass $row): string {
+        if (!empty($row->toko365username) || !empty($row->objectso365name)) {
             // Actively connected or synced users.
-            if (isset($values->userauth) && $values->userauth === 'oidc') {
+            if (isset($row->userauth) && $row->userauth === 'oidc') {
                 return get_string('yes');
             } else {
                 return get_string('no');
             }
-        } else {
-            if (!empty($values->matchedo365username)) {
-                return (!empty($values->matcheduselogin)) ? get_string('yes') : get_string('no');
-            }
+        } else if (!empty($row->matchedo365username)) {
+            return (!empty($row->matcheduselogin)) ? get_string('yes') : get_string('no');
         }
 
         return '';
     }
 
     /**
-     * Process the userlastname column.
+     * Get the connection status key for a row.
      *
-     * @param object $values Contains object with all the values of record.
-     * @return $string Return column value.
+     * @param \stdClass $row A row returned by the base query.
+     * @return string One of 'connected', 'matched', 'synced' or 'noconnection'.
      */
-    public function col_userlastname($values) {
-        $userdata = [
-            'firstname' => $values->userfirstname,
-            'firstnamephonetic' => $values->userfirstnamephonetic,
-            'lastname' => $values->userlastname,
-            'lastnamephonetic' => $values->userlastnamephonetic,
-            'middlename' => $values->usermiddlename,
-            'alternatename' => $values->useralternatename,
-        ];
-        $fullname = fullname((object)$userdata);
-        $viewurl = new url('/user/view.php', ['id' => $values->userid]);
-        return \html_writer::link($viewurl, $fullname);
+    public static function get_status_key(\stdClass $row): string {
+        if (!empty($row->toko365username)) {
+            return 'connected';
+        } else if (!empty($row->matchedo365username)) {
+            return 'matched';
+        } else if (!empty($row->objectso365name)) {
+            return 'synced';
+        }
+
+        return 'noconnection';
     }
 
     /**
-     * Process the o365username column.
+     * Render the "Connection status" column.
      *
-     * @param object $values Contains object with all the values of record.
-     * @return $string Return column value.
-     * @return $string Return formated certificate issue date.
+     * @param \stdClass $row A row returned by the base query.
+     * @return string
      */
-    public function col_o365username($values) {
-        return $values->o365username;
-    }
-
-    /**
-     * Process the status column.
-     *
-     * @param object $values Contains object with all the values of record.
-     * @return $string Return column value.
-     * @return $string Return formated certificate issue date.
-     */
-    public function col_status($values) {
+    public static function render_status(\stdClass $row): string {
         $statuscss = 'padding:0.25rem;display:block;';
-        if (!empty($values->toko365username)) {
-            $statusparams = ['class' => 'alert-success', 'style' => $statuscss];
-            $label = get_string('acp_userconnections_table_connected', 'local_o365');
-            return \html_writer::tag('span', $label, $statusparams);
-        } else {
-            if (!empty($values->matchedo365username)) {
-                $statusparams = [
-                    'class' => 'alert-info',
-                    'style' => 'padding:0.25rem;display:block;color:#960;background-color:#fed;',
-                ];
-                $label = get_string('acp_userconnections_table_matched', 'local_o365');
-                return \html_writer::tag('span', $label, $statusparams);
-            } else {
-                if (!empty($values->objectso365name)) {
-                    $statusparams = ['class' => 'alert-info', 'style' => $statuscss];
-                    $label = get_string('acp_userconnections_table_synced', 'local_o365');
-                    return \html_writer::tag('span', $label, $statusparams);
-                } else {
-                    $statusparams = ['style' => 'font-style:italic;opacity:0.5'];
-                    $label = get_string('acp_userconnections_table_noconnection', 'local_o365');
-                    return \html_writer::tag('span', $label, $statusparams);
-                }
-            }
+        switch (self::get_status_key($row)) {
+            case 'connected':
+                $label = get_string('acp_userconnections_connectionstatus_connected', 'local_o365');
+                return html_writer::tag('span', $label, ['class' => 'alert-success', 'style' => $statuscss]);
+            case 'matched':
+                $label = get_string('acp_userconnections_connectionstatus_matched', 'local_o365');
+                $style = 'padding:0.25rem;display:block;color:#960;background-color:#fed;';
+                return html_writer::tag('span', $label, ['class' => 'alert-info', 'style' => $style]);
+            case 'synced':
+                $label = get_string('acp_userconnections_connectionstatus_synced', 'local_o365');
+                return html_writer::tag('span', $label, ['class' => 'alert-info', 'style' => $statuscss]);
+            default:
+                $label = get_string('acp_userconnections_connectionstatus_noconnection', 'local_o365');
+                return html_writer::tag('span', $label, ['style' => 'font-style:italic;opacity:0.5']);
         }
     }
 
     /**
-     * Process the actions column.
+     * Render the "Actions" column.
      *
-     * @param object $values Contains object with all the values of record.
-     * @return $string Return column value.
+     * @param \stdClass $row A row returned by the base query.
+     * @return string
      */
-    public function col_actions($values) {
+    public static function render_actions(\stdClass $row): string {
         $urlparams = [
-            'userid' => $values->userid,
+            'userid' => $row->userid,
             'sesskey' => sesskey(),
         ];
         $links = [];
-        if (!empty($values->toko365username)) {
-            // Connected user.
-            $urlparams['mode'] = 'userconnections_disconnect';
-            $url = new url('/local/o365/acp.php', $urlparams);
-            $label = get_string('acp_userconnections_table_disconnect', 'local_o365');
-            $links[] = \html_writer::link($url, $label);
-
-            $urlparams['mode'] = 'userconnections_resync';
-            $url = new url('/local/o365/acp.php', $urlparams);
-            $label = get_string('acp_userconnections_table_resync', 'local_o365');
-            $links[] = \html_writer::link($url, $label, ['target' => '_blank']);
-        } else {
-            if (!empty($values->matchedo365username)) {
-                // Matched, unconfirmed user.
-                $urlparams['mode'] = 'userconnections_unmatch';
-                $url = new url('/local/o365/acp.php', $urlparams);
-                $label = get_string('acp_userconnections_table_unmatch', 'local_o365');
-                $links[] = \html_writer::link($url, $label);
-            } else {
-                if (!empty($values->objectso365name)) {
-                    // This is a synced, uninitialized user.
-                    $urlparams['mode'] = 'userconnections_resync';
-                    $url = new url('/local/o365/acp.php', $urlparams);
-                    $label = get_string('acp_userconnections_table_resync', 'local_o365');
-                    $links[] = \html_writer::link($url, $label, ['target' => '_blank']);
-                } else {
-                    // Unconnected, unmatched user.
-                    $urlparams['mode'] = 'userconnections_manualmatch';
-                    $url = new url('/local/o365/acp.php', $urlparams);
-                    $label = get_string('acp_userconnections_table_match', 'local_o365');
-                    $links[] = \html_writer::link($url, $label);
-                }
-            }
+        switch (self::get_status_key($row)) {
+            case 'connected':
+                $links[] = self::action_link($urlparams, 'userconnections_disconnect', 'acp_userconnections_table_disconnect');
+                $links[] = self::action_link($urlparams, 'userconnections_resync', 'acp_userconnections_table_resync');
+                break;
+            case 'matched':
+                $links[] = self::action_link($urlparams, 'userconnections_unmatch', 'acp_userconnections_table_unmatch');
+                break;
+            case 'synced':
+                $links[] = self::action_link($urlparams, 'userconnections_resync', 'acp_userconnections_table_resync');
+                break;
+            default:
+                $links[] = self::action_link($urlparams, 'userconnections_manualmatch', 'acp_userconnections_table_match');
+                break;
         }
 
         return implode('<br />', $links);
+    }
+
+    /**
+     * Build a single action link for the "Actions" column.
+     *
+     * @param array $urlparams Base URL parameters (userid, sesskey).
+     * @param string $mode The acp.php mode this action triggers.
+     * @param string $stringkey The local_o365 language string key for the link text.
+     * @return string
+     */
+    protected static function action_link(array $urlparams, string $mode, string $stringkey): string {
+        $urlparams['mode'] = $mode;
+        $url = new url('/local/o365/acp.php', $urlparams);
+        return html_writer::link($url, get_string($stringkey, 'local_o365'));
     }
 }
