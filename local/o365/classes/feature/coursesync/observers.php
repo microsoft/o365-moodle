@@ -158,4 +158,48 @@ class observers {
 
         return true;
     }
+
+    /**
+     * Observer function that listens for group_created event, to create the channel of the group.
+     *
+     * @param \core\event\group_created $event
+     * @return bool
+     */
+    public static function handle_group_created(\core\event\group_created $event): bool {
+        return groupchannels::queue_group_sync((int)$event->objectid);
+    }
+
+    /**
+     * Observer function that listens for group_member_added event, to add the user to the channel of the group.
+     *
+     * @param \core\event\group_member_added $event
+     * @return bool
+     */
+    public static function handle_group_member_added(\core\event\group_member_added $event): bool {
+        return groupchannels::queue_group_sync((int)$event->objectid);
+    }
+
+    /**
+     * Observer function that listens for group_member_removed event, to remove the user from the channel of the group.
+     *
+     * @param \core\event\group_member_removed $event
+     * @return bool
+     */
+    public static function handle_group_member_removed(\core\event\group_member_removed $event): bool {
+        return groupchannels::queue_group_sync((int)$event->objectid);
+    }
+
+    /**
+     * Observer function that listens for group_deleted event, to forget the channel of the group.
+     *
+     * The channel itself is left in Microsoft Teams, as it may hold conversations and files worth keeping.
+     *
+     * @param \core\event\group_deleted $event
+     * @return bool
+     */
+    public static function handle_group_deleted(\core\event\group_deleted $event): bool {
+        groupchannels::forget_group((int)$event->objectid);
+
+        return true;
+    }
 }
