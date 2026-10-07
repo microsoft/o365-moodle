@@ -28,6 +28,9 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot . '/blocks/microsoft/lib.php');
 require_once($CFG->dirroot . '/blocks/microsoft/classes/admin_setting_required_url.php');
 
+// Navigation tabs shared with the custom links page.
+$settings->add(new admin_setting_heading('block_microsoft/nav', '', block_microsoft_get_settings_nav_html('settings')));
+
 // Settings to show My Delve link in block.
 $label = get_string('settings_showmydelve', 'block_microsoft');
 $desc = get_string('settings_showmydelve_desc', 'block_microsoft');
