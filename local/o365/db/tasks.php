@@ -126,6 +126,15 @@ $tasks = [
         'month' => '*',
     ],
     [
+        'classname' => 'local_o365\task\calsyncautosubscribe',
+        'blocking' => 0,
+        'minute' => '*/5',
+        'hour' => '*',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*',
+    ],
+    [
         'classname' => 'local_o365\task\checkinvalidconfiglog',
         'blocking' => 0,
         'minute' => '0',
