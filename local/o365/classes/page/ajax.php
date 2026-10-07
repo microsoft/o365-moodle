@@ -115,26 +115,25 @@ class ajax extends base {
         $success = false;
         $setting = required_param('setting', PARAM_TEXT);
         $value = required_param('value', PARAM_TEXT);
-        $tokenresource = unified::get_tokenresource();
-        $clientdata = clientdata::instance_from_oidc();
         $httpclient = new httpclient();
-        $token = utils::get_application_token($tokenresource, $clientdata, $httpclient);
-        $apiclient = new unified($token, $httpclient);
 
         switch ($setting) {
             case 'entratenant':
-                try {
-                    $data->valid = $apiclient->test_tenant($value);
-                    $success = true;
-                } catch (moodle_exception $e) {
-                    utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
-                    $data->valid = false;
-                    $success = true;
+                // Test the submitted value, not the saved one, so a wrong saved tenant doesn't prevent it from being corrected.
+                $data->valid = unified::test_tenant($value, $httpclient);
+                if (!$data->valid && apptoken::get_last_error() !== '') {
+                    $data->reason = s(apptoken::get_last_error());
                 }
+
+                $success = true;
                 break;
 
             case 'odburl':
                 try {
+                    $tokenresource = unified::get_tokenresource();
+                    $clientdata = clientdata::instance_from_oidc();
+                    $token = utils::get_application_token($tokenresource, $clientdata, $httpclient);
+                    $apiclient = new unified($token, $httpclient);
                     $data->valid = $apiclient->validate_resource($value, $clientdata);
                     $success = true;
                 } catch (moodle_exception $e) {
@@ -266,6 +265,9 @@ class ajax extends base {
             $unifiedapi->active = false;
             utils::debug($e->getMessage(), __METHOD__ . ' (unified)', $e);
             $unifiedapi->error = $e->getMessage();
+            if (!empty($e->debuginfo)) {
+                $unifiedapi->error .= ' ' . s($e->debuginfo);
+            }
         }
 
         // Check reply url.
