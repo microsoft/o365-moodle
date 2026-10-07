@@ -123,7 +123,7 @@
 {{#js}}
     require(['theme_boost/loader']);
     require(['theme_boost_o365teams/iframeChecker'], function(iframeChecker) {
-    iframeChecker.init();
+    iframeChecker.init({{#teamsthemeforced}}true{{/teamsthemeforced}}{{^teamsthemeforced}}false{{/teamsthemeforced}});
     });
     require(['theme_boost_o365teams/teamsThemeChecker'], function(teamsThemeChecker) {
     teamsThemeChecker.init();
