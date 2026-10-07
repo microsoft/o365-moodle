@@ -73,6 +73,47 @@ final class oidcclient_test extends \advanced_testcase {
     }
 
     /**
+     * Dataprovider returning IdP types and whether the 'resource' param is expected in the auth request.
+     *
+     * @return array Array of arrays of test parameters.
+     */
+    public static function dataprovider_authrequestparams_idptype(): array {
+        require_once(__DIR__ . '/../lib.php');
+
+        return [
+            'Microsoft Entra ID (v1.0)' => [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, true],
+            'Microsoft identity platform (v2.0)' => [AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, false],
+            'Other' => [AUTH_OIDC_IDP_TYPE_OTHER, false],
+        ];
+    }
+
+    /**
+     * Test that the 'resource' auth request param is only sent for IdP types that support it.
+     *
+     * @dataProvider dataprovider_authrequestparams_idptype
+     * @covers \auth_oidc\tests\mockoidcclient::getauthrequestparams
+     * @param int $idptype
+     * @param bool $expectresource
+     */
+    public function test_getauthrequestparams_resource_by_idptype(int $idptype, bool $expectresource): void {
+        set_config('idptype', $idptype, 'auth_oidc');
+
+        $httpclient = new \auth_oidc\tests\mockhttpclient();
+        $client = new \auth_oidc\tests\mockoidcclient($httpclient);
+        $tokenresource = 'https://graph.microsoft.com';
+        $client->setcreds('id', 'secret', 'redirecturi', $tokenresource, 'openid');
+
+        $params = $client->getauthrequestparams();
+
+        if ($expectresource) {
+            $this->assertArrayHasKey('resource', $params);
+            $this->assertEquals($tokenresource, $params['resource']);
+        } else {
+            $this->assertArrayNotHasKey('resource', $params);
+        }
+    }
+
+    /**
      * Dataprovider returning endpoints.
      *
      * @return array Array of arrays of test parameters.
