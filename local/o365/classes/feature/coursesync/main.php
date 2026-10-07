@@ -921,6 +921,8 @@ class main {
         // Provision app, add app tab to channel.
         $this->install_moodle_app_in_team($groupobjectid, $course->id, $baselevel + 1);
 
+        $this->queue_group_channel_sync((int)$course->id, $baselevel + 1);
+
         return $teamobjectrecord;
     }
 
@@ -1074,6 +1076,8 @@ class main {
 
         // Provision app, add app tab to channel.
         $this->install_moodle_app_in_team($groupobjectid, $course->id, $baselevel + 1);
+
+        $this->queue_group_channel_sync((int)$course->id, $baselevel + 1);
 
         return $teamobjectrecord;
     }
@@ -1278,7 +1282,28 @@ class main {
         // Provision app, add app tab to channel.
         $this->install_moodle_app_in_team($groupobjectid, $course->id, $baselevel + 1);
 
+        $this->queue_group_channel_sync((int)$course->id, $baselevel + 1);
+
         return $teamobjectrecord;
+    }
+
+    /**
+     * Queue the creation of the channels for the Moodle groups of a course that has just got a Team, if channels are created
+     * for groups.
+     *
+     * The tasks are delayed a little, as Microsoft can refuse to create channels in a Team that has only just been created.
+     * Anything that fails or is missed, such as users who haven't arrived in the Team yet, is picked up by the scheduled
+     * channel sync task.
+     *
+     * @param int $courseid The Moodle course ID.
+     * @param int $baselevel The indentation level of the output.
+     * @return void
+     */
+    private function queue_group_channel_sync(int $courseid, int $baselevel): void {
+        $count = groupchannels::queue_course_groups_sync($courseid, 120);
+        if ($count) {
+            $this->mtrace('Queued the creation of channels for ' . $count . ' group(s) in the course.', $baselevel);
+        }
     }
 
     /**
