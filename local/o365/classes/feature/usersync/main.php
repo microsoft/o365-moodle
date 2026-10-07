@@ -1001,6 +1001,9 @@ class main {
                     case 'businessPhones':
                         $user->$localfield = implode(', ', (array) $entraiduserdata[$remotefield]);
                         break;
+                    case 'accountEnabled':
+                        $user->$localfield = $entraiduserdata[$remotefield] ? '1' : '0';
+                        break;
                     default:
                         $user->$localfield = $entraiduserdata[$remotefield] ?? '';
                 }
