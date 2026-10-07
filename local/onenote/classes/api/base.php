@@ -70,6 +70,13 @@ abstract class base {
     /** Import file area for OneNote feedback assignment. */
     const ASSIGNFEEDBACK_ONENOTE_IMPORT_FILEAREA = 'feedback_files_import';
 
+    /**
+     * Number of seconds to wait after creating a new OneNote section before creating a page in it.
+     * A brand new section is not immediately ready on Microsoft's backend, and creating a page in it
+     * too soon can result in the page's title being dropped.
+     */
+    const NEW_SECTION_PROPAGATION_DELAY = 2;
+
     /** @var base The static stored singleton class. */
     protected static $instance = null;
 
@@ -467,11 +474,14 @@ abstract class base {
 
     /**
      * Ensure that notebook and section data in the logged-in user's OneNote account are in sync with our database tables.
+     *
+     * @return array|bool Course ids for which a new OneNote section was created during this call, or false on failure.
      */
     public function sync_notebook_data() {
         $notebookname = get_string('notebookname', 'local_onenote');
         $courses = enrol_get_my_courses(); // Get the current user enrolled courses.
         $notebooksarray = [];
+        $newsectioncourseids = [];
 
         $notebooks = $this->get_items_list();
         foreach ($notebooks as $notebook) {
@@ -491,9 +501,8 @@ abstract class base {
                 return false;
             }
 
-            $sections = [];
             if (!empty($courses)) {
-                $this->sync_sections($courses, $creatednotebook['id'], $sections);
+                $newsectioncourseids = $this->sync_sections($courses, $creatednotebook['id'], []);
             }
         } else {
             // Moodle notebook found, sync sections with courses.
@@ -507,7 +516,7 @@ abstract class base {
                 }
 
                 if (!empty($courses)) {
-                    $this->sync_sections($courses, $notebookid, $sections);
+                    $newsectioncourseids = $this->sync_sections($courses, $notebookid, $sections);
                 }
             } catch (moodle_exception $e) {
                 \local_onenote\utils::debug('Could not sync notebook sections', __METHOD__, $e);
@@ -515,7 +524,7 @@ abstract class base {
             }
         }
 
-        return true;
+        return $newsectioncourseids;
     }
 
     /**
@@ -524,9 +533,11 @@ abstract class base {
      * @param array $courses Array of courses for the current user.
      * @param string $notebookid The id of the OneNote notebook associated with the current user.
      * @param array $sections Array of sections within this notebook.
+     * @return array Course ids for which a new OneNote section was created during this call.
      */
     protected function sync_sections($courses, $notebookid, array $sections) {
         $sectionendpoint = '/notebooks/' . $notebookid . '/sections/';
+        $newsectioncourseids = [];
 
         foreach ($courses as $course) {
             // OneNote sections have character and length restrictions. Ensure course name complies.
@@ -544,6 +555,7 @@ abstract class base {
                     $response = $this->apicall('post', $sectionendpoint, $sectiondata);
                     $response = $this->process_apicall_response($response, ['id' => null]);
                     $this->upsert_user_section($course->id, $response['id']);
+                    $newsectioncourseids[] = $course->id;
                 } catch (moodle_exception $e) {
                     \local_onenote\utils::debug('Could not create section for course', __METHOD__, [
                         'course_id' => $course->id,
@@ -558,6 +570,8 @@ abstract class base {
                 $this->upsert_user_section($course->id, $sectionid);
             }
         }
+
+        return $newsectioncourseids;
     }
 
     /**
@@ -880,6 +894,16 @@ abstract class base {
             throw new moodle_exception('onenote_page_error', 'local_onenote');
         }
 
+        // OneNote's page listing metadata (the title field) can briefly lag behind the actual page
+        // content after creation, leaving the page showing as untitled until it is opened in a
+        // client. Verify the title was set, and explicitly set it if not.
+        $a = new stdClass();
+        $a->assign_name = $assign->name;
+        $a->student_firstname = $student->firstname;
+        $a->student_lastname = $student->lastname;
+        $expectedtitle = get_string($wantfeedbackpage ? 'feedbacktitle' : 'submissiontitle', 'local_onenote', $a);
+        $this->ensure_page_title($response->id, $expectedtitle);
+
         // Update page id.
         $pagerecord->$requestedpageidfield = $response->id;
         // If this user is a teacher and viewing a submission, add a timestamp for the new
@@ -893,6 +917,52 @@ abstract class base {
         $DB->update_record('local_onenote_assign_pages', $pagerecord);
 
         return $response->links->oneNoteWebUrl->href;
+    }
+
+    /**
+     * Verify that a newly created OneNote page has its title set, and explicitly set it if not.
+     * OneNote's page listing metadata can briefly lag behind the actual page content after
+     * creation, leaving the page showing as untitled until it is opened in a client. This does not
+     * affect the page's actual content, only the title shown in listings before it is opened.
+     *
+     * @param string $pageid Id of the OneNote page to check.
+     * @param string $expectedtitle The title the page should have.
+     */
+    protected function ensure_page_title($pageid, $expectedtitle) {
+        if (empty($expectedtitle)) {
+            return;
+        }
+
+        try {
+            $page = $this->apicall('get', '/pages/' . $pageid);
+            $page = $this->process_apicall_response($page, ['id' => null]);
+        } catch (moodle_exception $e) {
+            \local_onenote\utils::debug('Could not verify page title', __METHOD__, $e);
+            return;
+        }
+
+        if (!empty($page['title'])) {
+            return;
+        }
+
+        try {
+            $commands = json_encode([
+                [
+                    'target' => 'title',
+                    'action' => 'replace',
+                    'content' => $expectedtitle,
+                ],
+            ]);
+            $result = $this->apicall('patch', '/pages/' . $pageid . '/content', $commands, ['contenttype' => 'application/json']);
+            if (!empty($result)) {
+                // A successful content update returns an empty (204 No Content) response. A non-empty
+                // body indicates an error, so validate it and let process_apicall_response() throw so the
+                // failure is logged below instead of being silently ignored.
+                $this->process_apicall_response($result);
+            }
+        } catch (moodle_exception $e) {
+            \local_onenote\utils::debug('Could not set page title', __METHOD__, $e);
+        }
     }
 
     /**
@@ -923,10 +993,18 @@ abstract class base {
             }
         }
 
-        $this->sync_notebook_data();
+        $newsectioncourseids = $this->sync_notebook_data();
 
         $section = $DB->get_record('local_onenote_user_sections', ['course_id' => $courseid, 'user_id' => $userid]);
         if ($section && $section->section_id) {
+            // A brand new section is not immediately ready on Microsoft's backend, so wait briefly before
+            // creating the first page in it, otherwise the page's title can be dropped. Only wait for the
+            // section actually needed now, rather than for every new section the sync above may have
+            // created across all of the user's courses.
+            if (is_array($newsectioncourseids) && in_array($courseid, $newsectioncourseids)) {
+                sleep(self::NEW_SECTION_PROPAGATION_DELAY);
+            }
+
             return $section;
         }
 
@@ -1043,7 +1121,8 @@ abstract class base {
         $postdata .= 'Content-Disposition: form-data; name="Presentation"' . $eol;
         $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
         $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
-        $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
+        $postdata .= '<head><title>' . htmlspecialchars($title, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</title>' .
+            '<meta name="created" value="' . $date . '"/></head>' . $eol;
         $postdata .= '<body style="font-family:\'Helvetica\',Arial,sans-serif;font-size:10.5pt; color:rgb(51,51,51);">' . $output .
             '</body>' . $eol;
         $postdata .= '</html>' . $eol;
@@ -1129,7 +1208,8 @@ abstract class base {
         $postdata .= 'Content-Disposition: form-data; name="Presentation"' . $eol;
         $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
         $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
-        $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
+        $postdata .= '<head><title>' . htmlspecialchars($title, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</title>' .
+            '<meta name="created" value="' . $date . '"/></head>' . $eol;
         $postdata .= '<body style="font-family:\'Helvetica\',\'Helvetica Neue\', Arial, \'Lucida Grande\',';
         $postdata .= 'sans-serif;font-size:10.5pt; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
