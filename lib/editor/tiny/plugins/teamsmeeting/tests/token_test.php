@@ -113,6 +113,18 @@ final class token_test extends \advanced_testcase {
     }
 
     /**
+     * A token far longer than any real token could be is rejected outright,
+     * before the length-proportional ctype_xdigit()/hex2bin()/preg_match()
+     * checks would otherwise run on it - this endpoint is reached before any
+     * authentication check, so an oversized value is otherwise free for an
+     * unauthenticated caller to send repeatedly.
+     */
+    public function test_validate_rejects_an_oversized_token(): void {
+        // Mirrors token::MAX_LENGTH (512): one character past it must be rejected.
+        $this->assertNull(token::validate(str_repeat('a', 513)));
+    }
+
+    /**
      * A token whose signature has been altered is rejected.
      */
     public function test_validate_rejects_a_tampered_signature(): void {
@@ -156,5 +168,50 @@ final class token_test extends \advanced_testcase {
         $result = token::validate($this->sign((int) $user->id, time() + 60));
 
         $this->assertSame((int) $user->id, $result);
+    }
+
+    /**
+     * A token embeds the language the issuing user was shown at the time,
+     * not their profile default, since that is routinely overridden per-session
+     * (e.g. by the language menu) and is what current_language() resolves to.
+     */
+    public function test_validate_lang_returns_the_language_active_when_the_token_was_issued(): void {
+        global $USER;
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+        // Set directly, after setUser() rather than through it: both
+        // create_user() (via user_create_user()) and setUser() (via
+        // \core\session\manager::set_user()) run lang through PARAM_LANG
+        // cleaning, which silently falls back to the site default for any
+        // language pack not installed on the test site - 'xx' would not
+        // survive either path. current_language() itself does not validate
+        // this, so setting it directly on the already-assigned global proves
+        // the token carries through whatever it returns, rather than a
+        // coincidentally-matching real pack.
+        $USER->lang = 'xx';
+
+        $result = token::validate_lang(token::generate());
+
+        $this->assertSame('xx', $result);
+    }
+
+    /**
+     * A structurally older token with no language segment in its payload is
+     * still accepted by validate(), and validate_lang() degrades to ''.
+     */
+    public function test_validate_lang_returns_empty_string_for_a_token_without_a_language(): void {
+        $user = $this->getDataGenerator()->create_user();
+        $token = $this->sign((int) $user->id, time() + 60);
+
+        $this->assertSame((int) $user->id, token::validate($token));
+        $this->assertSame('', token::validate_lang($token));
+    }
+
+    /**
+     * An invalid token has no language to report.
+     */
+    public function test_validate_lang_returns_empty_string_for_an_invalid_token(): void {
+        $this->assertSame('', token::validate_lang(''));
     }
 }
