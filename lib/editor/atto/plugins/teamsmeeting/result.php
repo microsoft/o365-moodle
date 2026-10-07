@@ -45,6 +45,15 @@ if ($tokenuserid) {
     $tokenuser = $DB->get_record('user', ['id' => $tokenuserid], '*', MUST_EXIST);
     if (empty($tokenuser->suspended) && empty($tokenuser->deleted) && !empty($tokenuser->confirmed)) {
         \core\session\manager::set_user($tokenuser);
+        // The cross-origin redirect above may have started a fresh, cookie-less
+        // session, in which case set_user() only carries $tokenuser's profile
+        // default language forward, silently dropping any session-level or
+        // course-forced language that was active when the dialogue was opened.
+        // The token carries that language across instead.
+        $tokenlang = \atto_teamsmeeting\result_token::validate_lang($session);
+        if ($tokenlang !== '') {
+            force_current_language($tokenlang);
+        }
     } else {
         $tokenuserid = null;
     }
