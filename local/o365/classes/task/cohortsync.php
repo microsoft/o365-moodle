@@ -29,6 +29,7 @@ use core\exception\moodle_exception;
 use core\task\scheduled_task;
 use Exception;
 use local_o365\feature\cohortsync\main;
+use local_o365\rest\unified;
 use local_o365\utils;
 
 /**
@@ -136,14 +137,39 @@ class cohortsync extends scheduled_task {
             }
         }
 
-        foreach ($mappings as $mapping) {
-            utils::mtrace("Processing mapping for group ID {$mapping->objectid} and cohort ID {$mapping->moodleid}.", 3);
-            try {
-                $cohortsync->sync_members_by_group_oid_and_cohort_id($mapping->objectid, $mapping->moodleid);
-            } catch (Exception $e) {
-                utils::mtrace("Error syncing members for mapping: " . $e->getMessage(), 4);
-                utils::debug('Exception in sync_members_by_group_oid_and_cohort_id: ' . $e->getMessage(), __METHOD__, $e);
-                // Continue with other mappings even if one fails.
+        // One chunk is one $batch call. The calls are sequential, so a larger chunk would only
+        // hold more data in memory.
+        $mappingbatches = array_chunk($mappings, unified::GROUPS_PER_BATCH_REQUEST);
+
+        foreach ($mappingbatches as $batchindex => $mappingbatch) {
+            utils::mtrace(
+                "Fetching group data for batch " . ($batchindex + 1) . " of " . count($mappingbatches) .
+                " (" . count($mappingbatch) . " groups).",
+                2
+            );
+
+            $groupoids = array_unique(array_column($mappingbatch, 'objectid'));
+            // Release the previous batch's data before fetching the next, so the two never coexist.
+            unset($groupdatabyoid);
+            $groupdatabyoid = $cohortsync->get_owners_and_members_for_groups($groupoids);
+
+            foreach ($mappingbatch as $mapping) {
+                utils::mtrace("Processing mapping for group ID {$mapping->objectid} and cohort ID {$mapping->moodleid}.", 3);
+                try {
+                    $cohortsync->sync_members_by_group_oid_and_cohort_id(
+                        $mapping->objectid,
+                        $mapping->moodleid,
+                        $groupdatabyoid[$mapping->objectid] ?? null
+                    );
+                } catch (Exception $e) {
+                    utils::mtrace("Error syncing members for mapping: " . $e->getMessage(), 4);
+                    utils::debug(
+                        'Exception in sync_members_by_group_oid_and_cohort_id: ' . $e->getMessage(),
+                        __METHOD__,
+                        $e
+                    );
+                    // Continue with other mappings even if one fails.
+                }
             }
         }
     }
