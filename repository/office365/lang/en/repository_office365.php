@@ -155,6 +155,7 @@ $string['errorbadpath'] = 'Bad Path';
 $string['errorcoursenotfound'] = 'Course not found';
 $string['errorencodingreference'] = 'Failed to encode file reference';
 $string['erroro365required'] = 'This file is currently only available to Microsoft 365 users.';
+$string['erroruploadtoremotedrive'] = 'Uploading to shared/remote OneDrive folders is not supported.';
 $string['errorwhiledownload'] = 'An error occurred while downloading the file';
 $string['errorwhilesharing'] = 'An error occurred while creating a sharable link';
 
