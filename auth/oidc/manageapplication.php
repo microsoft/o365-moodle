@@ -38,8 +38,8 @@ $url = new url('/auth/oidc/manageapplication.php');
 $PAGE->set_url($url);
 $PAGE->set_context(system::instance());
 $PAGE->set_pagelayout('admin');
-$PAGE->set_heading(get_string('settings_page_application', 'auth_oidc'));
-$PAGE->set_title(get_string('settings_page_application', 'auth_oidc'));
+$PAGE->set_heading(get_string('settings_page_application_wizard', 'auth_oidc'));
+$PAGE->set_title(get_string('settings_page_application_wizard', 'auth_oidc'));
 
 $jsparams = [AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, AUTH_OIDC_AUTH_METHOD_SECRET, AUTH_OIDC_AUTH_METHOD_CERTIFICATE,
     get_string('auth_method_certificate', 'auth_oidc')];
@@ -204,6 +204,7 @@ if ($form->is_cancelled()) {
 }
 
 echo $OUTPUT->header();
+echo auth_oidc_get_settings_nav_html('authsettingoidc', get_string('settings_page_application_wizard', 'auth_oidc'));
 
 $form->display();
 
