@@ -42,10 +42,16 @@ class teamsconnection extends \moodleform {
         $mform = &$this->_form;
 
         $mform->addElement(
-            'select',
+            'autocomplete',
             'team',
             get_string('acp_teamconnections_form_team', 'local_o365'),
-            $this->_customdata['teamsoptions']
+            $this->_customdata['teamsoptions'],
+            [
+                'ajax' => 'local_o365/team_datasource',
+                'noselectionstring' => get_string('acp_teamconnections_form_team_noselection', 'local_o365'),
+                'data-courseid' => $this->_customdata['course'],
+                'data-unset-label' => get_string('acp_teamconnections_not_connected', 'local_o365'),
+            ]
         );
 
         $this->add_action_buttons();
