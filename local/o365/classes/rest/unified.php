@@ -1313,16 +1313,18 @@ class unified extends o365api {
     }
 
     /**
-     * Process users in batches with minimal fields (id and accountEnabled only).
+     * Process users in batches with minimal fields (id and accountEnabled, plus any extra fields requested).
      * This method is optimized for suspend/reenable operations that only need user IDs.
      *
      * @param callable $callback Function to call for each batch of users. Receives array of users as parameter.
+     * @param array $extraselect Additional Graph user resource fields to include in $select (e.g. 'userPrincipalName').
      * @return int Total number of users processed
      * @throws moodle_exception
      */
-    public function process_users_minimal_batched(callable $callback): int {
+    public function process_users_minimal_batched(callable $callback, array $extraselect = []): int {
+        $selectfields = array_values(array_unique(array_merge(['id', 'accountEnabled'], $extraselect)));
         $odataqueries = [
-            '$select' => 'id,accountEnabled',
+            '$select' => implode(',', $selectfields),
             '$top'    => (string)self::GRAPH_API_BATCH_SIZE,
         ];
 
