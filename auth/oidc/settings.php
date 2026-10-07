@@ -276,6 +276,14 @@ if ($hassiteconfig) {
     $oidcresourcesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $applicationsettings->add($oidcresourcesetting);
 
+    // Conditional display: OIDC resource is only sent for Microsoft Entra ID (v1.0).
+    $applicationsettings->hide_if(
+        'auth_oidc/oidcresource',
+        'auth_oidc/idptype',
+        'neq',
+        AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID
+    );
+
     // OIDC scope.
     $oidcscopesetting = new admin_setting_configtext(
         'auth_oidc/oidcscope',
