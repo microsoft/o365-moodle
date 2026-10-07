@@ -2445,12 +2445,14 @@ class main {
             $dbman->drop_table($table);
         }
 
-        // Create temp table with objectid, accountenabled status, and the binding username claim value (used to match
-        // Moodle accounts that have no local_o365_objects record - see suspend_unlinked_users_from_temp_table()).
+        // Create temp table with objectid, accountenabled status, the binding username claim value (used to match
+        // Moodle accounts that have no local_o365_objects record - see suspend_unlinked_users_from_temp_table()) and
+        // the user sync group membership flag.
         $table = new \xmldb_table($tempname);
         $table->add_field('objectid', XMLDB_TYPE_CHAR, 255, null, XMLDB_NOTNULL, null, null);
         $table->add_field('accountenabled', XMLDB_TYPE_INTEGER, 1, null, XMLDB_NOTNULL, null, 0);
         $table->add_field('bindingvalue', XMLDB_TYPE_CHAR, 255, null, null, null, null);
+        $table->add_field('ingroup', XMLDB_TYPE_INTEGER, 1, null, XMLDB_NOTNULL, null, 1);
         $table->add_index('objectid', XMLDB_INDEX_UNIQUE, ['objectid']);
         $table->add_index('bindingvalue', XMLDB_INDEX_NOTUNIQUE, ['bindingvalue']);
 
@@ -2588,6 +2590,52 @@ class main {
     }
 
     /**
+     * Flag which users in the Entra users temporary table are members or owners of the user sync group.
+     *
+     * Every user in the table is first flagged as not in the group, then group members and owners are flagged as in it.
+     * Returns false without leaving the table in a half-marked state when no group filter is configured, the group members
+     * cannot be retrieved, or the group has no members, so that callers never suspend users based on an incomplete result.
+     *
+     * @param string $temptablename The name of the temporary table populated by populate_entra_users_temp_table().
+     * @return bool Whether group membership was marked successfully.
+     */
+    public function mark_group_members_in_temp_table(string $temptablename): bool {
+        global $DB;
+
+        $groupid = $this->get_usersync_group_filter();
+        if (empty($groupid)) {
+            return false;
+        }
+
+        $memberids = [];
+        try {
+            $apiclient = $this->construct_user_api();
+            $apiclient->process_group_members_batched($groupid, function (array $batch) use (&$memberids) {
+                foreach ($batch as $user) {
+                    if (!empty($user['id'])) {
+                        $memberids[$user['id']] = true;
+                    }
+                }
+            }, ['id']);
+        } catch (moodle_exception $e) {
+            $this->mtrace('Error retrieving user sync group members: ' . $e->getMessage());
+            return false;
+        }
+
+        if (empty($memberids)) {
+            return false;
+        }
+
+        $DB->execute('UPDATE {' . $temptablename . '} SET ingroup = 0');
+        foreach (array_chunk(array_keys($memberids), 500) as $chunk) {
+            [$idsql, $idparams] = $DB->get_in_or_equal($chunk, SQL_PARAMS_QM);
+            $DB->execute('UPDATE {' . $temptablename . '} SET ingroup = 1 WHERE objectid ' . $idsql, $idparams);
+        }
+
+        return true;
+    }
+
+    /**
      * Process all user status changes in a single pass through Moodle users.
      *
      * Combines reenable and suspend logic into one query to minimize memory overhead
@@ -2605,6 +2653,8 @@ class main {
      * @param bool $dodisabledsyncreenable Whether to reenable users whose Entra account is (re-)enabled.
      * @param bool $dosuspendunlinked Whether to also suspend oidc accounts that have no local_o365_objects record,
      *                                matched to Entra by the binding username claim. Suspend only, never delete.
+     * @param bool $dogroupsuspend Whether to suspend users who are still in Entra but flagged as not in the user sync group
+     *                             (see mark_group_members_in_temp_table()). Such users are also never re-enabled.
      *
      * @return array [$reenabled, $suspended, $deleted] counts.
      */
@@ -2615,7 +2665,8 @@ class main {
         bool $dodelete,
         bool $dodisabledsyncsuspend,
         bool $dodisabledsyncreenable,
-        bool $dosuspendunlinked = false
+        bool $dosuspendunlinked = false,
+        bool $dogroupsuspend = false
     ): array {
         global $CFG, $DB;
 
@@ -2643,7 +2694,7 @@ class main {
         // Single query: join with temp table to identify reenable candidates, and identify suspend candidates.
         $additionaltenantdomains = $this->get_additional_tenant_domains();
 
-        $sql = 'SELECT u.id, u.username, u.suspended, etmp.accountenabled, obj.objectid, obj.o365name,
+        $sql = 'SELECT u.id, u.username, u.suspended, etmp.accountenabled, etmp.ingroup, obj.objectid, obj.o365name,
                        pref.value AS suspendedtime,
                        CASE WHEN etmp.objectid IS NOT NULL THEN 1 ELSE 0 END AS isinentra
                   FROM {user} u
@@ -2664,11 +2715,13 @@ class main {
             }
 
             if ($user->isinentra) {
+                $notingroup = $dogroupsuspend && !$user->ingroup;
                 if ($user->suspended) {
                     // User is in Entra and currently suspended - reenable only if their Entra account is allowed to sign in,
                     // either because they reappeared in Entra ($doreenable) or because their Entra account has been
-                    // (re-)enabled ($dodisabledsyncreenable). Accounts blocked from signing in are never reenabled.
-                    if ($user->accountenabled && ($doreenable || $dodisabledsyncreenable)) {
+                    // (re-)enabled ($dodisabledsyncreenable). Accounts blocked from signing in are never reenabled, and
+                    // neither are users who are not in the configured user sync group.
+                    if ($user->accountenabled && ($doreenable || $dodisabledsyncreenable) && !$notingroup) {
                         $userstoreenable[] = $user->id;
                         $this->mtrace('Re-enabling user ' . $user->username . '...');
                         $reenabled++;
@@ -2677,6 +2730,17 @@ class main {
                             $this->update_users_suspended(0, $userstoreenable);
                             $userstoreenable = [];
                         }
+                    }
+                } else if ($notingroup) {
+                    // User is in Entra and not suspended, but is not a member or owner of the user sync group (whether or
+                    // not they ever were) - suspend.
+                    $userstosuspend[] = $user->id;
+                    $this->mtrace('Suspended ' . $user->username . ' (not in configured user sync group)');
+                    $suspended++;
+
+                    if (count($userstosuspend) >= 500) {
+                        $this->update_users_suspended(1, $userstosuspend);
+                        $userstosuspend = [];
                     }
                 } else if ($dodisabledsyncsuspend && !$user->accountenabled) {
                     // User is in Entra but their account has been disabled, and not already suspended - suspend,
