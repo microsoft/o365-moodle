@@ -279,55 +279,107 @@ class utils {
     }
 
     /**
-     * Return a list of unmatched teams, which can be used as connecting options.
+     * Search unmatched teams by display name, for use by the AJAX-backed team connection autocomplete field. Filtering,
+     * matching and paging are all performed in SQL so only the requested page is loaded from the database, allowing sites
+     * with a large Teams cache to search it without loading every cached Team into a single page. Teams already matched
+     * to a course, and Teams backing a Student Data Sync (SDS) class, are excluded from the results.
+     *
+     * @param string $query
+     * @param string $currentoid
+     * @param int $offset
+     * @param int $limit
+     * @return array Array with 'results' (list of ['id' => ..., 'name' => ...]) and 'hasmore' (bool).
+     */
+    public static function search_matching_teams(string $query, string $currentoid = '', int $offset = 0, int $limit = 20): array {
+        global $DB;
+
+        $params = ['hasteam' => 1];
+        $conditions = ['tc.has_team = :hasteam'];
+
+        if ($query !== '') {
+            $conditions[] = $DB->sql_like('tc.name', ':query', false, false);
+            $params['query'] = '%' . $DB->sql_like_escape($query) . '%';
+        }
+
+        // Exclude teams already matched to a course, without loading every matched objectid into PHP to build a
+        // NOT IN (...) list: a correlated NOT EXISTS keeps the exclusion in SQL, using the existing index on
+        // local_o365_objects.objectid. The currently-connected team (if any) is exempted so it still appears.
+        $matchedexistssql = "EXISTS (
+            SELECT 1
+              FROM {local_o365_objects} mo
+             WHERE mo.type = 'group' AND mo.subtype = 'course' AND mo.objectid = tc.objectid
+        )";
+        if ($currentoid !== '') {
+            $conditions[] = "(tc.objectid = :currentoid OR NOT $matchedexistssql)";
+            $params['currentoid'] = $currentoid;
+        } else {
+            $conditions[] = "NOT $matchedexistssql";
+        }
+
+        // Exclude Teams backing a Student Data Sync (SDS) class. SDS provisions its class Team using the class's own
+        // Microsoft Graph object ID as the group/team objectid, so a cache row whose objectid matches an existing
+        // 'sdssection' object record is an SDS class's Team. These cannot be manually connected: SDS already owns
+        // that Team's Moodle course link (or will, once SDS sync runs), and a manual connection would conflict with
+        // it. Unlike the "already matched" exclusion above, this one is not exempted for $currentoid: a course that
+        // somehow already ended up connected to one keeps showing that connection via get_current_team_option(), but
+        // it is not offered again here.
+        $sdsexistssql = "EXISTS (
+            SELECT 1
+              FROM {local_o365_objects} sds
+             WHERE sds.type = 'sdssection' AND sds.objectid = tc.objectid
+        )";
+        $conditions[] = "NOT $sdsexistssql";
+
+        $sql = "SELECT tc.id, tc.objectid, tc.name
+                  FROM {local_o365_groups_cache} tc
+                 WHERE " . implode(' AND ', $conditions) . '
+                 ORDER BY tc.name';
+
+        // Fetch one extra row to detect whether a further page exists.
+        $teamcacherecords = array_values($DB->get_records_sql($sql, $params, $offset, $limit + 1));
+        $hasmore = count($teamcacherecords) > $limit;
+        $teamcacherecords = array_slice($teamcacherecords, 0, $limit);
+
+        $nameoccurrences = array_count_values(array_map(fn($record) => $record->name, $teamcacherecords));
+
+        $results = [];
+        foreach ($teamcacherecords as $teamcacherecord) {
+            $label = $teamcacherecord->name;
+            if ($nameoccurrences[$teamcacherecord->name] > 1) {
+                $label .= ' [' . $teamcacherecord->objectid . ']';
+            }
+
+            if ($teamcacherecord->objectid == $currentoid) {
+                $label .= ' - ' . get_string('acp_teamconnections_current_connection', 'local_o365');
+            }
+
+            $results[] = ['id' => $teamcacherecord->id, 'name' => $label];
+        }
+
+        return ['results' => $results, 'hasmore' => $hasmore];
+    }
+
+    /**
+     * Return the cached Team option (id => label) currently connected to a course, for pre-populating the team connection
+     * autocomplete field without having to load the full Teams cache.
      *
      * @param string $currentoid
      * @return array
      */
-    public static function get_matching_team_options(string $currentoid = ''): array {
+    public static function get_current_team_option(string $currentoid): array {
         global $DB;
 
-        $teamsoptions = [];
-        $teamnamecache = [];
-        $matchedid = 0;
-
-        $matchedoids = $DB->get_fieldset_select('local_o365_objects', 'objectid', 'type = ? AND subtype = ?', ['group', 'course']);
-
-        $teamcacherecords = $DB->get_records('local_o365_groups_cache', ['has_team' => 1]);
-        foreach ($teamcacherecords as $key => $teamcacherecord) {
-            if ($teamcacherecord->objectid == $currentoid || !in_array($teamcacherecord->objectid, $matchedoids)) {
-                if (!array_key_exists($teamcacherecord->name, $teamnamecache)) {
-                    $teamnamecache[$teamcacherecord->name] = [];
-                }
-
-                $teamnamecache[$teamcacherecord->name][] = $teamcacherecord->objectid;
-            } else {
-                unset($teamcacherecords[$key]);
-            }
+        if ($currentoid === '') {
+            return [];
         }
 
-        foreach ($teamcacherecords as $teamcacherecord) {
-            $teamoidpart = '';
-            if (count($teamnamecache[$teamcacherecord->name]) > 1) {
-                $teamoidpart = ' [' . $teamcacherecord->objectid . '] ';
-            }
-
-            if ($teamcacherecord->objectid == $currentoid) {
-                $teamsoptions[$teamcacherecord->id] = $teamcacherecord->name . $teamoidpart . ' - ' .
-                    get_string('acp_teamconnections_current_connection', 'local_o365');
-                $matchedid = $teamcacherecord->id;
-            } else {
-                $teamsoptions[$teamcacherecord->id] = $teamcacherecord->name . $teamoidpart;
-            }
+        if (!$teamcacherecord = $DB->get_record('local_o365_groups_cache', ['objectid' => $currentoid, 'has_team' => 1])) {
+            return [];
         }
 
-        natcasesort($teamsoptions);
+        $label = $teamcacherecord->name . ' - ' . get_string('acp_teamconnections_current_connection', 'local_o365');
 
-        if (!$currentoid) {
-            $teamsoptions = ['0' => get_string('acp_teamconnections_not_connected', 'local_o365')] + $teamsoptions;
-        }
-
-        return [$teamsoptions, $matchedid];
+        return [$teamcacherecord->id => $label];
     }
 
     /**
