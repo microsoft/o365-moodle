@@ -101,6 +101,7 @@ class apptoken extends token {
     public static function get_app_token($tokenresource, clientdata $clientdata, $httpclient) {
         static::reset_last_error();
         $tokenendpoint = $clientdata->get_apptokenendpoint();
+        $graphscope = auth_oidc_get_graph_resource() . '/.default';
 
         switch (get_config('auth_oidc', 'idptype')) {
             case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
@@ -115,7 +116,7 @@ class apptoken extends token {
                 if (get_config('auth_oidc', 'clientauthmethod') == AUTH_OIDC_AUTH_METHOD_CERTIFICATE) {
                     $params = [
                         'client_id' => $clientdata->get_clientid(),
-                        'scope' => 'https://graph.microsoft.com/.default',
+                        'scope' => $graphscope,
                         'client_assertion_type' => 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
                         'client_assertion' => oidcclient::generate_client_assertion(),
                         'grant_type' => 'client_credentials',
@@ -126,7 +127,7 @@ class apptoken extends token {
                         'client_id' => $clientdata->get_clientid(),
                         'client_secret' => $clientdata->get_clientsecret(),
                         'grant_type' => 'client_credentials',
-                        'scope' => 'https://graph.microsoft.com/.default',
+                        'scope' => $graphscope,
                     ];
                 }
                 break;

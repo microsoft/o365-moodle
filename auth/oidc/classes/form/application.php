@@ -55,6 +55,22 @@ class application extends moodleform {
         $mform->addElement('select', 'idptype', auth_oidc_config_name_in_form('idptype'), $idptypeoptions);
         $mform->addElement('static', 'idptype_help', '', get_string('idptype_help', 'auth_oidc'));
 
+        // Microsoft cloud.
+        $microsoftcloudoptions = [
+            AUTH_OIDC_MICROSOFT_CLOUD_GLOBAL => get_string('microsoftcloud_global', 'auth_oidc'),
+            AUTH_OIDC_MICROSOFT_CLOUD_CHINA => get_string('microsoftcloud_china', 'auth_oidc'),
+        ];
+        $mform->addElement(
+            'select',
+            'microsoftcloud',
+            auth_oidc_config_name_in_form('microsoftcloud'),
+            $microsoftcloudoptions
+        );
+        $mform->setDefault('microsoftcloud', AUTH_OIDC_MICROSOFT_CLOUD_GLOBAL);
+        $mform->addElement('static', 'microsoftcloud_help', '', get_string('microsoftcloud_help', 'auth_oidc'));
+        $mform->hideIf('microsoftcloud', 'idptype', 'eq', AUTH_OIDC_IDP_TYPE_OTHER);
+        $mform->hideIf('microsoftcloud_help', 'idptype', 'eq', AUTH_OIDC_IDP_TYPE_OTHER);
+
         // Client ID.
         $mform->addElement('text', 'clientid', auth_oidc_config_name_in_form('clientid'), ['size' => 40]);
         $mform->setType('clientid', PARAM_TEXT);
@@ -202,14 +218,14 @@ class application extends moodleform {
         // Authorization endpoint.
         $mform->addElement('text', 'authendpoint', auth_oidc_config_name_in_form('authendpoint'), ['size' => 60]);
         $mform->setType('authendpoint', PARAM_URL);
-        $mform->setDefault('authendpoint', 'https://login.microsoftonline.com/organizations/oauth2/authorize');
+        $mform->setDefault('authendpoint', auth_oidc_get_login_baseurl() . '/organizations/oauth2/authorize');
         $mform->addElement('static', 'authendpoint_help', '', get_string('authendpoint_help', 'auth_oidc'));
         $mform->addRule('authendpoint', null, 'required', null, 'client');
 
         // Token endpoint.
         $mform->addElement('text', 'tokenendpoint', auth_oidc_config_name_in_form('tokenendpoint'), ['size' => 60]);
         $mform->setType('tokenendpoint', PARAM_URL);
-        $mform->setDefault('tokenendpoint', 'https://login.microsoftonline.com/organizations/oauth2/token');
+        $mform->setDefault('tokenendpoint', auth_oidc_get_login_baseurl() . '/organizations/oauth2/token');
         $mform->addElement('static', 'tokenendpoint_help', '', get_string('tokenendpoint_help', 'auth_oidc'));
         $mform->addRule('tokenendpoint', null, 'required', null, 'client');
 
@@ -220,7 +236,7 @@ class application extends moodleform {
         // Resource.
         $mform->addElement('text', 'oidcresource', auth_oidc_config_name_in_form('oidcresource'), ['size' => 60]);
         $mform->setType('oidcresource', PARAM_TEXT);
-        $mform->setDefault('oidcresource', 'https://graph.microsoft.com');
+        $mform->setDefault('oidcresource', auth_oidc_get_graph_resource());
         $mform->addElement('static', 'oidcresource_help', '', get_string('oidcresource_help', 'auth_oidc'));
 
         // Scope.
