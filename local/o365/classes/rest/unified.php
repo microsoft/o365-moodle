@@ -2427,53 +2427,118 @@ class unified extends o365api {
     }
 
     /**
+     * Get the app-only permissions for the graph api that an admin has granted consent to for the application.
+     *
+     * The permissions on the application registration are only what the application asks for. Microsoft only puts a
+     * permission in the application's tokens once an admin has granted consent to it.
+     *
+     * @return array|null The names of the granted permissions as keys, or null if they could not be read.
+     */
+    public function get_graph_granted_apponly_permissions(): ?array {
+        try {
+            $appserviceprincipal = $this->get_application_serviceprincipal_info();
+            $graphserviceprincipal = $this->get_unified_api_serviceprincipal_info();
+            if (empty($appserviceprincipal['value'][0]['id']) || empty($graphserviceprincipal['value'][0]['id'])) {
+                return null;
+            }
+
+            $graphserviceprincipalid = $graphserviceprincipal['value'][0]['id'];
+            $roles = [];
+            foreach ($graphserviceprincipal['value'][0]['appRoles'] as $role) {
+                $roles[$role['id']] = $role['value'];
+            }
+
+            $assignments = $this->paginatedapicall(
+                'get',
+                '/servicePrincipals/' . $appserviceprincipal['value'][0]['id'] . '/appRoleAssignments'
+            );
+        } catch (moodle_exception $e) {
+            \local_o365\utils::debug($e->getMessage(), __METHOD__, $e);
+            return null;
+        }
+
+        $granted = [];
+        foreach ($assignments as $assignment) {
+            if (($assignment['resourceId'] ?? '') === $graphserviceprincipalid && isset($roles[$assignment['appRoleId'] ?? ''])) {
+                $granted[$roles[$assignment['appRoleId']]] = true;
+            }
+        }
+
+        return $granted;
+    }
+
+    /**
      * Check application Graph API permissions.
      *
      * @return array
      */
     public function check_graph_apponly_permissions(): array {
         $this->token->refresh();
-        $requiredperms = $this->get_graph_required_apponly_permissions();
-        $currentperms = $this->get_graph_current_apponly_permissions();
-        $availableperms = $this->get_graph_available_apponly_permissions();
 
+        return $this->find_missing_apponly_permissions(
+            $this->get_graph_required_apponly_permissions(),
+            $this->get_graph_current_apponly_permissions(),
+            $this->get_graph_available_apponly_permissions(),
+            $this->get_graph_granted_apponly_permissions()
+        );
+    }
+
+    /**
+     * Work out which required app-only permissions are missing from the application, or haven't had consent granted.
+     *
+     * @param array $requiredperms The required permissions, each with a list of permissions that are as good.
+     * @param array $currentperms The permissions on the application registration, by name.
+     * @param array $availableperms The permissions Microsoft Graph offers, by name.
+     * @param array|null $grantedperms The permissions that have been granted consent, by name, or null if not known. Consent
+     *                                 isn't checked if it isn't known.
+     * @return array The permissions that are missing, with a description of what's wrong with each as the value.
+     */
+    public function find_missing_apponly_permissions(
+        array $requiredperms,
+        array $currentperms,
+        array $availableperms,
+        ?array $grantedperms = null
+    ): array {
         $missingperms = [];
+        $notgrantedperms = [];
 
         foreach ($requiredperms as $requiredperm => $alternativeperms) {
-            $haspermission = false;
-            if (array_key_exists($requiredperm, $currentperms)) {
-                $haspermission = true;
-            } else {
-                foreach ($alternativeperms as $alternativeperm) {
-                    if (array_key_exists($alternativeperm, $currentperms)) {
-                        $haspermission = true;
-                        break;
-                    }
-                }
-            }
+            $acceptableperms = array_merge([$requiredperm], $alternativeperms);
+            $configuredperms = array_filter($acceptableperms, function ($perm) use ($currentperms) {
+                return array_key_exists($perm, $currentperms);
+            });
 
-            if (!$haspermission) {
+            if (!$configuredperms) {
                 $missingperms[] = $requiredperm;
+            } else if ($grantedperms !== null && !array_intersect($configuredperms, array_keys($grantedperms))) {
+                $notgrantedperms[] = $requiredperm;
             }
         }
 
-        if (empty($missingperms)) {
+        if (empty($missingperms) && empty($notgrantedperms)) {
             return [];
         }
 
-        // Assemble friendly names for permissions.
+        // Assemble friendly names for permissions. App roles have a "displayName", whereas delegated permissions have an
+        // "adminConsentDisplayName".
         $permnames = [];
         foreach ($availableperms as $perminfo) {
-            if (!isset($perminfo['value']) || !isset($perminfo['adminConsentDisplayName'])) {
+            $displayname = $perminfo['displayName'] ?? $perminfo['adminConsentDisplayName'] ?? null;
+            if (!isset($perminfo['value']) || $displayname === null) {
                 continue;
             }
 
-            $permnames[$perminfo['value']] = $perminfo['adminConsentDisplayName'];
+            $permnames[$perminfo['value']] = $displayname;
         }
 
         $missingpermsreturn = [];
         foreach ($missingperms as $missingperm) {
             $missingpermsreturn[$missingperm] = (isset($permnames[$missingperm])) ? $permnames[$missingperm] : $missingperm;
+        }
+
+        foreach ($notgrantedperms as $notgrantedperm) {
+            $name = (isset($permnames[$notgrantedperm])) ? $permnames[$notgrantedperm] : $notgrantedperm;
+            $missingpermsreturn[$notgrantedperm] = $name . ' (' . get_string('settings_verifysetup_notgranted', 'local_o365') . ')';
         }
 
         return $missingpermsreturn;
@@ -2902,6 +2967,127 @@ class unified extends o365api {
         ];
 
         return $this->betaapicall('post', $endpoint, json_encode($requestparams));
+    }
+
+    /**
+     * Create a private channel in a Team, with the given user as its owner.
+     *
+     * @param string $teamobjectid The object ID of the Team.
+     * @param string $displayname The display name of the channel.
+     * @param string $description The description of the channel.
+     * @param string $ownerobjectid The object ID of the user to make the owner of the channel. A private channel cannot be
+     *                              created without an owner, and the user must already be a member of the Team.
+     * @return array|null The created channel, including its ID.
+     * @throws moodle_exception
+     */
+    public function create_private_channel(
+        string $teamobjectid,
+        string $displayname,
+        string $description,
+        string $ownerobjectid
+    ): ?array {
+        $endpoint = '/teams/' . $teamobjectid . '/channels';
+        $data = [
+            '@odata.type' => '#Microsoft.Graph.channel',
+            'membershipType' => 'private',
+            'displayName' => $displayname,
+            'description' => $description,
+            'members' => [
+                [
+                    '@odata.type' => '#microsoft.graph.aadUserConversationMember',
+                    'roles' => ['owner'],
+                    'user@odata.bind' => $this->get_apiuri() . "/v1.0/users('" . $ownerobjectid . "')",
+                ],
+            ],
+        ];
+        $response = $this->apicall('post', $endpoint, json_encode($data));
+
+        return $this->process_apicall_response($response, ['id' => null]);
+    }
+
+    /**
+     * Get the members of a channel.
+     *
+     * @param string $teamobjectid The object ID of the Team.
+     * @param string $channelid The ID of the channel.
+     * @return array The members. Each has the ID of the membership (id), the object ID of the user (userId) and roles.
+     * @throws moodle_exception
+     */
+    public function get_channel_members(string $teamobjectid, string $channelid): array {
+        $endpoint = '/teams/' . $teamobjectid . '/channels/' . rawurlencode($channelid) . '/members';
+
+        return $this->paginatedapicall('get', $endpoint);
+    }
+
+    /**
+     * Add a user to a private channel.
+     *
+     * @param string $teamobjectid The object ID of the Team.
+     * @param string $channelid The ID of the channel.
+     * @param string $userobjectid The object ID of the user. The user must already be a member of the Team.
+     * @param bool $owner Whether to make the user an owner of the channel.
+     * @return array|null The new membership.
+     * @throws moodle_exception
+     */
+    public function add_member_to_channel(
+        string $teamobjectid,
+        string $channelid,
+        string $userobjectid,
+        bool $owner = false
+    ): ?array {
+        $endpoint = '/teams/' . $teamobjectid . '/channels/' . rawurlencode($channelid) . '/members';
+        $data = [
+            '@odata.type' => '#microsoft.graph.aadUserConversationMember',
+            'roles' => $owner ? ['owner'] : [],
+            'user@odata.bind' => $this->get_apiuri() . "/v1.0/users('" . $userobjectid . "')",
+        ];
+        $response = $this->apicall('post', $endpoint, json_encode($data));
+
+        return $this->process_apicall_response($response, ['id' => null]);
+    }
+
+    /**
+     * Change whether a member of a private channel is an owner of it.
+     *
+     * @param string $teamobjectid The object ID of the Team.
+     * @param string $channelid The ID of the channel.
+     * @param string $membershipid The ID of the membership, as returned by get_channel_members().
+     * @param bool $owner Whether the member should be an owner of the channel.
+     * @return array|null The updated membership.
+     * @throws moodle_exception
+     */
+    public function update_channel_member_role(
+        string $teamobjectid,
+        string $channelid,
+        string $membershipid,
+        bool $owner
+    ): ?array {
+        $endpoint = '/teams/' . $teamobjectid . '/channels/' . rawurlencode($channelid) . '/members/' .
+            rawurlencode($membershipid);
+        $data = [
+            '@odata.type' => '#microsoft.graph.aadUserConversationMember',
+            'roles' => $owner ? ['owner'] : [],
+        ];
+        $response = $this->apicall('patch', $endpoint, json_encode($data));
+
+        return $this->process_apicall_response($response, ['id' => null]);
+    }
+
+    /**
+     * Remove a member from a private channel.
+     *
+     * @param string $teamobjectid The object ID of the Team.
+     * @param string $channelid The ID of the channel.
+     * @param string $membershipid The ID of the membership, as returned by get_channel_members().
+     * @return bool Whether the member was removed.
+     * @throws moodle_exception
+     */
+    public function remove_member_from_channel(string $teamobjectid, string $channelid, string $membershipid): bool {
+        $endpoint = '/teams/' . $teamobjectid . '/channels/' . rawurlencode($channelid) . '/members/' .
+            rawurlencode($membershipid);
+        $this->apicall('delete', $endpoint);
+
+        return $this->check_expected_http_code(['204']);
     }
 
     /**

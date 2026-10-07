@@ -418,6 +418,12 @@ abstract class o365api {
                 ],
             ],
         ];
+        if (get_config('local_o365', 'coursesyncgroupchannels')) {
+            // Only needed when a channel is created for each Moodle group.
+            $apis['graph']['requiredAppPermissions']['Channel.Create'] = [];
+            $apis['graph']['requiredAppPermissions']['ChannelMember.ReadWrite.All'] = [];
+        }
+
         if (!empty($api)) {
             if (!isset($apis[$api])) {
                 throw new moodle_exception('errornoapifound', 'local_o365', '', $api);
