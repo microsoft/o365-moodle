@@ -127,8 +127,21 @@ class base {
             // Check if multi tenants is enabled. User from additional tenants can only sync fields from token.
             $userfromadditionaltenant = false;
             $hostingtenantid = get_config('local_o365', 'entratenantid');
-            $token = jwt::instance_from_encoded($tokenrec->token);
-            if ($token->claim('tid') != $hostingtenantid) {
+            // Read the tenant id from the access token, falling back to the ID token: in real Entra
+            // flows the access token can be opaque while the ID token is still a JWT carrying 'tid'.
+            $tenanttoken = null;
+            foreach (['token', 'idtoken'] as $tokenname) {
+                try {
+                    $tenanttoken = jwt::instance_from_encoded($tokenrec->$tokenname);
+                    break;
+                } catch (moodle_exception $e) {
+                    // Not a readable JWT (e.g. an opaque access token): try the next token.
+                    $tenanttoken = null;
+                }
+            }
+            if ($tenanttoken !== null && $tenanttoken->claim('tid') != $hostingtenantid) {
+                // Only classify as an additional-tenant user when the tenant id could actually be read;
+                // if neither token is decodable, fall back to treating the user as the hosting tenant.
                 $userfromadditionaltenant = true;
             }
 
@@ -161,11 +174,18 @@ class base {
                 if (!$userdatafetchedfromgraph) {
                     // If local_o365 is installed, but all field mapping fields are in token, then use token.
                     $fieldmappingfromtoken = false;
-                    // Process both ID token and access tokens.
+                    // Process both ID token and access tokens. Initialise the collected user data so the
+                    // fieldmap call below is safe even when every token is skipped because it cannot be decoded.
+                    $userdata = [];
                     $tokenames = ['idtoken', 'token'];
 
                     foreach ($tokenames as $tokename) {
-                        $token = jwt::instance_from_encoded($tokenrec->$tokename);
+                        try {
+                            $token = jwt::instance_from_encoded($tokenrec->$tokename);
+                        } catch (moodle_exception $e) {
+                            // Error occurred when decoding a token, skip.
+                            continue;
+                        }
 
                         if (!isset($userdata['objectId'])) {
                             $objectid = $token->claim('oid');
