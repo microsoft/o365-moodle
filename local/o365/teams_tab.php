@@ -27,14 +27,9 @@ use core\url;
 
 // phpcs:ignore moodle.Files.RequireLogin.Missing -- This file is called from Microsoft Teams tab.
 require_once(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/local/o365/lib.php');
 
-// Force theme.
-$customtheme = get_config('local_o365', 'customtheme');
-if (!empty($customtheme) && get_config('theme_' . $customtheme, 'version')) {
-    $SESSION->theme = $customtheme;
-} else if (get_config('theme_boost_o365teams', 'version')) {
-    $SESSION->theme = 'boost_o365teams';
-}
+local_o365_apply_teams_theme();
 
 echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"styles.css\">";
 echo "<script src=\"" . $CFG->wwwroot . "/local/o365/js/MicrosoftTeams.min.js\"></script>";
