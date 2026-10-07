@@ -72,4 +72,45 @@ final class lib_test extends advanced_testcase {
 
         $this->assertSame($expected, auth_oidc_validate_secret_expiry_recipients($value));
     }
+
+    /**
+     * Data provider for {@see self::test_trim_user_field_value()}.
+     *
+     * @return array
+     */
+    public static function trim_user_field_value_provider(): array {
+        return [
+            'value within column limit is unchanged' => ['city', 'Toronto', 'Toronto'],
+            'value exceeding column limit is trimmed' => [
+                'phone1',
+                '+43 (1) XXXXX - 5107, 5145, 6866',
+                '+43 (1) XXXXX - 5107',
+            ],
+            'field not a user table column is unchanged' => [
+                'profile_field_custom',
+                str_repeat('a', 500),
+                str_repeat('a', 500),
+            ],
+            'non-character column is unchanged' => ['id', str_repeat('1', 50), str_repeat('1', 50)],
+            'non-string value is unchanged' => ['firstname', 123, 123],
+        ];
+    }
+
+    /**
+     * Test auth_oidc_trim_user_field_value().
+     *
+     * @dataProvider trim_user_field_value_provider
+     * @param string $localfield
+     * @param mixed $value
+     * @param mixed $expected
+     * @return void
+     * @covers ::auth_oidc_trim_user_field_value
+     */
+    public function test_trim_user_field_value(string $localfield, $value, $expected): void {
+        $this->resetAfterTest(true);
+
+        require_once(__DIR__ . '/../lib.php');
+
+        $this->assertSame($expected, auth_oidc_trim_user_field_value($localfield, $value));
+    }
 }
