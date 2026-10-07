@@ -743,6 +743,14 @@ if ($hassiteconfig) {
         )
     );
 
+    // Show login button.
+    $settings->add(new admin_setting_configcheckbox(
+        'auth_oidc/showbutton',
+        get_string('cfg_showbutton_key', 'auth_oidc'),
+        get_string('cfg_showbutton_desc', 'auth_oidc'),
+        '1'
+    ));
+
     // Provider Name (opname).
     $settings->add(
         new admin_setting_configtext(
@@ -816,6 +824,11 @@ if ($hassiteconfig) {
 
     $settings->hide_if('auth_oidc/icon', 'auth_oidc/set_pix', 'notchecked');
     $settings->hide_if('auth_oidc/customicon', 'auth_oidc/set_pix', 'notchecked');
+
+    $settings->hide_if('auth_oidc/opname', 'auth_oidc/showbutton', 'notchecked');
+    $settings->hide_if('auth_oidc/set_pix', 'auth_oidc/showbutton', 'notchecked');
+    $settings->hide_if('auth_oidc/icon', 'auth_oidc/showbutton', 'notchecked');
+    $settings->hide_if('auth_oidc/customicon', 'auth_oidc/showbutton', 'notchecked');
 
     // Debugging heading.
     $settings->add(
