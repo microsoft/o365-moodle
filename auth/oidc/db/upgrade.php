@@ -693,5 +693,13 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026042001.04, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2026042001.05) {
+        // The login flow and auto-append settings only applied to the removed rocreds login flow.
+        unset_config('loginflow', 'auth_oidc');
+        unset_config('autoappend', 'auth_oidc');
+
+        upgrade_plugin_savepoint(true, 2026042001.05, 'auth', 'oidc');
+    }
+
     return true;
 }
