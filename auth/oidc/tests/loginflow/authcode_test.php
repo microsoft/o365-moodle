@@ -81,6 +81,31 @@ final class authcode_test extends advanced_testcase {
     }
 
     /**
+     * When the "Show login button" setting is disabled, loginpage_idp_list() must not expose an entry
+     * for this provider on the login page, even though the plugin is otherwise fully configured.
+     *
+     * Regression test for https://github.com/microsoft/o365-moodle/issues/1824.
+     *
+     * @return void
+     * @covers ::loginpage_idp_list
+     */
+    public function test_loginpage_idp_list_is_empty_when_showbutton_disabled(): void {
+        set_config('clientid', 'clientid', 'auth_oidc');
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+        set_config('clientauthmethod', AUTH_OIDC_AUTH_METHOD_SECRET, 'auth_oidc');
+        set_config('clientsecret', 'clientsecret', 'auth_oidc');
+        set_config('authendpoint', 'https://example.com/authorize', 'auth_oidc');
+        set_config('tokenendpoint', 'https://example.com/token', 'auth_oidc');
+
+        $loginflow = new authcode();
+        $this->assertNotEmpty($loginflow->loginpage_idp_list(''));
+
+        set_config('showbutton', 0, 'auth_oidc');
+        $loginflow = new authcode();
+        $this->assertEmpty($loginflow->loginpage_idp_list(''));
+    }
+
+    /**
      * Creates a Moodle user manually matched to the given (as-stored) Entra UPN, drives handlelogin() with
      * an ID token carrying the given (as-received) UPN claim, and asserts the login completed and bound
      * the auth_oidc_token to the matched user.
