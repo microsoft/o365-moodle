@@ -74,7 +74,12 @@ $(function() {
                             if (resp.data.valid === true) {
                                 main.successmessage(opts.strvalid);
                             } else {
-                                main.errormessage(opts.strinvalid);
+                                var invalidmessage = opts.strinvalid;
+                                if (typeof(resp.data.reason) === 'string' && resp.data.reason !== '') {
+                                    invalidmessage += ' (' + resp.data.reason + ')';
+                                }
+
+                                main.errormessage(invalidmessage);
                             }
                             return true;
                         }
