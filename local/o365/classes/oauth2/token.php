@@ -57,6 +57,9 @@ class token {
     /** @var int The ID of the user the token belongs to. */
     protected $userid;
 
+    /** @var array IDs of users whose token request was rejected because multi-factor authentication is required. */
+    protected static $mfarequiredusers = [];
+
     /**
      * Constructor.
      *
@@ -298,6 +301,9 @@ class token {
             $tokenresult = $httpclient->post($tokenendpoint, $params);
             $tokenresult = @json_decode($tokenresult, true);
 
+            // Forget any MFA requirement from an earlier attempt, it is set again below if this attempt needs MFA.
+            unset(static::$mfarequiredusers[$userid]);
+
             if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
                 $expiry = $tokenresult['expires_on'] ?? time() + $tokenresult['expires_in'];
                 if (get_config('auth_oidc', 'idptype') === AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
@@ -326,6 +332,12 @@ class token {
                     $tokenresult['refresh_token'] = '---';
                 }
 
+                if (static::is_mfa_required_response($tokenresult)) {
+                    static::$mfarequiredusers[$userid] = true;
+                    $errmsg = 'Problem encountered getting a new token. Multi-factor authentication is required, ' .
+                        'the user must sign in to Microsoft 365 again to complete it.';
+                }
+
                 $debuginfo = [
                     'tokenresult' => $tokenresult,
                     'resource' => $tokenresource,
@@ -335,6 +347,41 @@ class token {
         }
 
         return false;
+    }
+
+    /**
+     * Check whether a token endpoint response is a request for interactive (multi-factor) authentication.
+     *
+     * @param mixed $tokenresult The decoded token endpoint response.
+     * @return bool
+     */
+    public static function is_mfa_required_response($tokenresult) {
+        if (!is_array($tokenresult)) {
+            return false;
+        }
+
+        if (isset($tokenresult['error']) && $tokenresult['error'] === 'interaction_required') {
+            return true;
+        }
+
+        // AADSTS50076: multi-factor authentication is required.
+        return isset($tokenresult['error_codes']) && is_array($tokenresult['error_codes']) &&
+            in_array(50076, $tokenresult['error_codes']);
+    }
+
+    /**
+     * Check whether a token request for the user failed because multi-factor authentication is required.
+     *
+     * This is a one-shot check: the flag is cleared once it has been read, so it can't leak into later operations.
+     *
+     * @param int $userid The ID of the Moodle user.
+     * @return bool
+     */
+    public static function consume_mfa_required_for_user($userid) {
+        $required = !empty(static::$mfarequiredusers[$userid]);
+        unset(static::$mfarequiredusers[$userid]);
+
+        return $required;
     }
 
     /**

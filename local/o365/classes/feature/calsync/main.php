@@ -88,6 +88,10 @@ class main {
         }
 
         if (empty($token)) {
+            if (token::consume_mfa_required_for_user($muserid)) {
+                throw new moodle_exception('errormfarequired', 'local_o365');
+            }
+
             throw new moodle_exception('errornotoken', 'local_o365', '', $muserid);
         }
 
