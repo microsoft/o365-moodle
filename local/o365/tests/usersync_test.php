@@ -500,7 +500,8 @@ final class usersync_test extends advanced_testcase {
     }
 
     /**
-     * Test accountEnabled gating: suspended users with accountEnabled=0 are not re-enabled.
+     * Test accountEnabled gating: suspended users with accountEnabled=0 are not re-enabled by 'reenable', even when
+     * 'disabledsyncreenable' is off, while suspended users with accountEnabled=1 are.
      *
      * @covers \local_o365\feature\usersync\main::process_user_status_from_temp_table
      */
@@ -509,48 +510,67 @@ final class usersync_test extends advanced_testcase {
 
         set_config('usersync', 'create', 'local_o365');
         set_config('usersync_reenable', 1, 'local_o365');
-        set_config('usersync_disabledsync', 1, 'local_o365');
 
-        $user1 = $this->getDataGenerator()->create_user();
-        $user1->suspended = 1;
-        $user1->auth = 'oidc';
-        $DB->update_record('user', $user1);
+        $blockeduser = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 1]);
+        $alloweduser = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 1]);
 
         $DB->insert_record('local_o365_objects', (object) [
             'type' => 'user',
-            'moodleid' => $user1->id,
-            'objectid' => 'entra-user-1',
-            'o365name' => $user1->email,
+            'moodleid' => $blockeduser->id,
+            'objectid' => 'entra-user-blocked',
+            'o365name' => $blockeduser->email,
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ]);
+        $DB->insert_record('local_o365_objects', (object) [
+            'type' => 'user',
+            'moodleid' => $alloweduser->id,
+            'objectid' => 'entra-user-allowed',
+            'o365name' => $alloweduser->email,
             'timecreated' => time(),
             'timemodified' => time(),
         ]);
 
         $usersync = new main();
-        $temptablename = $usersync->create_entra_users_temp_table();
 
-        try {
-            // User has accountEnabled=0 in Entra.
-            $DB->insert_records($temptablename, [
-                (object) ['objectid' => 'entra-user-1', 'accountenabled' => 0],
-            ]);
+        foreach ([false, true] as $dodisabledsyncreenable) {
+            $DB->set_field('user', 'suspended', 1, ['id' => $blockeduser->id]);
+            $DB->set_field('user', 'suspended', 1, ['id' => $alloweduser->id]);
 
-            // Process with dodisabledsyncreenable=true.
-            [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
-                $temptablename,
-                true, // Re-enable suspended users.
-                false, // Do not suspend.
-                false, // Do not delete.
-                false, // Do not suspend on disabled accounts.
-                true  // Check account enabled status.
-            );
+            $temptablename = $usersync->create_entra_users_temp_table();
 
-            $this->assertEquals(0, $reenabled);
+            try {
+                $DB->insert_records($temptablename, [
+                    (object) ['objectid' => 'entra-user-blocked', 'accountenabled' => 0],
+                    (object) ['objectid' => 'entra-user-allowed', 'accountenabled' => 1],
+                ]);
 
-            // User should still be suspended.
-            $user1refresh = $DB->get_record('user', ['id' => $user1->id]);
-            $this->assertEquals(1, $user1refresh->suspended);
-        } finally {
-            $usersync->drop_entra_users_temp_table($temptablename);
+                [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
+                    $temptablename,
+                    true, // Re-enable suspended users.
+                    false, // Do not suspend.
+                    false, // Do not delete.
+                    false, // Do not suspend on disabled accounts.
+                    $dodisabledsyncreenable
+                );
+
+                $this->assertEquals(1, $reenabled);
+                $this->assertEquals(0, $suspended);
+                $this->assertEquals(0, $deleted);
+
+                $this->assertEquals(
+                    1,
+                    $DB->get_field('user', 'suspended', ['id' => $blockeduser->id]),
+                    'User blocked from signing in to Entra should remain suspended.'
+                );
+                $this->assertEquals(
+                    0,
+                    $DB->get_field('user', 'suspended', ['id' => $alloweduser->id]),
+                    'User allowed to sign in to Entra should be re-enabled.'
+                );
+            } finally {
+                $usersync->drop_entra_users_temp_table($temptablename);
+            }
         }
     }
 
