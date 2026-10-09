@@ -60,13 +60,21 @@ class notifysecretexpiry extends scheduled_task {
      */
     public function execute(): bool {
         if (!utils::is_configured()) {
-            // Microsoft 365 integration has not been set up; nothing to do.
-            mtrace('Microsoft 365 integration is not configured. Skipping.');
+            // The site is not configured with a Microsoft IdP; nothing to do.
+            mtrace('The site is not configured with a Microsoft identity provider. Skipping.');
+            return true;
+        }
+
+        if (get_config('auth_oidc', 'clientauthmethod') != AUTH_OIDC_AUTH_METHOD_SECRET) {
+            // Only the client secret authentication method has a secret that can expire.
+            mtrace('The client authentication method is not client secret. Skipping.');
             return true;
         }
 
         if (utils::is_connected() !== true) {
-            throw new moodle_exception('error_not_connected', 'local_o365');
+            // The Microsoft 365 integration is not set up, so the secret cannot be checked.
+            mtrace('The Microsoft 365 integration is not connected. Skipping.');
+            return true;
         }
 
         try {
@@ -75,12 +83,6 @@ class notifysecretexpiry extends scheduled_task {
             utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
             mtrace(get_string('errorcannotgetapiclient', 'local_o365'));
             throw new moodle_exception('errorcannotgetapiclient', 'local_o365');
-        }
-
-        $authenticationmethod = get_config('auth_oidc', 'clientauthmethod');
-        if ($authenticationmethod != AUTH_OIDC_AUTH_METHOD_SECRET) {
-            // Currently only support client secret authentication method.
-            throw new moodle_exception('errorunsupportedsecretauthenticationmethod', 'local_o365');
         }
 
         // Resolve and DNS-check the configured notification recipients up front, so that a
