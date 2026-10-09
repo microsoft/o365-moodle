@@ -21,7 +21,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        image: postgres:17
         env:
           POSTGRES_USER: 'postgres'
           POSTGRES_HOST_AUTH_METHOD: 'trust'
@@ -30,7 +30,7 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 3
 
       mariadb:
-        image: mariadb:10.11
+        image: mariadb:11.4
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: "true"
         ports:
@@ -41,7 +41,7 @@ jobs:
       fail-fast: false
       matrix:
         folder: [ auth/oidc, blocks/microsoft, local/o365, local/office365, local/onenote, repository/office365, theme/boost_o365teams, mod/assign/feedback/onenote, mod/assign/submission/onenote, lib/editor/tiny/plugins/teamsmeeting ]
-        moodle-branch: [ 'MOODLE_502_STABLE' ]
+        moodle-branch: [ 'MOODLE_503_STABLE' ]
         php: [ 8.3, 8.4 ]
         database: [ pgsql, mariadb ]
         # Only folders whose plugin has in-tree dependencies need an entry here.
