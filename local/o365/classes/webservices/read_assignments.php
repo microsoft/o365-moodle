@@ -39,6 +39,7 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 use core_external\external_warnings;
+use core_external\util;
 use core\url;
 
 global $CFG;
@@ -278,10 +279,10 @@ class read_assignments extends external_api {
                     $assign = new assign($context, null, null);
 
                     if ($assign->show_intro()) {
-                        [$assignment['intro'], $assignment['introformat']] = external_format_text(
+                        [$assignment['intro'], $assignment['introformat']] = util::format_text(
                             $module->intro,
                             $module->introformat,
-                            $context->id,
+                            $context,
                             'mod_assign',
                             'intro',
                             null
