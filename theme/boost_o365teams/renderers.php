@@ -26,5 +26,4 @@ defined('MOODLE_INTERNAL') || die();
 
 // Include individual renderer files to maintain PSR-1 compliance (one class per file).
 require_once(__DIR__ . '/classes/mod_assign_renderer.php');
-require_once(__DIR__ . '/classes/core_course_renderer.php');
 require_once(__DIR__ . '/classes/mod_quiz_renderer.php');
