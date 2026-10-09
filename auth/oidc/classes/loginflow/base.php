@@ -550,7 +550,7 @@ class base {
                     $updateduser->password = $fromform->password;
                 } else if ($fromform->newmethod === $prevauthmethod) {
                     $updateduser->auth = $prevauthmethod;
-                    // We can't use user_update_user as it will rehash the value.
+                    // We can't use \core\user::update_user() as it will rehash the value.
                     if (!empty($prevmethodrec->password)) {
                         $manualuserupdate = new stdClass();
                         $manualuserupdate->id = $userrec->id;
@@ -562,7 +562,7 @@ class base {
                 // Update user.
                 $updateduser->id = $userrec->id;
                 try {
-                    user_update_user($updateduser);
+                    \core\user::update_user($updateduser);
                 } catch (moodle_exception $e) {
                     throw new moodle_exception($e->errorcode, '', $selfurl);
                 }

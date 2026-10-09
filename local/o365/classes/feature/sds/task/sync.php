@@ -181,7 +181,7 @@ class sync extends scheduled_task {
                             }
 
                             // Save user profile.
-                            user_update_user($completeuser, false, false);
+                            \core\user::update_user($completeuser, false, false);
                             profile_save_data($completeuser);
 
                             static::mtrace('User profile updated', 4);

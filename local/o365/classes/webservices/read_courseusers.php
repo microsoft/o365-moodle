@@ -170,7 +170,7 @@ class read_courseusers extends external_api {
 
             // Get user info.
             helper::preload_from_record($user);
-            if ($userdetails = user_get_user_details($user, $course, $userfields)) {
+            if ($userdetails = \core\user::get_user_details($user, $course, $userfields)) {
                 $users[] = $userdetails;
             }
         }

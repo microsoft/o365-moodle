@@ -209,7 +209,7 @@ class process {
 
             $user->username = $lcnewusername;
             try {
-                user_update_user($user, false);
+                \core\user::update_user($user, false);
                 $userupdated = true;
             } catch (moodle_exception $e) {
                 $this->upt->track('status', get_string('update_error_user_update_failed', 'auth_oidc'));

@@ -543,7 +543,7 @@ class main {
 
         $existinguser = core_user::get_user($muserid);
         $existinguser->timezone = $moodletimezone;
-        user_update_user($existinguser, false, true);
+        \core\user::update_user($existinguser, false, true);
 
         if ($printtrace) {
             $this->mtrace('Timezone applied.');
@@ -1341,7 +1341,7 @@ class main {
         }
 
         $newuser->timemodified = $newuser->timecreated;
-        $newuser->id = user_create_user($newuser, false, false);
+        $newuser->id = \core\user::create_user($newuser, false, false);
 
         // Save user profile data.
         profile_save_data($newuser);
@@ -1401,7 +1401,7 @@ class main {
         $existinguser->timemodified = time();
 
         // Update a user with a user object (will compare against the ID).
-        user_update_user($existinguser, false, false);
+        \core\user::update_user($existinguser, false, false);
 
         // Save user profile data.
         profile_save_data($existinguser);
@@ -1824,7 +1824,7 @@ class main {
 
                                 $username = trim(core_text::strtolower($username));
                                 $renamedmoodleuser->username = $username;
-                                user_update_user($renamedmoodleuser, false);
+                                \core\user::update_user($renamedmoodleuser, false);
 
                                 // Update connection record.
                                 $existingusermatching->o365name = $entraiduser['useridentifierlower'];
@@ -1950,7 +1950,7 @@ class main {
                                         $userrenamed = true;
 
                                         $renamedmoodleuser->username = $username;
-                                        user_update_user($renamedmoodleuser, false);
+                                        \core\user::update_user($renamedmoodleuser, false);
 
                                         // Update connection record.
                                         $existingusermatching->o365name = $entraiduser['useridentifierlower'];
@@ -2332,7 +2332,7 @@ class main {
                 $fullexistinguser = get_complete_user_data('username', $existinguser->username);
                 $existinguser->id = $fullexistinguser->id;
                 $existinguser->auth = 'oidc';
-                user_update_user($existinguser, true);
+                \core\user::update_user($existinguser, true);
                 // Clear user's password.
                 $password = '';
                 $existinguser->password = $fullexistinguser->password;

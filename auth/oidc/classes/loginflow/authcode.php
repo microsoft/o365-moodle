@@ -993,7 +993,7 @@ class authcode extends base {
                         // 2. can change token record.
                         if ($user->auth == 'oidc') {
                             $user->username = strtolower($oidcusername);
-                            user_update_user($user, false);
+                            \core\user::update_user($user, false);
 
                             $fullmessage = 'Attempt to change username of user ' . $user->id . ' from ' .
                                 $tokenrec->useridentifier . ' to ' . strtolower($oidcusername);
@@ -1083,7 +1083,7 @@ class authcode extends base {
             } else {
                 $originalusername = $existinguser->username;
                 $existinguser->username = $username;
-                user_update_user($existinguser, false);
+                \core\user::update_user($existinguser, false);
 
                 $fullmessage =
                     'Attempt to change username of user ' . $existinguser->id . ' from ' . $originalusername . ' to ' .
