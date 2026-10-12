@@ -100,7 +100,7 @@ class get_meeting_details extends external_api {
             'options' => $record->options,
             'viewexisting' => 1,
             'newwindow' => $params['newwindow'] ? 1 : 0,
-            'session' => token::generate(),
+            'session' => token::generate(self::resolve_language($context)),
         ]);
         return [
             'status' => true,
@@ -110,6 +110,50 @@ class get_meeting_details extends external_api {
             // in result.php fails with 'invalidtoken').
             'url' => $resulturl->out(false),
         ];
+    }
+
+    /**
+     * Resolve the effective language for the meeting's own context.
+     *
+     * execute() runs inside Moodle's generic AJAX dispatcher
+     * (lib/ajax/service.php), which never points $PAGE->course/$COURSE at the
+     * course the meeting actually lives in - it stays the frontpage course for
+     * the whole request. That leaves current_language() structurally unable
+     * to see a course-forced language here, even though the session/profile
+     * language it falls back to is otherwise correct for this user. Replicate
+     * current_language()'s priority, but resolve the course-forced check
+     * against the meeting's own context instead of the ambient $PAGE->course.
+     *
+     * Meetings are only ever created in a course or system context (see
+     * result.php), never a module context, so activity-forced language
+     * ($PAGE->cm->lang) has no equivalent to check here.
+     *
+     * @param context $context The context the meeting was created in.
+     * @return string The resolved language code.
+     */
+    private static function resolve_language(context $context): string {
+        global $SESSION, $USER, $CFG, $DB;
+
+        if (!empty($SESSION->forcelang)) {
+            return $SESSION->forcelang;
+        }
+
+        $coursecontext = $context->get_course_context(false);
+        if ($coursecontext && $coursecontext->instanceid != SITEID) {
+            $courselang = $DB->get_field('course', 'lang', ['id' => $coursecontext->instanceid]);
+            if (!empty($courselang)) {
+                return $courselang;
+            }
+        }
+
+        if (!empty($SESSION->lang)) {
+            return $SESSION->lang;
+        }
+        if (!empty($USER->lang)) {
+            return $USER->lang;
+        }
+
+        return $CFG->lang ?? 'en';
     }
 
     /**
