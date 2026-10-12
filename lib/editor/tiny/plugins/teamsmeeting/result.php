@@ -62,6 +62,15 @@ if (!$tokenuserid) {
 if (!$DB->record_exists('user', ['id' => $tokenuserid, 'deleted' => 0, 'suspended' => 0])) {
     throw new moodle_exception('invaliduser');
 }
+// This script runs with NO_MOODLE_COOKIES, so $USER is never populated with
+// the real user and the get_string() calls below would otherwise fall back
+// to the site's default language. The token carries the language the user
+// was shown when the dialog was opened (already resolved from their session,
+// not their profile default, which is routinely overridden per-session).
+$tokenlang = \tiny_teamsmeeting\token::validate_lang($session);
+if ($tokenlang !== '') {
+    force_current_language($tokenlang);
+}
 
 if ($viewexisting) {
     // Showing the details of a meeting that already exists.
