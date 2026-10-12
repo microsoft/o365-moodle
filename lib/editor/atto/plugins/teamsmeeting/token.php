@@ -45,6 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 require_sesskey();
 
+// This endpoint runs via require_login() with no course, so $PAGE->course is
+// always the frontpage course and current_language() can never see a
+// course-forced language here. The caller resolved it correctly at page load
+// (when $PAGE->course was the real course) and passes it through instead.
+$lang = optional_param('lang', null, PARAM_LANG);
+
 // Not cacheable: every request must mint a fresh token, never replay a
 // cached one. This also sets the JSON content type, so the response isn't
 // treated as HTML/text by intermediaries.
@@ -52,5 +58,5 @@ send_headers('application/json', false);
 
 $context = context_system::instance();
 
-echo json_encode(['session' => \atto_teamsmeeting\result_token::generate((int) $USER->id, $context->id)]);
+echo json_encode(['session' => \atto_teamsmeeting\result_token::generate((int) $USER->id, $context->id, $lang)]);
 die();

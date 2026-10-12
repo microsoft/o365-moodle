@@ -80,6 +80,21 @@ final class result_token_test extends advanced_testcase {
     }
 
     /**
+     * generate()'s explicit $lang overrides current_language(), for callers
+     * that cannot see a course-forced language themselves (token.php runs via
+     * require_login() with no course, so $PAGE->course there is always the
+     * frontpage course).
+     */
+    public function test_generate_embeds_the_explicitly_passed_language(): void {
+        $user = $this->getDataGenerator()->create_user(['lang' => 'en']);
+        $this->setUser($user);
+
+        $token = result_token::generate((int) $user->id, \context_system::instance()->id, 'xx');
+
+        $this->assertSame('xx', result_token::validate_lang($token));
+    }
+
+    /**
      * validate_lang() consumes its cache entry, so it cannot be replayed even
      * though it does not consume the underlying result_token itself.
      */

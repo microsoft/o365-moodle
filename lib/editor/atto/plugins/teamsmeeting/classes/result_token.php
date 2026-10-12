@@ -60,11 +60,18 @@ class result_token {
      *
      * @param int $userid The id of the user the token is issued for.
      * @param int $contextid The id of the context the token is scoped to.
+     * @param string|null $lang The language to embed, or null to resolve it
+     *                           from current_language(). Pass this explicitly
+     *                           when generating from a context that cannot see
+     *                           a course-forced language itself - token.php,
+     *                           for instance, calls require_login() with no
+     *                           course, so $PAGE->course there is always the
+     *                           frontpage course, never the real one.
      * @return string The token.
      */
-    public static function generate(int $userid, int $contextid): string {
+    public static function generate(int $userid, int $contextid, ?string $lang = null): string {
         $token = create_user_key(self::SCRIPT, $userid, $contextid, null, time() + self::TTL);
-        self::lang_cache()->set($token, current_language());
+        self::lang_cache()->set($token, $lang ?? current_language());
         return $token;
     }
 
