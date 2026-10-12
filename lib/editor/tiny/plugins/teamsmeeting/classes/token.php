@@ -67,11 +67,19 @@ class token {
      * profile language (mdl_user.lang), which is only a fallback default and is
      * routinely overridden per-session.
      *
+     * @param string|null $lang The language to embed, or null to resolve it
+     *                           from current_language(). Pass this explicitly
+     *                           when generating from a context that does not
+     *                           have the relevant course in $PAGE - a generic
+     *                           AJAX dispatch, for instance, where
+     *                           current_language() can never see a
+     *                           course-forced language because $PAGE->course
+     *                           is always the frontpage course there.
      * @return string Hexadecimal token, safe to pass as a URL parameter.
      */
-    public static function generate(): string {
+    public static function generate(?string $lang = null): string {
         global $USER;
-        $payload = $USER->id . ':' . (time() + self::LIFETIME) . ':' . current_language();
+        $payload = $USER->id . ':' . (time() + self::LIFETIME) . ':' . ($lang ?? current_language());
         return hash_hmac('sha256', $payload, self::secret()) . bin2hex($payload);
     }
 
