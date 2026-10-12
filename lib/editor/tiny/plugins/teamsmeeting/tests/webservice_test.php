@@ -35,6 +35,7 @@ use externallib_advanced_testcase;
 use context_course;
 use context_system;
 use tiny_teamsmeeting\external\get_meeting_details;
+use tiny_teamsmeeting\token;
 
 /**
  * REST test case for tiny_teamsmeeting webservice.
@@ -277,5 +278,43 @@ final class webservice_test extends externallib_advanced_testcase {
         // The new-window preference defaults to off and is forwarded to result.php.
         $this->assertStringContainsString('newwindow=0', $result['url']);
         $this->assertStringContainsString('newwindow=1', get_meeting_details::execute($meetingurl, true)['url']);
+    }
+
+    /**
+     * execute() embeds the meeting's course-forced language in the token, not
+     * the caller's own profile/session language: current_language() cannot see
+     * a course-forced language from inside this generic AJAX dispatch (see
+     * get_meeting_details::resolve_language()), so it has to be resolved
+     * explicitly against the meeting's own stored context instead.
+     */
+    public function test_execute_embeds_the_meetings_course_forced_language(): void {
+        global $DB, $USER;
+
+        $course = $this->getDataGenerator()->create_course(['lang' => 'xx']);
+        $user = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, 'editingteacher');
+        $context = context_course::instance($course->id);
+
+        $meetingurl = 'https://teams.microsoft.com/l/meetup-join/course-lang-test';
+        $DB->insert_record('tiny_teamsmeeting', (object) [
+            'userid' => $user->id,
+            'contextid' => $context->id,
+            'title' => 'Course language test meeting',
+            'link' => $meetingurl,
+            'linkhash' => sha1($meetingurl),
+            'options' => null,
+            'timecreated' => time(),
+        ]);
+
+        $this->setUser($user);
+        // The caller's own profile language differs from the course's forced
+        // language, so the assertion below proves which one actually won.
+        $USER->lang = 'yy';
+
+        $result = get_meeting_details::execute($meetingurl);
+
+        $query = [];
+        parse_str((string) parse_url($result['url'], PHP_URL_QUERY), $query);
+        $this->assertSame('xx', token::validate_lang($query['session']));
     }
 }
