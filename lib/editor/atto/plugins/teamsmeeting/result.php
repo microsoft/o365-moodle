@@ -32,6 +32,7 @@ $optionslink = optional_param('options', null, PARAM_RAW);
 $session = optional_param('session', '', PARAM_ALPHANUM);
 $viewexisting = optional_param('viewexisting', 0, PARAM_INT);
 $newwindow = optional_param('newwindow', false, PARAM_BOOL);
+$lang = optional_param('lang', '', PARAM_LANG);
 
 $context = context_system::instance();
 
@@ -45,12 +46,31 @@ if ($tokenuserid) {
     $tokenuser = $DB->get_record('user', ['id' => $tokenuserid], '*', MUST_EXIST);
     if (empty($tokenuser->suspended) && empty($tokenuser->deleted) && !empty($tokenuser->confirmed)) {
         \core\session\manager::set_user($tokenuser);
+        // The cross-origin redirect above may have started a fresh, cookie-less
+        // session, in which case set_user() only carries $tokenuser's profile
+        // default language forward, silently dropping any session-level or
+        // course-forced language that was active when the dialogue was opened.
+        // The token carries that language across instead.
+        $tokenlang = \atto_teamsmeeting\result_token::validate_lang($session);
+        if ($tokenlang !== '') {
+            force_current_language($tokenlang);
+        }
     } else {
         $tokenuserid = null;
     }
 }
 if (!$tokenuserid) {
     require_login();
+    // This is a same-site navigation (the view-existing-meeting flow), so the
+    // real session cookie is present and require_login() needed no fallback.
+    // But this script never sets $PAGE->course/$COURSE to the course the
+    // meeting was created in (nor is that even recorded against the meeting),
+    // so current_language() cannot see a course-forced language on its own
+    // here either. $lang carries the value the editor's host page already
+    // resolved correctly when it loaded.
+    if ($lang !== '') {
+        force_current_language($lang);
+    }
 }
 
 // This endpoint is entered by a cross-origin redirect, so it cannot rely on a

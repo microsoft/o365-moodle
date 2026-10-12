@@ -52,12 +52,27 @@ class result_token {
     /**
      * Generate a single-use token for the given user and context.
      *
+     * Also records the language the caller is currently shown, so result.php
+     * can render its response in that same language: it authenticates via
+     * this token because the cross-origin redirect back to it may not carry
+     * the Moodle session cookie, which would otherwise leave it with no way
+     * to resolve anything beyond the user's profile default language.
+     *
      * @param int $userid The id of the user the token is issued for.
      * @param int $contextid The id of the context the token is scoped to.
+     * @param string|null $lang The language to embed, or null to resolve it
+     *                           from current_language(). Pass this explicitly
+     *                           when generating from a context that cannot see
+     *                           a course-forced language itself - token.php,
+     *                           for instance, calls require_login() with no
+     *                           course, so $PAGE->course there is always the
+     *                           frontpage course, never the real one.
      * @return string The token.
      */
-    public static function generate(int $userid, int $contextid): string {
-        return create_user_key(self::SCRIPT, $userid, $contextid, null, time() + self::TTL);
+    public static function generate(int $userid, int $contextid, ?string $lang = null): string {
+        $token = create_user_key(self::SCRIPT, $userid, $contextid, null, time() + self::TTL);
+        self::lang_cache()->set($token, $lang ?? current_language());
+        return $token;
     }
 
     /**
@@ -87,5 +102,43 @@ class result_token {
         $DB->delete_records('user_private_key', ['id' => $key->id]);
 
         return (int) $key->userid;
+    }
+
+    /**
+     * Return the language the token's issuing user was shown when it was issued.
+     *
+     * Consumes the cache entry, so it is only meaningful when called once per
+     * token. The value is purely cosmetic (it only picks which language a
+     * response is rendered in), so unlike validate() this does not need to
+     * verify the token: an unrecognised or already-consumed token is simply a
+     * cache miss.
+     *
+     * @param string $token The token received from the callback request.
+     * @return string The language code (e.g. 'en', 'pl'), or '' when there is
+     *                 no cached language for this token.
+     */
+    public static function validate_lang(string $token): string {
+        // The cache definition requires simple ([a-zA-Z0-9_]) keys, and
+        // result.php reads $token via PARAM_ALPHANUM, so reject anything
+        // that filter would not have let through before it ever reaches the
+        // cache layer's own (fatal) key format check.
+        if (!ctype_alnum($token)) {
+            return '';
+        }
+
+        $cache = self::lang_cache();
+        $lang = $cache->get($token);
+        $cache->delete($token);
+
+        return $lang !== false ? $lang : '';
+    }
+
+    /**
+     * The cache used to carry a token's language from generate() to validate_lang().
+     *
+     * @return \cache_application
+     */
+    private static function lang_cache(): \cache_application {
+        return \cache::make('atto_teamsmeeting', 'resultlang');
     }
 }
