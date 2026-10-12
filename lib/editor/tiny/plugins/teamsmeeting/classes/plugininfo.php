@@ -82,7 +82,7 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_conf
         array $fpoptions,
         ?editor $editor = null
     ): array {
-        global $CFG, $SESSION, $USER;
+        global $CFG;
 
         // Add courseid parameter if we're in a course context or below.
         $coursecontext = $context->get_course_context(false);
@@ -97,7 +97,10 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_conf
             // The raw wwwroot is passed as-is; the JavaScript side URL-encodes it
             // when building the query string for the meetings app.
             'clientdomain' => $CFG->wwwroot,
-            'localevalue' => (empty($SESSION->lang) ? $USER->lang : $SESSION->lang),
+            // Use current_language() (not just $SESSION->lang/$USER->lang) so
+            // a course- or activity-forced language is respected too: this
+            // runs on the real page, with $PAGE->course already set to it.
+            'localevalue' => current_language(),
             // A short-lived token bound to the current user (never the session
             // key) is handed to the external meetings app and validated when it
             // calls back into result.php.
