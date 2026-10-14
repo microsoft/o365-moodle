@@ -674,5 +674,37 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024100735.08, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2026042001.01) {
+        $table = new xmldb_table('auth_oidc_token');
+        $field = new xmldb_field('oidcuniqid', XMLDB_TYPE_CHAR, '200', null, XMLDB_NOTNULL, null, null, 'id');
+        $singleindex = new xmldb_index('oidcuniqid', XMLDB_INDEX_NOTUNIQUE, ['oidcuniqid']);
+        $uniqueindex = new xmldb_index('authoidctoken_uniq_ix', XMLDB_INDEX_UNIQUE, ['oidcuniqid', 'tokenresource']);
+
+        // The field length change is blocked while the old single-column index still exists.
+        if ($dbman->index_exists($table, $singleindex)) {
+            $dbman->drop_index($table, $singleindex);
+        }
+
+        // The raw SQL unique index also depends on the field length in the same way.
+        if ($dbman->index_exists($table, $uniqueindex)) {
+            $dbman->drop_index($table, $uniqueindex);
+        }
+
+        if ($dbman->field_exists($table, new xmldb_field('oidcuniqid'))) {
+            $dbman->change_field_precision($table, $field);
+        }
+
+        if (!$dbman->index_exists($table, $singleindex)) {
+            $dbman->add_index($table, $singleindex);
+        }
+
+        // Recreate the unique composite index after the field length change.
+        if (!$dbman->index_exists($table, $uniqueindex)) {
+            \auth_oidc\utils::add_token_unique_constraint();
+        }
+
+        upgrade_plugin_savepoint(true, 2026042001.01, 'auth', 'oidc');
+    }
+
     return true;
 }

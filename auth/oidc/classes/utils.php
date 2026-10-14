@@ -261,19 +261,13 @@ class utils {
      * Removes duplicate tokens, keeping the latest one for each (oidcuniqid, tokenresource) pair.
      * Uses a temporary table to work around MySQL error 1093 and PostgreSQL parameter limits.
      *
-     * The combined length of oidcuniqid (255 chars) and tokenresource (127 chars) exceeds the byte
-     * limit the XMLDB API enforces on composed indexes (xmldb_index::INDEX_COMPOSED_MAX_BYTES), even
-     * though both MySQL and PostgreSQL can create the index without issue. So the index is created
-     * with raw SQL instead of $dbman->add_index(), with the index name manually prefixed with the
-     * site's table prefix to avoid name collisions with other prefixes (e.g. PHPUnit or Behat test
-     * tables) sharing the same database/schema.
      */
     public static function add_token_unique_constraint(): void {
         global $DB;
 
         $dbman = $DB->get_manager();
         $table = new \xmldb_table('auth_oidc_token');
-        $index = new \xmldb_index('oidcuniqid-tokenresource', XMLDB_INDEX_UNIQUE, ['oidcuniqid', 'tokenresource']);
+        $index = new \xmldb_index('authoidctoken_uniq_ix', XMLDB_INDEX_UNIQUE, ['oidcuniqid', 'tokenresource']);
 
         if ($dbman->index_exists($table, $index)) {
             // Unique constraint already present, nothing to do.
@@ -306,9 +300,7 @@ class utils {
         $DB->execute($sql);
 
         // Step 5: Add unique constraint on (oidcuniqid, tokenresource) to prevent duplicate tokens.
-        $indexname = $DB->get_prefix() . 'authoidctoken_uniq_ix';
-        $sql = "CREATE UNIQUE INDEX {$indexname} ON {auth_oidc_token} (oidcuniqid, tokenresource)";
-        $DB->execute($sql);
+        $dbman->add_index($table, $index);
     }
 
     /**
