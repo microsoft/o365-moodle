@@ -584,7 +584,8 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     }
 
     if ($oldversion < 2025100601.01) {
-        utils::add_token_unique_constraint();
+        // The unique constraint on (oidcuniqid, tokenresource) is created by the 2025100603.06 step below, once
+        // oidcuniqid has been shortened: at its original length the index is rejected by the XMLDB API.
         upgrade_plugin_savepoint(true, 2025100601.01, 'auth', 'oidc');
     }
 
@@ -599,11 +600,8 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     }
 
     if ($oldversion < 2025100602.02) {
-        // Retry adding the unique constraint: the previous (2025100601.01) attempt used a helper
-        // that silently swallowed failures, so sites where that step failed never got the
-        // constraint despite passing the savepoint. utils::add_token_unique_constraint() is
-        // idempotent (checks index_exists() first), so this is a no-op where .01 already succeeded.
-        utils::add_token_unique_constraint();
+        // The unique constraint on (oidcuniqid, tokenresource) is created by the 2025100603.06 step below, once
+        // oidcuniqid has been shortened: at its original length the index is rejected by the XMLDB API.
         upgrade_plugin_savepoint(true, 2025100602.02, 'auth', 'oidc');
     }
 
@@ -672,6 +670,46 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     if ($oldversion < 2025100602.08) {
         \auth_oidc\utils::migrate_removed_icon_choices();
         upgrade_plugin_savepoint(true, 2025100602.08, 'auth', 'oidc');
+    }
+
+    if ($oldversion < 2025100603.06) {
+        $table = new xmldb_table('auth_oidc_token');
+        $field = new xmldb_field('oidcuniqid', XMLDB_TYPE_CHAR, '200', null, XMLDB_NOTNULL, null, null, 'id');
+        $singleindex = new xmldb_index('oidcuniqid', XMLDB_INDEX_NOTUNIQUE, ['oidcuniqid']);
+        $uniqueindex = new xmldb_index('authoidctoken_uniq_ix', XMLDB_INDEX_UNIQUE, ['oidcuniqid', 'tokenresource']);
+
+        // Shortening the field would fail or truncate values longer than the new length, so refuse to continue.
+        if ($dbman->field_exists($table, new xmldb_field('oidcuniqid'))) {
+            $select = $DB->sql_length('oidcuniqid') . ' > 200';
+            if ($DB->record_exists_select('auth_oidc_token', $select)) {
+                throw new moodle_exception('upgradeoidcuniqidtoolong', 'auth_oidc');
+            }
+        }
+
+        // The field length change is blocked while the old single-column index still exists.
+        if ($dbman->index_exists($table, $singleindex)) {
+            $dbman->drop_index($table, $singleindex);
+        }
+
+        // The raw SQL unique index also depends on the field length in the same way.
+        if ($dbman->index_exists($table, $uniqueindex)) {
+            $dbman->drop_index($table, $uniqueindex);
+        }
+
+        if ($dbman->field_exists($table, new xmldb_field('oidcuniqid'))) {
+            $dbman->change_field_precision($table, $field);
+        }
+
+        if (!$dbman->index_exists($table, $singleindex)) {
+            $dbman->add_index($table, $singleindex);
+        }
+
+        // Recreate the unique composite index after the field length change.
+        if (!$dbman->index_exists($table, $uniqueindex)) {
+            utils::add_token_unique_constraint();
+        }
+
+        upgrade_plugin_savepoint(true, 2025100603.06, 'auth', 'oidc');
     }
 
     return true;
