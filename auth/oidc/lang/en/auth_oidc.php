@@ -363,6 +363,7 @@ $string['errorusermatched'] = 'The Microsoft 365 account "{$a->entraidupn}" is a
 $string['update_oncreate_and_onlogin'] = 'On creation and every login';
 $string['update_oncreate_and_onlogin_and_usersync'] = 'On creation, every login, and every user sync task run';
 $string['update_onlogin_and_usersync'] = 'On every login and every user sync task run';
+$string['upgradeoidcuniqidtoolong'] = 'The upgrade cannot continue: some auth_oidc_token records have an oidcuniqid longer than 200 characters, which the new column length would truncate. Please delete those token records and run the upgrade again.';
 
 // Remote fields.
 $string['settings_fieldmap_feild_not_mapped'] = '(not mapped)';
