@@ -38,7 +38,7 @@
     <TABLE NAME="auth_oidc_token" COMMENT="Stores tokens.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="oidcuniqid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="oidc uniqid"/>
+        <FIELD NAME="oidcuniqid" TYPE="char" LENGTH="200" NOTNULL="true" SEQUENCE="false" COMMENT="oidc uniqid"/>
         <FIELD NAME="username" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="username"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="moodle userid"/>
         <FIELD NAME="oidcusername" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="oidc username"/>
@@ -59,6 +59,7 @@
         <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
         <INDEX NAME="username" UNIQUE="false" FIELDS="username"/>
         <INDEX NAME="oidcusername" UNIQUE="false" FIELDS="oidcusername"/>
+        <INDEX NAME="authoidctoken_uniq_ix" UNIQUE="true" FIELDS="oidcuniqid, tokenresource"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="auth_oidc_sid" COMMENT="Stores sid from IdP, to be used to find connected Moodle users when SLO is triggered from IdP.">
