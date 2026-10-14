@@ -32,8 +32,4 @@ function xmldb_auth_oidc_install() {
     if (empty($bindingusernameclaimconfig)) {
         set_config('bindingusernameclaim', 'auto', 'auth_oidc');
     }
-
-    // The unique constraint on (oidcuniqid, tokenresource) can't be declared in install.xml: it
-    // exceeds the XMLDB API's byte limit for composed indexes, so it must be added with raw SQL.
-    \auth_oidc\utils::add_token_unique_constraint();
 }
