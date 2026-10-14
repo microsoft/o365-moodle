@@ -261,6 +261,8 @@ class utils {
      * Removes duplicate tokens, keeping the latest one for each (oidcuniqid, tokenresource) pair.
      * Uses a temporary table to work around MySQL error 1093 and PostgreSQL parameter limits.
      *
+     * The index is created with the XMLDB API, so oidcuniqid must be short enough (200 characters) for the combined
+     * index with tokenresource to stay within xmldb_index::INDEX_COMPOSED_MAX_BYTES.
      */
     public static function add_token_unique_constraint(): void {
         global $DB;
