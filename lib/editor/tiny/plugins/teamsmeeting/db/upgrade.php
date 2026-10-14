@@ -166,5 +166,30 @@ function xmldb_tiny_teamsmeeting_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025100307.02, 'tiny', 'teamsmeeting');
     }
 
+    if ($oldversion < 2025100308.02) {
+        $table = new xmldb_table('tiny_teamsmeeting');
+        $columns = $DB->get_columns('tiny_teamsmeeting', false);
+
+        // The 2025100205 step added userid and contextid with a default of 0 (needed to add a NOT NULL column to a
+        // table that already has rows), but install.xml declares no default. Bring such databases in line with
+        // install.xml so that admin/cli/check_database_schema.php reports no difference. A column cannot be altered
+        // while an index on it exists, so the index is dropped and recreated around the change.
+        foreach (['userid' => 'id', 'contextid' => 'userid'] as $fieldname => $previous) {
+            if (!empty($columns[$fieldname]) && $columns[$fieldname]->default_value !== null) {
+                $index = new xmldb_index($fieldname, XMLDB_INDEX_NOTUNIQUE, [$fieldname]);
+                if ($dbman->index_exists($table, $index)) {
+                    $dbman->drop_index($table, $index);
+                }
+
+                $field = new xmldb_field($fieldname, XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, $previous);
+                $dbman->change_field_default($table, $field);
+
+                $dbman->add_index($table, $index);
+            }
+        }
+
+        upgrade_plugin_savepoint(true, 2025100308.02, 'tiny', 'teamsmeeting');
+    }
+
     return true;
 }
