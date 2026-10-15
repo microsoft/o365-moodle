@@ -213,7 +213,7 @@ class acp extends base {
                 ];
                 $revokeurl = new url('/local/o365/acp.php', $revokeurlparams);
                 $table->data[] = [
-                    implode(', ', $tenantdomains),
+                    s(implode(', ', $tenantdomains)),
                     html_writer::link($revokeurl, $revokeaccessstr),
                 ];
             }
@@ -252,7 +252,7 @@ class acp extends base {
                 ];
                 $deleteurl = new url('/local/o365/acp.php', $deleturlparams);
                 $table->data[] = [
-                    $configuredtenant,
+                    s($configuredtenant),
                     html_writer::link($deleteurl, get_string('acp_tenants_delete', 'local_o365')),
                 ];
             }
@@ -497,7 +497,7 @@ class acp extends base {
         echo html_writer::empty_tag('br');
         if (!empty($SESSION->o365matcherrors)) {
             foreach ($SESSION->o365matcherrors as $error) {
-                echo html_writer::div($error, 'alert-error alert local_o365_statusmessage');
+                echo html_writer::div(s($error), 'alert-error alert local_o365_statusmessage');
             }
 
             $SESSION->o365matcherrors = [];
@@ -581,8 +581,8 @@ class acp extends base {
                         echo html_writer::tag('td', $queuedicon);
                 }
 
-                echo html_writer::tag('td', $queuerec->musername);
-                echo html_writer::tag('td', $queuerec->o365username);
+                echo html_writer::tag('td', s($queuerec->musername));
+                echo html_writer::tag('td', s($queuerec->o365username));
                 echo html_writer::tag('td', $queuerec->openidconnect > 0 ? get_string('yes') : get_string('no'));
 
                 switch ($status) {
@@ -591,7 +591,7 @@ class acp extends base {
                         break;
 
                     case 'error':
-                        $statusstr = get_string('acp_usermatch_matchqueue_status_error', 'local_o365', $queuerec->errormessage);
+                        $statusstr = s(get_string('acp_usermatch_matchqueue_status_error', 'local_o365', $queuerec->errormessage));
                         echo html_writer::tag('td', $statusstr);
                         break;
 
@@ -1042,9 +1042,9 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $visiblestr = $course->visible ? get_string('show') : get_string('hide');
 
             $data[] = [
-                html_writer::link($courseurl, $course->fullname),
-                $course->shortname,
-                $course->idnumber,
+                html_writer::link($courseurl, format_string($course->fullname)),
+                s($course->shortname),
+                s($course->idnumber),
                 $visiblestr,
                 html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs) . ' ' . $lockedcoursetext,
             ];
@@ -1360,7 +1360,12 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
             $courseurl = new url('/course/view.php', ['id' => $course->id]);
 
-            $rowdata = [html_writer::link($courseurl, $course->fullname), $course->shortname, $existingconnection, $actionsfield];
+            $rowdata = [
+                html_writer::link($courseurl, format_string($course->fullname)),
+                s($course->shortname),
+                $existingconnection,
+                $actionsfield,
+            ];
 
             $table->data[] = $rowdata;
         }
@@ -1547,7 +1552,10 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $PAGE->navbar->add(get_string('acp_teamconnections', 'local_o365'), $url);
             $PAGE->requires->jquery();
             $this->standard_header();
-            echo html_writer::tag('h4', get_string('acp_teamconnections_form_connect_course', 'local_o365', $course->fullname));
+            echo html_writer::tag(
+                'h4',
+                get_string('acp_teamconnections_form_connect_course', 'local_o365', format_string($course->fullname))
+            );
             echo html_writer::tag(
                 'h5',
                 get_string('acp_teamconnections_form_sds_warning', 'local_o365'),
@@ -1693,7 +1701,10 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $PAGE->navbar->add(get_string('acp_teamconnections', 'local_o365'), $url);
             $PAGE->requires->jquery();
             $this->standard_header();
-            echo html_writer::tag('h4', get_string('acp_teamconnections_form_connect_course', 'local_o365', $course->fullname));
+            echo html_writer::tag(
+                'h4',
+                get_string('acp_teamconnections_form_connect_course', 'local_o365', format_string($course->fullname))
+            );
             echo html_writer::tag(
                 'h5',
                 get_string('acp_teamconnections_form_sds_warning', 'local_o365'),
@@ -1773,7 +1784,10 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $group = null;
             $groupname = '';
 
-            $courselink = html_writer::link(new url('/course/view.php', ['id' => $course->id]), $course->fullname);
+            $courselink = html_writer::link(
+                new url('/course/view.php', ['id' => $course->id]),
+                format_string($course->fullname)
+            );
             $groupcheckstatusitem = [
                 get_string('acp_maintenance_recreatedeletedgroups_group_type_' . $groupconnectiontype, 'local_o365'),
                 $courselink,
@@ -1884,15 +1898,18 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $outputsbycourse = [];
         foreach ($courses as $course) {
             $courseitem = [];
-            $courseitem['link'] = html_writer::link(new url('/course/view.php', ['id' => $course->id]), $course->fullname);
+            $courseitem['link'] = html_writer::link(
+                new url('/course/view.php', ['id' => $course->id]),
+                format_string($course->fullname)
+            );
             try {
                 ob_start();
                 $coursesync->process_course_team_user_sync_from_moodle_to_microsoft($course->id, $course->groupobjectid);
                 $courseitem['output'] = ob_get_contents();
                 ob_clean();
-                $courseitem['output'] = '<pre>' . $courseitem['output'] . '</pre>';
+                $courseitem['output'] = '<pre>' . s($courseitem['output']) . '</pre>';
             } catch (moodle_exception $e) {
-                $courseitem['output'] = 'Could not sync course ' . $course->id . '. Reason: ' . $e->getMessage();
+                $courseitem['output'] = s('Could not sync course ' . $course->id . '. Reason: ' . $e->getMessage());
             }
 
             $outputsbycourse[] = $courseitem;
@@ -2224,9 +2241,14 @@ var local_o365_coursesync_all_set_feature = function(state) {
         // Get Entra ID data.
         $usersync = new \local_o365\feature\usersync\main();
         $userdata = $usersync->get_user($objectrecord->objectid, $isguestuser);
-        echo '<pre>';
-        $usersync->sync_users([$userdata]);
-        echo '</pre>';
+        ob_start();
+        try {
+            $usersync->sync_users([$userdata]);
+        } finally {
+            $syncoutput = ob_get_clean();
+        }
+
+        echo '<pre>' . s($syncoutput) . '</pre>';
 
         return true;
     }
@@ -2320,7 +2342,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $PAGE->navbar->add(get_string('acp_userconnections', 'local_o365'), $url);
             $PAGE->requires->jquery();
             $this->standard_header();
-            $message = get_string('acp_userconnections_table_unmatch_confirmmsg', 'local_o365', $user->username);
+            $message = get_string('acp_userconnections_table_unmatch_confirmmsg', 'local_o365', s($user->username));
             $message .= '<br /><br />';
             $urlparams = ['mode' => 'userconnections_unmatch', 'userid' => $userid, 'confirmed' => 1, 'sesskey' => sesskey()];
             $url = new url('/local/o365/acp.php', $urlparams);
@@ -2356,7 +2378,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $PAGE->navbar->add(get_string('acp_userconnections', 'local_o365'), $url);
             $PAGE->requires->jquery();
             $this->standard_header();
-            $message = get_string('acp_userconnections_table_disconnect_confirmmsg', 'local_o365', $user->username);
+            $message = get_string('acp_userconnections_table_disconnect_confirmmsg', 'local_o365', s($user->username));
             $message .= '<br /><br />';
             $urlparams = ['mode' => 'userconnections_disconnect', 'userid' => $userid, 'confirmed' => 1, 'sesskey' => sesskey()];
             $url = new url('/local/o365/acp.php', $urlparams);
