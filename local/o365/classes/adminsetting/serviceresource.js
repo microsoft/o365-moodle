@@ -137,13 +137,13 @@ $(function() {
         this.successmessage = function(message) {
             main.find('.local_o365_statusmessage').show().removeClass('alert-error').removeClass('alert-info').addClass('alert-success');
             main.find('.local_o365_statusmessage').find('img.smallicon').replaceWith(opts.iconvalid);
-            main.find('.local_o365_statusmessage').find('.statusmessage').html(message);
+            main.find('.local_o365_statusmessage').find('.statusmessage').text(message);
         }
 
         this.errormessage = function(message) {
             main.find('.local_o365_statusmessage').show().removeClass('alert-success').removeClass('alert-info').addClass('alert-error');
             main.find('.local_o365_statusmessage').find('img.smallicon').replaceWith(opts.iconinvalid);
-            main.find('.local_o365_statusmessage').find('.statusmessage').html(message);
+            main.find('.local_o365_statusmessage').find('.statusmessage').text(message);
         }
 
         this.input.on('input', function(e) {
