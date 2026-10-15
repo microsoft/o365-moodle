@@ -61,7 +61,10 @@ class sdsschools extends admin_setting_configmulticheckbox {
             return false;
         }
 
-        $this->choices = $schools;
+        // Core renders multi checkbox labels as raw HTML, so escape the school names retrieved from the Graph API.
+        $this->choices = array_map(function ($schoolname) {
+            return s($schoolname);
+        }, $schools);
 
         return true;
     }
