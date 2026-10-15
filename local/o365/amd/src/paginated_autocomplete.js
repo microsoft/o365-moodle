@@ -31,11 +31,27 @@ define(['core/ajax', 'core/str'], function(Ajax, Str) {
     var PAGE_SIZE = 20;
 
     /**
+     * Escape a plain-text value for safe use in HTML.
+     *
+     * Moodle core's autocomplete inserts labels and notices as raw HTML, so any value that
+     * originates from outside Moodle (e.g. Microsoft Graph group names) must be escaped first.
+     *
+     * @param {*} value
+     * @return {string}
+     */
+    function escapeHtml(value) {
+        var div = document.createElement('div');
+        div.textContent = String(value === null || value === undefined ? '' : value);
+        return div.innerHTML;
+    }
+
+    /**
      * Create a paginated autocomplete datasource.
      *
      * @param {Object} options
      * @param {string} options.methodname   Web service method to call for search.
-     * @param {Function} options.mapResult  Maps one WS result item to {value, label}.
+     * @param {Function} options.mapResult  Maps one WS result item to {value, label}. The label is plain text
+     *                                  and is HTML-escaped by this factory.
      * @param {string} options.noResultsKey Lang string key for the zero-results notice (component: local_o365).
      * @return {{processResults: Function, transport: Function}} Moodle autocomplete datasource.
      */
@@ -219,7 +235,9 @@ define(['core/ajax', 'core/str'], function(Ajax, Str) {
                     return null;
                 }
 
-                var newItems = response.results.map(options.mapResult);
+                var newItems = response.results.map(options.mapResult).map(function(item) {
+                    return {value: item.value, label: escapeHtml(item.label)};
+                });
                 st.accumulated = st.accumulated.concat(newItems);
                 st.offset += newItems.length;
 
@@ -238,7 +256,7 @@ define(['core/ajax', 'core/str'], function(Ajax, Str) {
                 if (st.accumulated.length === 0) {
                     // Return the string promise so the chained .then() below can call
                     // st.success without nesting a .then() inside this callback.
-                    return Str.get_string(options.noResultsKey, 'local_o365', query);
+                    return Str.get_string(options.noResultsKey, 'local_o365', escapeHtml(query));
                 }
 
                 st.success(st.accumulated.slice());
