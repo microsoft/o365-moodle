@@ -69,6 +69,7 @@ jobs:
       - name: Check out sub repository code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           # matrix.internal-deps is space-separated and cannot be a single
           # sparse pattern, so check out every folder that is a dependency of
           # any plugin; the install step below moves the ones this job needs.
