@@ -59,6 +59,9 @@ stages:
       done
     - TXT_RED="\e[31m"
 
+  after_script:
+    - rm -rf "$CI_PROJECT_DIR/moodle" "$CI_PROJECT_DIR/moodledata"
+
   script:
     - errors=()
     - moodle-plugin-ci phplint || errors+=("phplint")
