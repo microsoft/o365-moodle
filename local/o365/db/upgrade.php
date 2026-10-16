@@ -1710,5 +1710,20 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025100602.04, 'local', 'o365');
     }
 
+    if ($oldversion < 2025100603.06) {
+        // The minute of the user suspension/deletion running time was previously saved by the settings page under
+        // the wrong config name (with a "local_o365/" prefix), so the user sync task never read it.
+        // Move the value to the correct config name.
+        $wrongname = 'local_o365/usersync_suspension_m';
+        $wrongvalue = get_config('local_o365', $wrongname);
+        if ($wrongvalue !== false) {
+            set_config('usersync_suspension_m', (int) $wrongvalue, 'local_o365');
+            unset_config($wrongname, 'local_o365');
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2025100603.06, 'local', 'o365');
+    }
+
     return true;
 }
