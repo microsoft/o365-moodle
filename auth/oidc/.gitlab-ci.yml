@@ -48,6 +48,9 @@ stages:
     - '{ php -S 0.0.0.0:8000 -t "$CI_PROJECT_DIR/moodle" >/dev/null 2>&1 & }'
     - TXT_RED="\e[31m"
 
+  after_script:
+    - rm -rf "$CI_PROJECT_DIR/moodle" "$CI_PROJECT_DIR/moodledata"
+
   script:
     - errors=()
     - moodle-plugin-ci phplint || errors+=("phplint")
