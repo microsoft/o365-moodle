@@ -232,7 +232,7 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_suspend_delete_running_time_desc', 'local_o365');
         $usersyncsettings->add(new admin_setting_configtime(
             'local_o365/usersync_suspension_h',
-            'local_o365/usersync_suspension_m',
+            'usersync_suspension_m',
             $label,
             $desc,
             ['h' => 2, 'm' => 30]
