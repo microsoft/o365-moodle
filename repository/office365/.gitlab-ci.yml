@@ -1,3 +1,10 @@
+# Do not run branch pipelines for rc/* and release/* branches: they carry commits already tested on another branch.
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(rc|release)\//
+      when: never
+    - when: always
+
 services:
   - name: selenium/standalone-chrome:3
     alias: behat
