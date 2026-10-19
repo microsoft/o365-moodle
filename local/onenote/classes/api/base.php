@@ -751,6 +751,60 @@ abstract class base {
     }
 
     /**
+     * Ensure the current user may access the requested submission or feedback of the given student.
+     *
+     * @param stdClass $cm The course module record.
+     * @param stdClass $assign The assignment record.
+     * @param context $context The course module context.
+     * @param stdClass $student The student whose work is requested.
+     * @param bool $isteacher Whether the caller requested teacher mode.
+     * @param int|null $submissionid The requested submission ID.
+     * @param int|null $gradeid The requested grade ID.
+     * @throws moodle_exception If the current user is not allowed or the identifiers do not match the student and assignment.
+     */
+    protected function require_page_access($cm, $assign, $context, $student, $isteacher, $submissionid, $gradeid): void {
+        global $DB, $USER;
+
+        if ($isteacher) {
+            require_capability('mod/assign:grade', $context);
+        }
+
+        if ($student->id != $USER->id) {
+            // Viewing another user's work requires grading rights (including group access restrictions).
+            require_capability('mod/assign:grade', $context);
+            $course = get_course($cm->course);
+            $assignment = new \assign($context, $cm, $course);
+            if (!$assignment->can_view_submission($student->id)) {
+                throw new moodle_exception('nopermissions', 'error', '', get_string('view'));
+            }
+        } else {
+            require_capability('mod/assign:view', $context);
+        }
+
+        if (!empty($submissionid)) {
+            $valid = $DB->record_exists('assign_submission', [
+                'id' => $submissionid,
+                'assignment' => $assign->id,
+                'userid' => $student->id,
+            ]);
+            if (!$valid) {
+                throw new moodle_exception('errorinvalidreference', 'local_onenote');
+            }
+        }
+
+        if (!empty($gradeid)) {
+            $valid = $DB->record_exists('assign_grades', [
+                'id' => $gradeid,
+                'assignment' => $assign->id,
+                'userid' => $student->id,
+            ]);
+            if (!$valid) {
+                throw new moodle_exception('errorinvalidreference', 'local_onenote');
+            }
+        }
+    }
+
+    /**
      * Gets (or creates) the submission page or feedback page in OneNote for the given student assignment.
      * Note: For each assignment, each student has a record in the db that contains the OneNote page ID's
      * of corresponding submission and feedback pages
@@ -799,7 +853,9 @@ abstract class base {
         // If $submission_userId is given, then it contains the student's user id.
         // If it is null, it means a student is just looking at the assignment to start working on it, so use the logged in user id.
         $studentuserid = (!empty($submissionuserid)) ? $submissionuserid : $userid;
-        $student = $DB->get_record('user', ['id' => $studentuserid]);
+        $student = $DB->get_record('user', ['id' => $studentuserid], '*', MUST_EXIST);
+
+        $this->require_page_access($cm, $assign, $context, $student, $isteacher, $submissionid, $gradeid);
 
         // Determine what page we are dealing with.
         if ($isteacher === true) {
