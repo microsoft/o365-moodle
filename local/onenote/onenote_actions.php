@@ -23,23 +23,24 @@
  * @copyright  Microsoft, Inc.
  */
 
-use core\context\system;
 use core\url;
 use local_onenote\api\base;
 
 require_once(__DIR__ . '/../../config.php');
 
-require_login();
-$PAGE->set_url('/local/onenote/onenote_actions.php');
-$PAGE->set_context(system::instance());
-
 $action = required_param('action', PARAM_TEXT);
 $cmid = (int) required_param('cmid', PARAM_INT);
+
+[$course, $cm] = get_course_and_cm_from_cmid($cmid, 'assign');
+require_login($course, false, $cm);
+
 $wantfeedbackpage = (bool) optional_param('wantfeedback', false, PARAM_BOOL);
 $isteacher = (bool) optional_param('isteacher', false, PARAM_BOOL);
 $subuserid = (int) optional_param('submissionuserid', null, PARAM_INT);
 $sub = (int) optional_param('submissionid', null, PARAM_INT);
 $gradeid = (int) optional_param('gradeid', null, PARAM_INT);
+
+$PAGE->set_url('/local/onenote/onenote_actions.php');
 
 $onenoteapi = base::getinstance();
 $url = $onenoteapi->get_page($cmid, $wantfeedbackpage, $isteacher, $subuserid, $sub, $gradeid);
