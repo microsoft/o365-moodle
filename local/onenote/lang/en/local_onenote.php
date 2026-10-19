@@ -37,6 +37,7 @@ $string['erroronenoteapibadcall_message'] = 'Error in API call: {$a}';
 $string['errornosection'] = 'Could not get or create a section in your OneNote Notebook';
 $string['errornopostdata'] = 'Could not create page data to send to OneNote.';
 $string['errorsubmissioninteachercontext'] = 'Attempted to create a submission from teacher grading context.';
+$string['errorinvalidreference'] = 'The requested submission or grade does not belong to this assignment and user.';
 $string['errorfeedbackinstudentcontext'] = 'Attempted to create feedback in student submission context.';
 
 $string['privacy:metadata:local_onenote'] = 'Microsoft OneNote Local Plugin';
