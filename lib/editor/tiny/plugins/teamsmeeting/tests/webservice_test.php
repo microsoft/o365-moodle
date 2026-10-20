@@ -274,5 +274,8 @@ final class webservice_test extends externallib_advanced_testcase {
         $this->assertStringContainsString('viewexisting=1', $result['url']);
         $this->assertStringContainsString(urlencode($meetingurl), $result['url']);
         $this->assertStringContainsString('session=', $result['url']);
+        // The new-window preference defaults to off and is forwarded to result.php.
+        $this->assertStringContainsString('newwindow=0', $result['url']);
+        $this->assertStringContainsString('newwindow=1', get_meeting_details::execute($meetingurl, true)['url']);
     }
 }

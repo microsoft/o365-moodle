@@ -51,6 +51,7 @@ class get_meeting_details extends external_api {
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'url' => new external_value(PARAM_URL, 'Link to the Teams meeting', VALUE_REQUIRED),
+            'newwindow' => new external_value(PARAM_BOOL, 'Whether the link opens in a new window', VALUE_DEFAULT, false),
         ]);
     }
 
@@ -58,12 +59,13 @@ class get_meeting_details extends external_api {
      * Get meeting details from database by url.
      *
      * @param string $url
+     * @param bool $newwindow Whether the selected link currently opens in a new window.
      * @return array
      * @throws moodle_exception
      * @throws required_capability_exception
      */
-    public static function execute(string $url): array {
-        $params = self::validate_parameters(self::execute_parameters(), ['url' => $url]);
+    public static function execute(string $url, bool $newwindow = false): array {
+        $params = self::validate_parameters(self::execute_parameters(), ['url' => $url, 'newwindow' => $newwindow]);
 
         self::validate_context(context_system::instance());
 
@@ -71,7 +73,9 @@ class get_meeting_details extends external_api {
         if (!$record) {
             return [
                 'status' => false,
-                'url' => (new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/error.php'))->out(),
+                // Unescaped: the caller loads this straight into an iframe src,
+                // so ampersands must stay raw, not be HTML-escaped to &amp;.
+                'url' => (new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/error.php'))->out(false),
             ];
         }
 
@@ -95,11 +99,16 @@ class get_meeting_details extends external_api {
             'link' => $record->link,
             'options' => $record->options,
             'viewexisting' => 1,
+            'newwindow' => $params['newwindow'] ? 1 : 0,
             'session' => token::generate(),
         ]);
         return [
             'status' => true,
-            'url' => $resulturl->out(),
+            // Unescaped: the caller loads this straight into an iframe src, so
+            // the query separators must stay as raw '&', not HTML-escaped '&amp;'
+            // (otherwise 'session' arrives as 'amp;session' and the token check
+            // in result.php fails with 'invalidtoken').
+            'url' => $resulturl->out(false),
         ];
     }
 
