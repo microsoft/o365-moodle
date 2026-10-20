@@ -266,6 +266,12 @@ if (!empty($meetinglink)) {
     $content .= html_writer::div($addbutton, '', ['style' => 'text-align: center;']);
 }
 
+// The page carries no theme stylesheet, so give every control a clearly visible keyboard focus ring.
+echo html_writer::tag(
+    'style',
+    'a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid #0b57d0; outline-offset: 2px; }'
+);
+
 // Build container div.
 $divattributes = [
     'style' => 'display: flex; flex-direction: column; margin-top: 2rem; padding: 2rem; font-family: sans-serif;',
