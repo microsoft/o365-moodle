@@ -163,7 +163,7 @@ class observers {
 
         $task = new \local_o365\feature\calsync\task\synccalendarevent();
         $task->set_custom_data(['eventid' => $event->objectid, 'action' => 'create']);
-        \core\task\manager::queue_adhoc_task($task);
+        \core\task\manager::queue_adhoc_task($task, true);
         return true;
     }
 
@@ -180,7 +180,7 @@ class observers {
 
         $task = new \local_o365\feature\calsync\task\synccalendarevent();
         $task->set_custom_data(['eventid' => $event->objectid, 'action' => 'update']);
-        \core\task\manager::queue_adhoc_task($task);
+        \core\task\manager::queue_adhoc_task($task, true);
         return true;
     }
 
@@ -208,7 +208,7 @@ class observers {
                 ? ['courseid' => (int)$snapshot->courseid, 'groupid' => (int)$snapshot->groupid]
                 : null,
         ]);
-        \core\task\manager::queue_adhoc_task($task);
+        \core\task\manager::queue_adhoc_task($task, true);
         return true;
     }
 
@@ -243,7 +243,7 @@ class observers {
             'modulename' => $modulename,
             'instanceid' => $instanceid,
         ]);
-        \core\task\manager::queue_adhoc_task($task);
+        \core\task\manager::queue_adhoc_task($task, true);
 
         return true;
     }
@@ -293,7 +293,7 @@ class observers {
             'courseid' => $courseid,
             'userid' => $userid,
         ]);
-        \core\task\manager::queue_adhoc_task($task);
+        \core\task\manager::queue_adhoc_task($task, true);
 
         return true;
     }
@@ -411,7 +411,7 @@ class observers {
             'event' => $oldevent,
             'newextensionduedate' => $newextensionduedate,
         ]);
-        \core\task\manager::queue_adhoc_task($task);
+        \core\task\manager::queue_adhoc_task($task, true);
 
         return true;
     }
