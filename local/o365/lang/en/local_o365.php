@@ -32,6 +32,7 @@ defined('MOODLE_INTERNAL') || die();
 $string['pluginname'] = 'Microsoft 365 Integration';
 
 // Settings - tabs.
+$string['settings_pageheading'] = '{$a} configuration';
 $string['settings_header_setup'] = 'Setup';
 $string['settings_header_syncsettings'] = 'Sync Settings';
 $string['settings_header_usersync'] = 'User Sync';
@@ -132,8 +133,6 @@ $string['settings_detectperms_valid'] = 'Permissions have been set up.';
 $string['settings_detectperms_invalid'] = 'Check permissions in Microsoft Entra ID';
 
 // Settings in "User sync" section of the "Sync settings" tab.
-$string['settings_options_usersync'] = 'User Sync';
-$string['settings_options_usersync_desc'] = 'The following settings control user synchronization between Microsoft 365 and Moodle.';
 $string['settings_usersync_general'] = 'General user synchronization';
 $string['settings_usersync_suspension'] = 'Moodle account suspension';
 $string['settings_usersync_matching'] = 'User matching';
