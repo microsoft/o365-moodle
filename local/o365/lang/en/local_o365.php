@@ -576,12 +576,24 @@ $string['acp_teamconnections_table_connect_to_different_team'] = 'Connect to a d
 $string['acp_teamconnections_table_cannot_create_team_from_group'] = 'Cannot create Team from group - no owner';
 $string['acp_teamconnections_table_link_team'] = 'Link to Team "{$a}"';
 $string['acp_teamconnections_table_missing_team'] = 'The course is connected to a non-existing team. This will be cleaned up on the next course sync scheduled task run.';
+$string['acp_teamconnections_table_resync'] = 'Resync';
 $string['acp_teamconnections_table_update'] = 'Update';
 $string['acp_teamconnections_team_already_connected'] = 'The course is already connected to a Team.';
 $string['acp_teamconnections_team_created'] = 'Team was created successfully for the course.';
 $string['acp_teamconnections_team_exists_but_not_connected'] = 'The course is configured to be connected to a Group only, however a Team connected to the Group exists.';
 $string['acp_teamconnections_teams_cache_updated'] = 'Teams cache updated successfully.';
 $string['acp_teamconnections_no_owner'] = 'Add owner to connect to Teams.';
+$string['acp_teamconnections_resync'] = 'Resync Team owners / members';
+$string['acp_teamconnections_resync_title'] = 'Resync Team owners / members for course {$a}';
+$string['acp_teamconnections_resync_desc'] = 'This compares the course\'s enrolled users against the connected Microsoft 365 group/Team\'s owners and members, and adds anyone who is missing. Choose whether users who are in the Team but not enrolled in the Moodle course should also be removed.';
+$string['acp_teamconnections_resync_keep'] = 'Resync (keep additional Team members)';
+$string['acp_teamconnections_resync_keep_desc'] = 'Users enrolled in the Moodle course who are missing from the Team will be added. Existing Team owners / members who are not enrolled in the Moodle course will not be changed.';
+$string['acp_teamconnections_resync_remove'] = 'Resync and remove additional Team members';
+$string['acp_teamconnections_resync_remove_desc'] = 'Warning: any Team owner or member who is not enrolled in the Moodle course will be removed from the Team, even if they were added directly in Microsoft Teams.';
+$string['acp_teamconnections_resync_completed'] = 'Team owners / members have been resynced.';
+$string['acp_teamconnections_resync_failed'] = 'Could not resync Team owners / members. See the output above for details.';
+$string['acp_teamconnections_last_resync'] = 'Last resynced: {$a}';
+$string['acp_teamconnections_never_resynced'] = 'Never resynced';
 
 // Settings in the "User matching" feature of the "Advanced" tab.
 $string['acp_usermatch'] = 'User Matching';
