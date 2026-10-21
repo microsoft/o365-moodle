@@ -2192,9 +2192,16 @@ class main {
      *
      * @param int $courseid The ID of the course.
      * @param string $groupobjectid The object ID of the Microsoft 365 group.
+     * @param bool $removeextra Whether to remove owners/members present in the Microsoft 365 group but not enrolled
+     *                          in the Moodle course. When false, existing owners/members are left untouched and only
+     *                          missing owners/members are added.
      * @return array|false
      */
-    public function process_course_team_user_sync_from_moodle_to_microsoft(int $courseid, string $groupobjectid = '') {
+    public function process_course_team_user_sync_from_moodle_to_microsoft(
+        int $courseid,
+        string $groupobjectid = '',
+        bool $removeextra = true
+    ) {
         global $DB;
 
         $this->mtrace('Syncing Microsoft group owners / members for course #' . $courseid);
@@ -2285,36 +2292,42 @@ class main {
             }
         }
 
-        // Remove owners.
-        $this->mtrace('Owners to remove: ' . count($toremoveowners), 1);
-        foreach ($toremoveowners as $userobjectid) {
-            $this->mtrace('Removing ' . $userobjectid, 2);
+        if ($removeextra) {
+            // Remove owners.
+            $this->mtrace('Owners to remove: ' . count($toremoveowners), 1);
+            foreach ($toremoveowners as $userobjectid) {
+                $this->mtrace('Removing ' . $userobjectid, 2);
 
-            try {
-                $this->remove_owner_from_group($groupobjectid, $userobjectid);
-                $this->mtrace('Removed ownership.', 3);
-            } catch (moodle_exception $e) {
-                $this->mtrace('Error removing ownership. Details: ' . $e->getMessage(), 3);
+                try {
+                    $this->remove_owner_from_group($groupobjectid, $userobjectid);
+                    $this->mtrace('Removed ownership.', 3);
+                } catch (moodle_exception $e) {
+                    $this->mtrace('Error removing ownership. Details: ' . $e->getMessage(), 3);
+                }
             }
-        }
 
-        // Remove members.
-        foreach ($toremovemembers as $key => $userobjectid) {
-            if (in_array($userobjectid, $intendedteamowners)) {
-                unset($toremovemembers[$key]);
+            // Remove members.
+            foreach ($toremovemembers as $key => $userobjectid) {
+                if (in_array($userobjectid, $intendedteamowners)) {
+                    unset($toremovemembers[$key]);
+                }
             }
-        }
 
-        $this->mtrace('Members to remove: ' . count($toremovemembers), 1);
-        foreach ($toremovemembers as $userobjectid) {
-            $this->mtrace('Removing ' . $userobjectid, 2);
+            $this->mtrace('Members to remove: ' . count($toremovemembers), 1);
+            foreach ($toremovemembers as $userobjectid) {
+                $this->mtrace('Removing ' . $userobjectid, 2);
 
-            try {
-                $this->remove_member_from_group($groupobjectid, $userobjectid);
-                $this->mtrace('Removed membership.', 3);
-            } catch (moodle_exception $e) {
-                $this->mtrace('Error removing membership. Details: ' . $e->getMessage(), 3);
+                try {
+                    $this->remove_member_from_group($groupobjectid, $userobjectid);
+                    $this->mtrace('Removed membership.', 3);
+                } catch (moodle_exception $e) {
+                    $this->mtrace('Error removing membership. Details: ' . $e->getMessage(), 3);
+                }
             }
+        } else {
+            $this->mtrace('Skipping removal of owners / members not enrolled in the Moodle course.', 1);
+            $toremoveowners = [];
+            $toremovemembers = [];
         }
 
         // Add owners and members in bulk.
