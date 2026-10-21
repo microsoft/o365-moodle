@@ -199,10 +199,6 @@ if ($hassiteconfig) {
             local_o365_get_settings_nav_html('local_o365_usersync')
         ));
 
-        $label = new lang_string('settings_options_usersync', 'local_o365');
-        $desc = new lang_string('settings_options_usersync_desc', 'local_o365');
-        $usersyncsettings->add(new admin_setting_heading('local_o365_options_usersync', $label, $desc));
-
         // User sync options.
         $label = new lang_string('settings_usersync', 'local_o365');
         $scheduledtasks = new url('/admin/tool/task/scheduledtasks.php');
