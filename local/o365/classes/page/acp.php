@@ -1623,7 +1623,11 @@ var local_o365_coursesync_all_set_feature = function(state) {
         }
 
         $teamsoptions = \local_o365\feature\coursesync\utils::get_current_team_option($groupobject->objectid);
-        $connectedteamrecordid = $teamsoptions ? array_key_first($teamsoptions) : 0;
+        if (!$teamsoptions) {
+            // Not connected to a Team: label the empty selection so that "0" is not displayed.
+            $teamsoptions = [0 => get_string('acp_teamconnections_not_connected', 'local_o365')];
+        }
+        $connectedteamrecordid = array_key_first($teamsoptions);
 
         $urlparams = ['mode' => 'teamconnections_update', 'course' => $courseid];
         $updateconnectionurl = new url('/local/o365/acp.php', $urlparams);
