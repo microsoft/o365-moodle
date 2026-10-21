@@ -165,9 +165,11 @@ class acp extends base {
      * @param string $subtitle The page-specific subtitle to print below the tab navigation.
      */
     protected function print_settings_page_header(string $section, string $subtitle): void {
-        global $OUTPUT, $PAGE;
+        global $OUTPUT, $PAGE, $SITE;
 
         $PAGE->set_pagelayout('admin');
+        // The set_title() override leaves the page heading empty; use the site name, as the admin settings pages do.
+        $PAGE->set_heading(format_string($SITE->fullname));
         $PAGE->set_primary_active_tab('siteadminnode');
         $PAGE->set_secondary_active_tab('modules');
 
