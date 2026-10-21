@@ -625,6 +625,8 @@ $string['acp_maintenance_debugdata'] = 'Generate debug data package';
 $string['acp_maintenance_debugdata_desc'] = 'This will generate a package containing various pieces of information about your Moodle and Microsoft 365 environment to assist developers in solving any issues you may have. If requested by a developer, run this tool and send the resulting file download. Note: Although this package does not contain sensitive token data, we ask that you do not post this file publicly or send it to an untrusted party.';
 $string['acp_maintenance_cleandeltatoken'] = 'Cleanup User Sync Delta Tokens';
 $string['acp_maintenance_cleandeltatoken_desc'] = 'If user synchronisation is not fully working after updating it user sync settings, it may be caused by an old delta sync token. Cleaning up the token will remove force a complete re-sync the next time when the user sync is run.';
+$string['acp_maintenance_cleanapptokens'] = 'Cleanup Application Tokens';
+$string['acp_maintenance_cleanapptokens_desc'] = 'Removes the stored application tokens, which the plugin uses for calls to Microsoft APIs that do not run as a user. New application tokens are requested automatically when they are next needed, and the results of the last "Verify setup" check on the Setup tab are cleared. If calls made with application permissions fail with authentication errors, for example after the permissions of the Microsoft Entra ID application or its credentials have changed, cleaning up the tokens can help. Tokens of users are not affected.';
 
 // Settings in the "Resync users in Microsoft 365 groups for courses" feature in the "Maintenance Tools" feature of the
 // "Advanced" tab.
@@ -646,6 +648,8 @@ $string['acp_maintenance_recreatedeletedgroups_all_groups_exist'] = 'All groups 
 
 // Settings in the "Cleanup User Sync Delta Tokens" feature in the "Maintenance Tools" feature of the "Advanced" tab.
 $string['acp_maintenance_cleandeltatoken_completed'] = 'User sync delta token and skip delta token were cleaned up.';
+$string['acp_maintenance_cleanapptokens_confirm'] = 'Are you sure you want to clean up the application tokens? {$a} application token(s) are currently stored.';
+$string['acp_maintenance_cleanapptokens_completed'] = 'Application tokens and the last "Verify setup" results were cleaned up.';
 
 // Settings "Advanced settings" section of the "Advanced" tab.
 $string['settings_course_reset_teams'] = 'Course reset Team/group actions';
