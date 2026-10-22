@@ -215,4 +215,89 @@ final class unified_test extends advanced_testcase {
         $this->expectException(moodle_exception::class);
         $unified->get_groups_batch([$groupid]);
     }
+
+    /**
+     * Create a unified API client whose HTTP client answers every request with the given response.
+     *
+     * @param string $response The response body.
+     * @param int $httpcode The HTTP status code.
+     * @return unified
+     */
+    protected function get_unified_with_response(string $response, int $httpcode): unified {
+        $token = self::createMock(token::class);
+        $token->method('is_expired')->willReturn(false);
+        $token->method('get_token')->willReturn('token');
+
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response($response);
+        $httpclient->info = ['http_code' => $httpcode];
+
+        return new unified($token, $httpclient);
+    }
+
+    /**
+     * An event that is deleted reports success.
+     *
+     * @return void
+     * @covers ::delete_event
+     */
+    public function test_delete_event_success(): void {
+        $unified = $this->get_unified_with_response('', 204);
+
+        $this->assertTrue($unified->delete_event('eventid', 'user@example.com'));
+        $this->assertTrue($unified->delete_event('eventid', 'groupid', 'group'));
+    }
+
+    /**
+     * An event that isn't there any more reports that nothing was deleted, without an error.
+     *
+     * @return void
+     * @covers ::delete_event
+     */
+    public function test_delete_event_not_found(): void {
+        $response = json_encode(['error' => ['code' => 'ErrorItemNotFound', 'message' => 'The specified object was not found.']]);
+        $unified = $this->get_unified_with_response($response, 404);
+
+        $this->assertFalse($unified->delete_event('eventid', 'user@example.com'));
+    }
+
+    /**
+     * A request that Microsoft refuses, for example a group calendar event deleted without the owner's own token,
+     * is reported instead of looking like a successful delete.
+     *
+     * @return void
+     * @covers ::delete_event
+     */
+    public function test_delete_event_refused_throws(): void {
+        $response = json_encode(['error' => ['code' => 'ErrorAccessDenied', 'message' => 'Access is denied.']]);
+        $unified = $this->get_unified_with_response($response, 403);
+
+        $this->expectException(moodle_exception::class);
+        $unified->delete_event('eventid', 'groupid', 'group');
+    }
+
+    /**
+     * A refused request is reported even when Microsoft's response has no error details.
+     *
+     * @return void
+     * @covers ::delete_event
+     */
+    public function test_delete_event_refused_without_details_throws(): void {
+        $unified = $this->get_unified_with_response('', 500);
+
+        $this->expectException(moodle_exception::class);
+        $unified->delete_event('eventid', 'user@example.com');
+    }
+
+    /**
+     * Nothing is requested for an empty event ID.
+     *
+     * @return void
+     * @covers ::delete_event
+     */
+    public function test_delete_event_without_id(): void {
+        $unified = $this->get_unified_with_response('', 500);
+
+        $this->assertTrue($unified->delete_event('', 'user@example.com'));
+    }
 }
