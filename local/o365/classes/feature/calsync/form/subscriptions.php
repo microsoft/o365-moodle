@@ -252,7 +252,10 @@ class subscriptions extends \moodleform {
                         $eventdata = [
                             'objectid' => $currentcaldata[$caltype]['recid'],
                             'userid' => $USER->id,
-                            'other' => ['caltype' => $caltype],
+                            'other' => [
+                                'caltype' => $caltype,
+                                'calendarchanged' => $currentcaldata[$caltype]['o365calid'] !== $syncwith,
+                            ],
                         ];
                     }
 
@@ -333,7 +336,11 @@ class subscriptions extends \moodleform {
                     $eventdata = [
                         'objectid' => $USER->id,
                         'userid' => $USER->id,
-                        'other' => ['caltype' => 'course', 'caltypeid' => $courseid],
+                        'other' => [
+                            'caltype' => 'course',
+                            'caltypeid' => $courseid,
+                            'calendarchanged' => $existingcoursesubs[$courseid]->o365calid !== $syncwith,
+                        ],
                     ];
                     $event = \local_o365\event\calendar_subscribed::create($eventdata);
                     $event->trigger();

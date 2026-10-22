@@ -162,7 +162,7 @@ class observers {
             'eventid' => $event->objectid,
             'action' => 'delete',
             'snapshot' => $snapshot
-                ? ['courseid' => (int)$snapshot->courseid, 'groupid' => (int)$snapshot->groupid]
+                ? ['courseid' => (int)$snapshot->courseid, 'groupid' => (int)$snapshot->groupid, 'userid' => (int)$snapshot->userid]
                 : null,
         ]);
         \core\task\manager::queue_adhoc_task($task);
@@ -273,6 +273,7 @@ class observers {
             'caltypeid' => ((isset($eventdata['other']['caltypeid'])) ? $eventdata['other']['caltypeid'] : 0),
             'userid' => $eventdata['userid'],
             'timecreated' => time(),
+            'calendarchanged' => !empty($eventdata['other']['calendarchanged']),
         ]);
         \core\task\manager::queue_adhoc_task($calsubscribe);
         return true;
