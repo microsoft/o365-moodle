@@ -36,7 +36,7 @@ use local_o365\utils;
  * Custom data fields:
  *   - int      eventid  The ID of the Moodle calendar event.
  *   - string   action   One of 'create', 'update', or 'delete'.
- *   - stdClass snapshot (delete only) The 'courseid' and 'groupid' of the event record, taken before deletion.
+ *   - stdClass snapshot (delete only) The 'courseid', 'groupid' and 'userid' of the event record, taken before deletion.
  */
 class synccalendarevent extends \core\task\adhoc_task {
     /**
