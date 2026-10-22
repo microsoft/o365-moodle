@@ -714,6 +714,21 @@ if ($hassiteconfig) {
             PARAM_TEXT
         ));
 
+        // Course events in Outlook: shared event with attendees, or one event per user.
+        $label = new lang_string('settings_calsync_courseeventmode', 'local_o365');
+        $desc = new lang_string('settings_calsync_courseeventmode_details', 'local_o365');
+        $options = [
+            'shared' => new lang_string('settings_calsync_courseeventmode_shared', 'local_o365'),
+            'individual' => new lang_string('settings_calsync_courseeventmode_individual', 'local_o365'),
+        ];
+        $advancedsettings->add(new admin_setting_configselect(
+            'local_o365/calsync_courseeventmode',
+            $label,
+            $desc,
+            'shared',
+            $options
+        ));
+
         $label = new lang_string('settings_debugmode', 'local_o365');
         $logurl = new url('/report/log/index.php', ['chooselog' => '1', 'modid' => 'site_errors']);
         $desc = new lang_string('settings_debugmode_details', 'local_o365', $logurl->out());
