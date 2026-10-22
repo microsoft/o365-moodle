@@ -661,6 +661,15 @@ $string['settings_reset_group_name_prefix'] = 'Reset group name prefix';
 $string['settings_reset_group_name_prefix_details'] = 'When resetting a course that is connected to a group, the name of the existing group will be prefixed with this.';
 $string['settings_o365china'] = 'Microsoft 365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Microsoft 365 for China.';
+$string['settings_calsync_courseeventmode'] = 'Outlook events for course calendar events';
+$string['settings_calsync_courseeventmode_details'] = 'Controls how a Moodle course calendar event is created in Outlook for users who have subscribed to the course calendar.
+<ul>
+<li><strong>One shared event with course users as attendees:</strong> a single event is created in the Outlook calendar of the user who created the Moodle event (or in the course\'s Microsoft 365 group calendar, if the course is linked to a group), and the course users are added to it as attendees.</li>
+<li><strong>One individual event per user:</strong> a separate event is created directly in each subscribed user\'s own Outlook calendar. There is no shared event, no attendee list, and nothing is added to the Microsoft 365 group calendar.</li>
+</ul>
+Changing this setting only affects events synced afterwards; events already in Outlook are not converted.';
+$string['settings_calsync_courseeventmode_shared'] = 'One shared event with course users as attendees';
+$string['settings_calsync_courseeventmode_individual'] = 'One individual event per user';
 $string['settings_debugmode'] = 'Record debug messages';
 $string['settings_debugmode_details'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems. <a href="{$a}">View recorded log messages.</a>';
 $string['settings_switchauthminupnsplit0'] = 'Minimum inexact username length to switch to Microsoft 365';

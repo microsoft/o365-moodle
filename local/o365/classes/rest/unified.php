@@ -1991,7 +1991,9 @@ class unified extends o365api {
      * @param string $outlookeventid The event ID in o365 outlook.
      * @param string $owner user's userPrincipalName or group object id
      * @param string $scope 'user' or 'group'
-     * @return bool Success/Failure.
+     * @return bool True if the event was deleted, false if it wasn't found (there's nothing left to delete).
+     * @throws moodle_exception If Microsoft refuses the request, for example when a group calendar event is
+     *                          deleted with a token that isn't a user's own.
      */
     public function delete_event(string $outlookeventid, string $owner, string $scope = 'user'): bool {
         if (!empty($outlookeventid)) {
@@ -1999,10 +2001,66 @@ class unified extends o365api {
                 ? '/groups/' . $owner . '/events/' . $outlookeventid
                 : '/users/' . $owner . '/events/' . $outlookeventid;
 
-            $this->apicall('delete', $path);
+            $response = $this->apicall('delete', $path);
+
+            $httpcode = $this->httpclient->info['http_code'] ?? 0;
+            if ($httpcode == 404) {
+                return false;
+            }
+
+            if ($httpcode >= 400) {
+                // Throws with Microsoft's error message if the response has one.
+                $this->process_apicall_response($response, ['id' => null]);
+                throw new moodle_exception('erroro365apibadcall', 'local_o365');
+            }
         }
 
         return true;
+    }
+
+    /**
+     * Get the iCalUId and attendees of an event.
+     *
+     * @param string $outlookeventid The event ID in o365 outlook.
+     * @param string $owner user's userPrincipalName or group object id
+     * @param string $scope 'user' or 'group'
+     * @return array|null The event's 'iCalUId' and 'attendees', or null if error.
+     * @throws moodle_exception
+     */
+    public function get_event_attendee_info(string $outlookeventid, string $owner, string $scope = 'user'): ?array {
+        $path = $scope === 'group'
+            ? '/groups/' . $owner . '/events/' . $outlookeventid
+            : '/users/' . $owner . '/events/' . $outlookeventid;
+
+        $response = $this->apicall('get', $path . '?$select=iCalUId,attendees');
+        return $this->process_apicall_response($response, ['iCalUId' => null]);
+    }
+
+    /**
+     * Delete a user's own copy of a meeting, identified by the meeting's iCalUId, from their calendar.
+     *
+     * Used after a user is removed as an attendee of a shared event: Outlook leaves them a "Canceled" copy of
+     * the meeting, which this removes.
+     *
+     * @param string $upn user's userPrincipalName
+     * @param string $icaluid The meeting's iCalUId.
+     * @return int The number of copies deleted.
+     * @throws moodle_exception
+     */
+    public function delete_event_copies_by_icaluid(string $upn, string $icaluid): int {
+        $filter = rawurlencode('iCalUId eq \'' . str_replace('\'', '\'\'', $icaluid) . '\'');
+        $response = $this->apicall('get', '/users/' . $upn . '/events?$select=id&$filter=' . $filter);
+        $result = $this->process_apicall_response($response, ['value' => null]);
+
+        $deleted = 0;
+        foreach ($result['value'] as $copy) {
+            if (!empty($copy['id'])) {
+                $this->delete_event($copy['id'], $upn);
+                $deleted++;
+            }
+        }
+
+        return $deleted;
     }
 
     /**
