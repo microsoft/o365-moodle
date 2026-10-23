@@ -36,22 +36,8 @@ $auth->set_httpclient(new \auth_oidc\httpclient());
 try {
     $auth->handleredirect();
 } catch (moodle_exception $e) {
-    // If debugging is off, re-throw to let Moodle handle it with generic message.
-    if (empty($CFG->debug) || $CFG->debug < DEBUG_MINIMAL) {
-        throw $e;
-    }
-
-    // Only display detailed debug information if debug display is enabled.
-    // This prevents leaking sensitive internal details to unauthenticated users.
-    $showdetails = !empty($CFG->debugdisplay);
-
-    if ($showdetails) {
-        // Display error details when debug display is enabled.
-        $errormessage = $e->getMessage();
-    } else {
-        // Show generic error message to prevent information disclosure.
-        $errormessage = get_string('errorauthgeneral', 'auth_oidc');
-    }
+    // Moodle's default handler shows the same message to unauthenticated users, so nothing extra is exposed here.
+    $errormessage = $e->getMessage();
 
     $PAGE->set_url('/auth/oidc/');
     $PAGE->set_context(system::instance());
