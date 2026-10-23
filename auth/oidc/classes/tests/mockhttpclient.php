@@ -37,6 +37,22 @@ class mockhttpclient extends \auth_oidc\httpclient {
     /** @var int The index of the current response. */
     protected $curresponse = 0;
 
+    /** @var array The POST requests made, each as ['url' => string, 'params' => array|string]. */
+    public $postrequests = [];
+
+    /**
+     * Record the POST request, then return the set response.
+     *
+     * @param string $url The request URL.
+     * @param array|string $params The POST parameters, before they are encoded.
+     * @param array $options Additional curl options.
+     * @return string The set response.
+     */
+    public function post($url, $params = '', $options = []) {
+        $this->postrequests[] = ['url' => $url, 'params' => $params];
+        return parent::post($url, $params, $options);
+    }
+
     /**
      * Set a response to return.
      *
