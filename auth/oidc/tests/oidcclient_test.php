@@ -73,6 +73,54 @@ final class oidcclient_test extends \advanced_testcase {
     }
 
     /**
+     * Dataprovider for the prompt parameter of authorization requests.
+     *
+     * @return array Array of arrays of test parameters.
+     */
+    public static function dataprovider_prompt(): array {
+        return [
+            'default' => [[], false, false, null],
+            'force setting' => [['forceselectaccount' => 1], false, false, 'select_account'],
+            'select account requested' => [[], false, true, 'select_account'],
+            'promptlogin wins over force setting' => [['forceselectaccount' => 1], true, false, 'login'],
+            'silent mode wins over force setting' => [
+                ['forceselectaccount' => 1, 'silentloginmode' => 1], false, false, 'none',
+            ],
+        ];
+    }
+
+    /**
+     * Test the prompt parameter of authorization requests.
+     *
+     * @dataProvider dataprovider_prompt
+     * @covers \auth_oidc\oidcclient::getauthrequestparams
+     * @param array $config
+     * @param bool $promptlogin
+     * @param bool $selectaccount
+     * @param string|null $expected
+     */
+    public function test_getauthrequestparams_prompt(
+        array $config,
+        bool $promptlogin,
+        bool $selectaccount,
+        ?string $expected
+    ): void {
+        foreach ($config as $name => $value) {
+            set_config($name, $value, 'auth_oidc');
+        }
+        $client = new \auth_oidc\tests\mockoidcclient(new \auth_oidc\tests\mockhttpclient());
+        $client->setcreds('id', 'secret', 'http://example.com/redirect', 'resource', 'openid');
+
+        $params = $client->getauthrequestparams($promptlogin, [], [], $selectaccount);
+
+        if ($expected === null) {
+            $this->assertArrayNotHasKey('prompt', $params);
+        } else {
+            $this->assertEquals($expected, $params['prompt']);
+        }
+    }
+
+    /**
      * Dataprovider returning endpoints.
      *
      * @return array Array of arrays of test parameters.
