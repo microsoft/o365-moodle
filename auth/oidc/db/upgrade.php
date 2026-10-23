@@ -674,5 +674,25 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024100735.08, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2024100740.07) {
+        // Define field codeverifier to be added to auth_oidc_state.
+        $table = new xmldb_table('auth_oidc_state');
+        $field = new xmldb_field('codeverifier', XMLDB_TYPE_CHAR, '128', null, null, null, null, 'additionaldata');
+
+        // Conditionally launch add field codeverifier.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Keep the existing behaviour for providers that are not Microsoft ones; enable PKCE for Microsoft ones.
+        if (get_config('auth_oidc', 'usepkce') === false) {
+            $idptype = get_config('auth_oidc', 'idptype');
+            set_config('usepkce', $idptype == AUTH_OIDC_IDP_TYPE_OTHER ? 0 : 1, 'auth_oidc');
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2024100740.07, 'auth', 'oidc');
+    }
+
     return true;
 }

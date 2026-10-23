@@ -81,6 +81,88 @@ final class authcode_test extends advanced_testcase {
     }
 
     /**
+     * Data provider for test_handleauthresponse_forwards_stored_code_verifier.
+     *
+     * @return array
+     */
+    public static function codeverifier_provider(): array {
+        return [
+            'verifier stored with the state' => ['storedverifier', 'storedverifier'],
+            'PKCE disabled (empty verifier)' => ['', null],
+            'state created before the upgrade (null verifier)' => [null, null],
+        ];
+    }
+
+    /**
+     * The code verifier stored with the state must be the one sent in the token request, and a state without one must
+     * be exchanged without PKCE.
+     *
+     * @param string|null $storedverifier The value of auth_oidc_state.codeverifier.
+     * @param string|null $expectedverifier The code_verifier expected in the token request, or null if it must be absent.
+     * @return void
+     * @dataProvider codeverifier_provider
+     * @covers ::handleauthresponse
+     */
+    public function test_handleauthresponse_forwards_stored_code_verifier(
+        ?string $storedverifier,
+        ?string $expectedverifier
+    ): void {
+        global $CFG, $DB;
+
+        // The CSRF cookie check, which sets a cookie and so cannot run after PHPUnit has started output, is only done over
+        // HTTPS. It is not what is tested here, so make sure it is skipped whatever the test environment's wwwroot is.
+        $CFG->wwwroot = 'http://www.example.com/moodle';
+        $CFG->sslproxy = false;
+        unset($_COOKIE['auth_oidc_csrf']);
+
+        set_config('clientid', 'clientid', 'auth_oidc');
+        set_config('clientsecret', 'clientsecret', 'auth_oidc');
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+        set_config('clientauthmethod', AUTH_OIDC_AUTH_METHOD_SECRET, 'auth_oidc');
+        set_config('authendpoint', 'http://example.com/auth', 'auth_oidc');
+        set_config('tokenendpoint', 'http://example.com/token', 'auth_oidc');
+
+        $DB->insert_record('auth_oidc_state', (object) [
+            'sesskey' => sesskey(),
+            'state' => 'teststate',
+            'nonce' => 'Ntestnonce',
+            'timecreated' => time(),
+            'additionaldata' => serialize([]),
+            'codeverifier' => $storedverifier,
+        ]);
+
+        // An ID token without a subject makes the login stop right after the token request, which is all that is checked here.
+        $encode = static fn(array $data): string => rtrim(strtr(base64_encode(json_encode($data)), '+/', '-_'), '=');
+        $idtoken = $encode(['alg' => 'none']) . '.' . $encode(['aud' => 'clientid']) . '.';
+        $httpclient = new \auth_oidc\tests\mockhttpclient();
+        $httpclient->set_response(json_encode(['id_token' => $idtoken, 'access_token' => 'accesstoken']));
+
+        $loginflow = new authcode();
+        $loginflow->set_httpclient($httpclient);
+        try {
+            phpunit_util::call_internal_method(
+                $loginflow,
+                'handleauthresponse',
+                [['code' => 'thecode', 'state' => 'teststate']],
+                authcode::class
+            );
+            $this->fail('Expected the login to stop at the ID token without a subject.');
+        } catch (\moodle_exception $e) {
+            $this->assertEquals('errorauthinvalididtoken', $e->errorcode);
+        }
+
+        $this->assertCount(1, $httpclient->postrequests);
+        $tokenrequest = $httpclient->postrequests[0]['params'];
+        $this->assertEquals('thecode', $tokenrequest['code']);
+        if ($expectedverifier === null) {
+            $this->assertArrayNotHasKey('code_verifier', $tokenrequest);
+        } else {
+            $this->assertEquals($expectedverifier, $tokenrequest['code_verifier']);
+        }
+        $this->assertFalse($DB->record_exists('auth_oidc_state', ['state' => 'teststate']));
+    }
+
+    /**
      * Creates a Moodle user manually matched to the given (as-stored) Entra UPN, drives handlelogin() with
      * an ID token carrying the given (as-received) UPN claim, and asserts the login completed and bound
      * the auth_oidc_token to the matched user.
