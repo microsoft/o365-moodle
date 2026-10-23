@@ -540,6 +540,7 @@ class authcode extends base {
         }
 
         $orignonce = $staterec->nonce;
+        $codeverifier = $staterec->codeverifier ?? '';
         $additionaldata = [];
         if (!empty($staterec->additionaldata)) {
             $additionaldata = @unserialize($staterec->additionaldata);
@@ -552,7 +553,7 @@ class authcode extends base {
 
         // Get token from auth code.
         $client = $this->get_oidcclient();
-        $tokenparams = $client->tokenrequest($authparams['code']);
+        $tokenparams = $client->tokenrequest($authparams['code'], $codeverifier);
         if (!isset($tokenparams['id_token'])) {
             throw new moodle_exception('errorauthnoidtoken', 'auth_oidc');
         }
