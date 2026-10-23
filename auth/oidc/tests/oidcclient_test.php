@@ -129,4 +129,90 @@ final class oidcclient_test extends \advanced_testcase {
             $this->assertEquals($uri, $client->get_endpoint($type));
         }
     }
+
+    /**
+     * Test that the PKCE S256 code challenge matches the example in RFC 7636 appendix B.
+     *
+     * @covers \auth_oidc\oidcclient::get_code_challenge
+     */
+    public function test_get_code_challenge(): void {
+        $this->assertEquals(
+            'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+            oidcclient::get_code_challenge('dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk')
+        );
+    }
+
+    /**
+     * Test that generated PKCE code verifiers are valid and unique.
+     *
+     * @covers \auth_oidc\oidcclient::generate_code_verifier
+     */
+    public function test_generate_code_verifier(): void {
+        $verifier = oidcclient::generate_code_verifier();
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9_-]{43,128}$/', $verifier);
+        $this->assertNotEquals($verifier, oidcclient::generate_code_verifier());
+    }
+
+    /**
+     * Test that, with PKCE enabled, the authorization request carries the S256 challenge of the verifier stored with its state.
+     *
+     * @covers \auth_oidc\oidcclient::getauthrequestparams
+     * @covers \auth_oidc\oidcclient::getnewstate
+     */
+    public function test_authrequest_pkce_challenge_matches_stored_verifier(): void {
+        global $DB;
+
+        set_config('usepkce', 1, 'auth_oidc');
+        $client = new \auth_oidc\tests\mockoidcclient(new \auth_oidc\tests\mockhttpclient());
+        $client->setcreds('id', 'secret', 'http://example.com/redirect', 'resource', 'openid');
+
+        $params = $client->getauthrequestparams();
+
+        $this->assertEquals('S256', $params['code_challenge_method']);
+        $staterec = $DB->get_record('auth_oidc_state', ['state' => $params['state']], '*', MUST_EXIST);
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9_-]{43,128}$/', $staterec->codeverifier);
+        $this->assertEquals(oidcclient::get_code_challenge($staterec->codeverifier), $params['code_challenge']);
+        $this->assertArrayNotHasKey('code_verifier', $params);
+    }
+
+    /**
+     * Test that, with PKCE disabled, the authorization request has no challenge and no verifier is stored.
+     *
+     * @covers \auth_oidc\oidcclient::getauthrequestparams
+     */
+    public function test_authrequest_without_pkce_omits_challenge(): void {
+        global $DB;
+
+        set_config('usepkce', 0, 'auth_oidc');
+        $client = new \auth_oidc\tests\mockoidcclient(new \auth_oidc\tests\mockhttpclient());
+        $client->setcreds('id', 'secret', 'http://example.com/redirect', 'resource', 'openid');
+
+        $params = $client->getauthrequestparams();
+
+        $this->assertArrayNotHasKey('code_challenge', $params);
+        $this->assertArrayNotHasKey('code_challenge_method', $params);
+        $staterec = $DB->get_record('auth_oidc_state', ['state' => $params['state']], '*', MUST_EXIST);
+        $this->assertEmpty($staterec->codeverifier);
+    }
+
+    /**
+     * Test that the token request sends the code verifier when there is one, and omits it when there is not.
+     *
+     * @covers \auth_oidc\oidcclient::tokenrequest
+     */
+    public function test_tokenrequest_sends_code_verifier_only_when_present(): void {
+        $httpclient = new \auth_oidc\tests\mockhttpclient();
+        $httpclient->set_response(json_encode(['id_token' => 'idtoken', 'access_token' => 'accesstoken']));
+        $client = new \auth_oidc\tests\mockoidcclient($httpclient);
+        $client->setcreds('id', 'secret', 'http://example.com/redirect', 'resource', 'openid');
+        $client->setendpoints(['auth' => 'http://example.com/auth', 'token' => 'http://example.com/token']);
+
+        $client->tokenrequest('thecode', 'theverifier');
+        $client->tokenrequest('thecode');
+
+        $this->assertCount(2, $httpclient->postrequests);
+        $this->assertEquals('theverifier', $httpclient->postrequests[0]['params']['code_verifier']);
+        $this->assertEquals('thecode', $httpclient->postrequests[0]['params']['code']);
+        $this->assertArrayNotHasKey('code_verifier', $httpclient->postrequests[1]['params']);
+    }
 }
