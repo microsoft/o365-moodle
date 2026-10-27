@@ -63,7 +63,25 @@ class manualusermatch extends \moodleform {
         $mform->addElement('text', 'o365username', get_string('acp_userconnections_manualmatch_o365username', 'local_o365'));
         $mform->addElement('checkbox', 'uselogin', get_string('acp_userconnections_manualmatch_uselogin', 'local_o365'));
         $mform->setType('o365username', PARAM_TEXT);
+        $mform->addRule('o365username', get_string('required'), 'required', null, 'client');
 
         $this->add_action_buttons();
+    }
+
+    /**
+     * Form validation.
+     *
+     * @param array $data Submitted data.
+     * @param array $files Submitted files.
+     * @return array Validation errors indexed by element name.
+     */
+    public function validation($data, $files) {
+        $errors = parent::validation($data, $files);
+
+        if (trim($data['o365username']) === '') {
+            $errors['o365username'] = get_string('required');
+        }
+
+        return $errors;
     }
 }

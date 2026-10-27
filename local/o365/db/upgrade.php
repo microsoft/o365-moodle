@@ -1710,5 +1710,19 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026042000.04, 'local', 'o365');
     }
 
+    if ($oldversion < 2026042001.07) {
+        // Remove manual user matches saved with a blank Microsoft 365 username. They can never match a Microsoft 365 user
+        // and only block the Moodle user from being matched properly. The manual match form now rejects blank usernames.
+        $select = $DB->sql_isempty('local_o365_connections', 'entraidupn', false, false);
+        $deleted = $DB->count_records_select('local_o365_connections', $select);
+        if ($deleted) {
+            $DB->delete_records_select('local_o365_connections', $select);
+            mtrace('Removed ' . $deleted . ' user match record(s) with a blank Microsoft 365 username.');
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2026042001.07, 'local', 'o365');
+    }
+
     return true;
 }
