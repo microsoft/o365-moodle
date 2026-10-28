@@ -25,6 +25,7 @@
 namespace local_o365\feature\userconnections;
 
 use core\url;
+use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -42,6 +43,11 @@ class table extends \table_sql {
     protected $having = null;
 
     /**
+     * @var stdClass
+     */
+    protected stdClass $where;
+
+    /**
      * Constructor.
      *
      * @param int $uniqueid This is a unique string used as a key when storing table properties in the session.
@@ -49,7 +55,7 @@ class table extends \table_sql {
     public function __construct($uniqueid) {
         global $USER, $DB;
         parent::__construct($uniqueid);
-        $this->sql = new \stdClass();
+        $this->sql = new stdClass();
         $this->set_columns();
         $this->having = (object)['sql' => '', 'params' => []];
     }
