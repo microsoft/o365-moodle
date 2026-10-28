@@ -223,6 +223,13 @@ class authcode extends base {
             }
             // Handle guest account session termination.
             if (isguestuser()) {
+                // Keep the url the user was heading to, because terminate_current() discards it with the guest session.
+                if ($restoredwantsurl === null && !empty($SESSION->wantsurl)) {
+                    $guestwantsurl = ($SESSION->wantsurl instanceof url) ? $SESSION->wantsurl->out() : (string)$SESSION->wantsurl;
+                    if ($this->is_valid_local_url($guestwantsurl)) {
+                        $restoredwantsurl = $guestwantsurl;
+                    }
+                }
                 \core\session\manager::terminate_current();
             }
             // Re-assign because terminate_current() above replaces $SESSION with a new object.
