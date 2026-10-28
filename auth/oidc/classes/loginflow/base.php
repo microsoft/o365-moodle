@@ -100,6 +100,35 @@ class base {
     }
 
     /**
+     * Determine whether the user belongs to an additional tenant, whose fields can only be synced from the token.
+     *
+     * A user is treated as coming from the hosting tenant unless the token's tenant ID is missing or differs from the
+     * hosting tenant ID. The hosting tenant ID is only stored in local_o365 after the admin consent flow completes, so until
+     * then the tenant ID in the configured authorization endpoint is used instead. If neither is known, the user cannot be
+     * identified as coming from an additional tenant.
+     *
+     * @param jwt $token The user's access token.
+     * @return bool True if the user should only sync fields from the token.
+     */
+    protected function is_user_from_additional_tenant(jwt $token): bool {
+        $tokentenantid = $token->claim('tid');
+        if (empty($tokentenantid)) {
+            return true;
+        }
+
+        $hostingtenantid = get_config('local_o365', 'entratenantid');
+        if (empty($hostingtenantid)) {
+            $authendpoint = (string) get_config('auth_oidc', 'authendpoint');
+            $guidpattern = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+            if (preg_match('#^https://login\.microsoftonline\.com/(' . $guidpattern . ')/#i', $authendpoint, $matches)) {
+                $hostingtenantid = $matches[1];
+            }
+        }
+
+        return !empty($hostingtenantid) && strtolower($tokentenantid) !== strtolower($hostingtenantid);
+    }
+
+    /**
      * Read user information from external database and returns it as array().
      *
      * @param string $username username
@@ -124,20 +153,20 @@ class base {
         $fieldmappingfromtoken = true;
 
         if (auth_oidc_is_local_365_installed()) {
-            // Check if multi tenants is enabled. User from additional tenants can only sync fields from token.
-            $userfromadditionaltenant = false;
-            $hostingtenantid = get_config('local_o365', 'entratenantid');
             $token = jwt::instance_from_encoded($tokenrec->token);
-            if ($token->claim('tid') != $hostingtenantid) {
-                $userfromadditionaltenant = true;
-            }
+            $userfromadditionaltenant = $this->is_user_from_additional_tenant($token);
 
             if (!$userfromadditionaltenant) {
                 $userdatafetchedfromgraph = false;
                 if (\local_o365\feature\usersync\main::fieldmap_require_graph_api_call($eventtype)) {
                     // If local_o365 is installed, and connects to Microsoft Identity Platform (v2.0),
                     // or field mapping uses fields not covered by token, then call Graph API function to get user details.
-                    $apiclient = \local_o365\utils::get_api();
+                    try {
+                        $apiclient = \local_o365\utils::get_api();
+                    } catch (moodle_exception $e) {
+                        // No application token available (e.g. admin consent not completed), fall back to token data.
+                        $apiclient = null;
+                    }
                     if ($apiclient) {
                         $fieldmappingfromtoken = false;
                         $userdata = $apiclient->get_user($tokenrec->oidcuniqid);
@@ -232,8 +261,19 @@ class base {
                 }
 
                 // Call the function in local_o365 to map fields.
-                $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, $originaluser, $eventtype);
-                $userinfo = (array)$updateduser;
+                try {
+                    $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap(
+                        $userdata,
+                        $originaluser,
+                        $eventtype
+                    );
+                    $userinfo = (array)$updateduser;
+                    $fieldmappingfromtoken = false;
+                } catch (moodle_exception $e) {
+                    // Graph dependent mappings (manager, groups, teams, roles) failed, e.g. no application token is available.
+                    // Fall back to token based field mapping.
+                    $fieldmappingfromtoken = true;
+                }
             }
         }
 
