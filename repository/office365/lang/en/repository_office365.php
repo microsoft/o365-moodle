@@ -160,6 +160,7 @@ $string['errorwhilesharing'] = 'An error occurred while creating a sharable link
 
 $string['file'] = 'File';
 $string['filelinkingheader'] = 'File linking options';
+$string['filereferencewarning'] = 'No sharing changes are made to the OneDrive file. Only people who already have access to the file in OneDrive can open this link.';
 $string['groups'] = 'Groups (Courses)';
 $string['invalidfilereference'] = 'Invalid or malformed file reference';
 $string['myfiles'] = 'My OneDrive';
