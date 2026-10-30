@@ -126,6 +126,13 @@ $PAGE->set_pagelayout('standard');
 // text and URLs (and $preview is a large HTML blob) that should not end up in
 // the page URL, logs or debug output.
 $PAGE->set_url(new moodle_url('/lib/editor/atto/plugins/teamsmeeting/result.php'));
+// The page carries no theme stylesheet, so set one font for all text and controls (buttons and inputs do not
+// inherit the page font by default).
+echo html_writer::tag(
+    'style',
+    'body, a, button, input, label, span { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, ' .
+    '"Helvetica Neue", Arial, sans-serif; }'
+);
 echo '<div style="display: flex; flex-direction: column; margin-top: 2rem;padding: 2rem;">
     <svg class="meetingsuccess" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="width:100px; align-self: center;
         display: flex; margin-bottom: 1.5rem;">
