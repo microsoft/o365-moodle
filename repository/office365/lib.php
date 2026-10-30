@@ -206,6 +206,7 @@ class repository_office365 extends repository {
                 'dynload' => true,
                 'nologin' => true,
                 'nosearch' => true,
+                'filereferencewarning' => get_string('filereferencewarning', 'repository_office365'),
                 'path' => $breadcrumb,
                 'upload' => [
                     'label' => get_string('file', 'repository_office365'),
@@ -217,6 +218,7 @@ class repository_office365 extends repository {
             'dynload' => true,
             'nologin' => true,
             'nosearch' => true,
+            'filereferencewarning' => get_string('filereferencewarning', 'repository_office365'),
             'list' => $list,
             'path' => $breadcrumb,
         ];
