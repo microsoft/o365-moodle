@@ -36,6 +36,30 @@ use core\url;
  */
 class utils {
     /**
+     * Re-emit the session cookie with "SameSite=None; Secure" so it is kept inside a cross-site iframe.
+     *
+     * Since MDL-83526 core sets SameSite=Lax on the session cookie, which browsers reject when the page is
+     * embedded cross-site, e.g. in the Microsoft Teams tab. Must be called after the session id is final
+     * (after complete_user_login()) and before any output is sent.
+     */
+    public static function set_session_cookie_samesite_none(): void {
+        global $CFG;
+
+        if (!is_https() && empty($CFG->sslproxy)) {
+            return;
+        }
+
+        $cookieparams = session_get_cookie_params();
+        setcookie(session_name(), session_id(), [
+            'path' => $cookieparams['path'],
+            'domain' => $cookieparams['domain'],
+            'secure' => true,
+            'httponly' => $cookieparams['httponly'],
+            'samesite' => 'None',
+        ]);
+    }
+
+    /**
      * Process an OIDC JSON response.
      *
      * @param string $response The received JSON.

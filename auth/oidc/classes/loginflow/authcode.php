@@ -1138,6 +1138,13 @@ class authcode extends base {
                 redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, notification::NOTIFY_ERROR);
             }
         }
+
+        // When the login completes inside an iframe (e.g. the Microsoft Teams tab), the SameSite=Lax session cookie
+        // set by core (MDL-83526) is rejected by the browser, and the next request would be anonymous.
+        if (($_SERVER['HTTP_SEC_FETCH_DEST'] ?? '') === 'iframe') {
+            utils::set_session_cookie_samesite_none();
+        }
+
         return true;
     }
 }
