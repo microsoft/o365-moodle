@@ -218,6 +218,12 @@ class assign_submission_onenote extends assign_submission_plugin {
         );
 
         if (!$record || !$record->submission_student_page_id) {
+            // The student did not start a OneNote page. That's only a problem if OneNote is the only way to submit.
+            foreach ($this->assignment->get_submission_plugins() as $plugin) {
+                if ($plugin->get_type() !== $this->get_type() && $plugin->is_enabled() && $plugin->is_visible()) {
+                    return true;
+                }
+            }
             $this->set_error(get_string('submissionnotstarted', 'assignsubmission_onenote'));
             return false;
         }
