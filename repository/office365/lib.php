@@ -203,7 +203,7 @@ class repository_office365 extends repository {
             }
         }
 
-        if ($this->path_is_upload($path) === true && $this->is_remote_drive_upload_path($path) !== true) {
+        if ($this->path_is_upload($path) === true) {
             return [
                 'dynload' => true,
                 'nologin' => true,
@@ -237,22 +237,6 @@ class repository_office365 extends repository {
     }
 
     /**
-     * Determine whether an upload path points into a folder of another drive (e.g. inside a OneDrive shortcut to a
-     * SharePoint folder), where uploading is not supported.
-     *
-     * @param string $path An upload path to check.
-     * @return bool Whether the path is an upload path targeting another drive.
-     */
-    protected function is_remote_drive_upload_path($path) {
-        if ($this->path_is_upload($path) !== true || strpos($path, '/my/') !== 0) {
-            return false;
-        }
-
-        $realpath = substr($path, 3, -strlen('/upload/'));
-        return $this->split_drive_path($realpath)[0] !== '';
-    }
-
-    /**
      * Process uploaded file.
      *
      * @param string $saveasfilename
@@ -270,7 +254,6 @@ class repository_office365 extends repository {
         $clientid = optional_param('client_id', '', PARAM_TEXT);
 
         $filepath = '/';
-        $clienttype = '';
         if (!empty($SESSION->repository_office365)) {
             if (isset($SESSION->repository_office365['curpath']) && isset($SESSION->repository_office365['curpath'][$clientid])) {
                 $filepath = $SESSION->repository_office365['curpath'][$clientid];
@@ -293,16 +276,6 @@ class repository_office365 extends repository {
 
         if ($this->path_is_upload($filepath) === true) {
             $filepath = substr($filepath, 0, -strlen('/upload/'));
-        }
-
-        if ($clienttype === 'onedrive') {
-            [$uploaddriveid] = $this->split_drive_path($filepath);
-            if ($uploaddriveid !== '') {
-                // Uploading into a folder of another drive, e.g. a shortcut to a SharePoint folder, is not supported.
-                $debugdata = ['filepath' => $filepath, 'driveid' => $uploaddriveid];
-                utils::debug(get_string('erroruploadtoremotedrive', 'repository_office365'), __METHOD__, $debugdata);
-                throw new moodle_exception('erroruploadtoremotedrive', 'repository_office365');
-            }
         }
 
         $filename = (!empty($saveasfilename)) ? $saveasfilename : $_FILES['repo_upload_file']['name'];
@@ -581,7 +554,6 @@ class repository_office365 extends repository {
         $path = (empty($path)) ? '/' : $path;
 
         $list = [];
-        $contents = [];
 
         $unified = $this->get_unified_apiclient();
         $realpath = $path;
@@ -592,17 +564,11 @@ class repository_office365 extends repository {
 
         if ($this->path_is_upload($path) === true) {
             $realpath = substr($path, 0, -strlen('/upload/'));
-        }
-
-        // The folder can be in a drive other than the user's own, when it is (inside) the target of a shortcut.
-        [$driveid, $itemid] = $this->split_drive_path($realpath);
-
-        // Uploading is not supported into a folder of another drive, so list its contents instead of an upload form.
-        if ($this->path_is_upload($path) !== true || $driveid !== '') {
+        } else {
             try {
                 $o365userid = utils::get_o365_userid($USER->id);
 
-                $filesresults = $unified->get_user_files($itemid, $o365userid, '', $driveid);
+                $filesresults = $unified->get_user_files($realpath, $o365userid);
                 $contents = $filesresults['value'];
                 while (!empty($filesresults['@odata.nextLink'])) {
                     $nextlink = parse_url($filesresults['@odata.nextLink']);
@@ -611,14 +577,13 @@ class repository_office365 extends repository {
                         $query = [];
                         parse_str($nextlink['query'], $query);
                         if (isset($query['$skiptoken'])) {
-                            $filesresults = $unified->get_user_files($itemid, $o365userid, $query['$skiptoken'], $driveid);
+                            $filesresults = $unified->get_user_files($realpath, $o365userid, $query['$skiptoken']);
                             $contents = array_merge($contents, $filesresults['value']);
                         }
                     }
                 }
 
-                // Uploading into a folder of another drive is not supported, so do not offer the upload item there.
-                $list = $this->contents_api_response_to_list($contents, $realpath, 'unified', $driveid, $driveid === '');
+                $list = $this->contents_api_response_to_list($contents, $realpath, 'unified');
             } catch (moodle_exception $e) {
                 $errmsg = 'Exception when retrieving personal onedrive files for folder';
                 $debugdata = [
@@ -630,23 +595,9 @@ class repository_office365 extends repository {
             }
         }
 
-        if ($realpath !== '/' && $driveid !== '') {
+        if ($realpath !== '/') {
             $o365userid = utils::get_o365_userid($USER->id);
-            $metadata = $unified->get_file_metadata($itemid, $o365userid, $driveid);
-            $itempath = '/my/' . $driveid . ':' . $itemid;
-
-            // The folders of another drive do not have a path within the user's OneDrive, so the breadcrumb is remembered
-            // when the parent folder is listed.
-            $cache = cache::make('repository_office365', 'unifiedfolderids');
-            $cachedbreadcrumb = $cache->get('remote:' . $itempath);
-            if (is_array($cachedbreadcrumb)) {
-                $breadcrumb = $cachedbreadcrumb;
-            } else {
-                $breadcrumb[] = ['name' => $metadata['name'], 'path' => $itempath];
-            }
-        } else if ($realpath !== '/') {
-            $o365userid = utils::get_o365_userid($USER->id);
-            $metadata = $unified->get_file_metadata($itemid, $o365userid);
+            $metadata = $unified->get_file_metadata($realpath, $o365userid);
             if (!empty($metadata['parentReference']) && !empty($metadata['parentReference']['path'])) {
                 $parentrefpath = substr(
                     $metadata['parentReference']['path'],
@@ -668,78 +619,12 @@ class repository_office365 extends repository {
             $breadcrumb[] = ['name' => $metadata['name'], 'path' => '/my/' . $metadata['id']];
         }
 
-        // Uploading is not supported into a folder of another drive, so do not add the "Upload" breadcrumb item there.
-        if ($this->path_is_upload($path) === true && $driveid === '') {
+        if ($this->path_is_upload($path) === true) {
             $breadcrumb[] = ['name' => get_string('upload', 'repository_office365'),
                 'path' => '/my/' . $metadata['id'] . '/upload/'];
         }
 
-        $this->remember_remote_breadcrumbs($contents, $driveid, $breadcrumb);
-
         return [$list, $breadcrumb];
-    }
-
-    /**
-     * Split the path of a OneDrive item into the ID of the drive it belongs to and the ID of the item.
-     *
-     * Items of the user's own drive are identified by the item ID only. Items of any other drive, e.g. the target of a shortcut
-     * to a SharePoint folder, are identified by "driveid:itemid".
-     *
-     * @param string $path Item path, e.g. "/itemid", "/driveid:itemid" or "/" for the root of the user's drive.
-     * @return array Array of the drive ID (empty string for the user's own drive) and the item ID (empty string for the root).
-     */
-    protected function split_drive_path($path) {
-        $itemid = trim($path, '/');
-        $driveid = '';
-        if (strpos($itemid, ':') !== false) {
-            [$driveid, $itemid] = explode(':', $itemid, 2);
-        }
-
-        return [$driveid, $itemid];
-    }
-
-    /**
-     * Resolve where a OneDrive item is stored.
-     *
-     * A shortcut ("Add shortcut to OneDrive") is returned by the API as an item of the user's drive with a remoteItem facet,
-     * which holds the ID and the drive of the item it points to.
-     *
-     * @param array $content The item, as returned by the API.
-     * @param string $parentdriveid ID of the drive of the folder the item was listed from. Empty for the user's own drive.
-     * @return array Array of the drive ID (empty string for the user's own drive), the item ID, and the item with the properties
-     *               that are missing from a shortcut (e.g. the folder or file facet) taken from the item it points to.
-     */
-    protected function resolve_remote_item(array $content, $parentdriveid = '') {
-        if (!empty($content['remoteItem']['id']) && !empty($content['remoteItem']['parentReference']['driveId'])) {
-            $remote = $content['remoteItem'];
-            return [$remote['parentReference']['driveId'], $remote['id'], $content + $remote];
-        }
-
-        return [$parentdriveid, $content['id'], $content];
-    }
-
-    /**
-     * Remember the breadcrumb of the folders of other drives in a listing, so it can be shown when they are opened.
-     *
-     * @param array $contents The items of the listing, as returned by the API.
-     * @param string $parentdriveid ID of the drive of the listed folder. Empty for the user's own drive.
-     * @param array $breadcrumb The breadcrumb of the listed folder.
-     */
-    protected function remember_remote_breadcrumbs(array $contents, $parentdriveid, array $breadcrumb) {
-        $cache = null;
-        foreach ($contents as $content) {
-            [$driveid, $itemid, $item] = $this->resolve_remote_item($content, $parentdriveid);
-            if ($driveid === '' || !isset($item['folder'])) {
-                continue;
-            }
-
-            if ($cache === null) {
-                $cache = cache::make('repository_office365', 'unifiedfolderids');
-            }
-
-            $itempath = '/my/' . $driveid . ':' . $itemid;
-            $cache->set('remote:' . $itempath, array_merge($breadcrumb, [['name' => $item['name'], 'path' => $itempath]]));
-        }
     }
 
     /**
@@ -796,8 +681,6 @@ class repository_office365 extends repository {
      * @param string $clienttype The type of client that the response is from. onedrive/unified
      * @param string $parentinfo Client type-specific parent information.
      *                               If using the unifiedgroup clienttype, this is the parent group ID.
-     *                               If using the unified clienttype, this is the ID of the drive the folder belongs to, if it is
-     *                               not the user's own drive.
      * @param bool $addupload Whether to add the "Upload" file item.
      * @return array A $list array to be used by the respository class in get_listing.
      */
@@ -829,14 +712,7 @@ class repository_office365 extends repository {
         if (isset($response)) {
             foreach ($response as $content) {
                 if ($clienttype === 'unified' || $clienttype === 'unifiedgroup') {
-                    $driveid = '';
-                    if ($clienttype === 'unified') {
-                        [$driveid, $itemid, $content] = $this->resolve_remote_item($content, (string) $parentinfo);
-                    } else {
-                        $itemid = $content['id'];
-                    }
-
-                    $itempath = $pathprefix . '/' . (($driveid !== '') ? $driveid . ':' : '') . $itemid;
+                    $itempath = $pathprefix . '/' . $content['id'];
                     if (isset($content['folder'])) {
                         $list[] = [
                             'title' => $content['name'],
@@ -851,12 +727,9 @@ class repository_office365 extends repository {
                         $url = $content['webUrl'] . '?web=1';
                         if ($clienttype === 'unified') {
                             $source = [
-                                'id' => $itemid,
+                                'id' => $content['id'],
                                 'source' => 'onedrive',
                             ];
-                            if ($driveid !== '') {
-                                $source['driveid'] = $driveid;
-                            }
                         } else if ($clienttype === 'unifiedgroup') {
                             $source = [
                                 'id' => $content['id'],
@@ -1022,8 +895,7 @@ class repository_office365 extends repository {
             }
 
             $o365userid = utils::get_o365_userid($USER->id);
-            $driveid = isset($reference['driveid']) ? (string) $reference['driveid'] : '';
-            $file = $sourceclient->get_file_by_id($reference['id'], $o365userid, $driveid);
+            $file = $sourceclient->get_file_by_id($reference['id'], $o365userid);
         } else if ($reference['source'] === 'onedrivegroup') {
             if ($this->unifiedconfigured === true) {
                 $sourceclient = $this->get_unified_apiclient();
@@ -1275,7 +1147,6 @@ class repository_office365 extends repository {
                 'downloadurl' => 'string', // Optional: Download URL.
                 'linktype' => 'string', // Optional: e.g. 'default', 'directlink', 'controlledshare'.
                 'groupid' => 'string', // Optional: Group/course ID.
-                'driveid' => 'string', // Optional: ID of the drive of the file, if not the user's own drive.
                 'shared' => 'boolean', // Optional: Whether file is shared.
             ];
 
@@ -1346,8 +1217,7 @@ class repository_office365 extends repository {
                     $o365userid = utils::get_o365_userid($USER->id);
 
                     // Get original file metadata.
-                    $driveid = isset($ref['driveid']) ? (string) $ref['driveid'] : '';
-                    $metadata = $sourceclient->get_file_metadata($fileid, $o365userid, $driveid);
+                    $metadata = $sourceclient->get_file_metadata($fileid, $o365userid);
                     $filename = isset($metadata['name']) ? $metadata['name'] : 'file';
 
                     // Create a copy with " - Shared" suffix.
@@ -1358,7 +1228,7 @@ class repository_office365 extends repository {
 
                     // Copy the file using download-and-upload approach.
                     // This returns the new file ID directly (synchronous operation).
-                    $copiedfileid = $sourceclient->copy_file($fileid, $o365userid, $newname, '', $driveid);
+                    $copiedfileid = $sourceclient->copy_file($fileid, $o365userid, $newname);
 
                     // Create organization sharing link for the copy.
                     $shareurl = $sourceclient->get_sharing_link($copiedfileid, $o365userid);
@@ -1368,7 +1238,6 @@ class repository_office365 extends repository {
                     $ref['url'] = $shareurl;
                     $ref['shared'] = true;
                     $ref['linktype'] = 'controlledshare';
-                    unset($ref['driveid']); // The copy is in user's own drive.
                 }
             } else if ($filesource === 'onedrivegroup') {
                 if ($this->unifiedconfigured !== true) {
@@ -1456,11 +1325,6 @@ class repository_office365 extends repository {
                 $reference['groupid'] = $sourceunpacked['groupid'];
             }
 
-            $driveid = isset($sourceunpacked['driveid']) ? (string) $sourceunpacked['driveid'] : '';
-            if ($driveid !== '') {
-                $reference['driveid'] = $driveid;
-            }
-
             try {
                 if ($linktype === 'directlink') {
                     // Handle direct link (FILE_REFERENCE) - get the file's webUrl WITHOUT changing permissions.
@@ -1469,7 +1333,7 @@ class repository_office365 extends repository {
                         if ($this->unifiedconfigured === true) {
                             $sourceclient = $this->get_unified_apiclient();
                             $o365userid = utils::get_o365_userid($USER->id);
-                            $metadata = $sourceclient->get_file_metadata($fileid, $o365userid, $driveid);
+                            $metadata = $sourceclient->get_file_metadata($fileid, $o365userid);
                             if (isset($metadata['webUrl'])) {
                                 $reference['url'] = $metadata['webUrl'];
                             }
@@ -1493,7 +1357,7 @@ class repository_office365 extends repository {
                         if ($this->unifiedconfigured === true) {
                             $sourceclient = $this->get_unified_apiclient();
                             $o365userid = utils::get_o365_userid($USER->id);
-                            $metadata = $sourceclient->get_file_metadata($fileid, $o365userid, $driveid);
+                            $metadata = $sourceclient->get_file_metadata($fileid, $o365userid);
                             if (isset($metadata['webUrl'])) {
                                 $reference['url'] = $metadata['webUrl'];
                             }
@@ -1594,8 +1458,7 @@ class repository_office365 extends repository {
                     if ($this->unifiedconfigured === true) {
                         $sourceclient = $this->get_unified_apiclient();
                         $o365userid = utils::get_o365_userid($USER->id);
-                        $driveid = isset($ref['driveid']) ? (string) $ref['driveid'] : '';
-                        $metadata = $sourceclient->get_file_metadata($ref['id'], $o365userid, $driveid);
+                        $metadata = $sourceclient->get_file_metadata($ref['id'], $o365userid);
 
                         if (isset($metadata['name'])) {
                             $details .= ': ' . $metadata['name'];
@@ -1707,8 +1570,7 @@ class repository_office365 extends repository {
 
                 if ($doembed === true) {
                     $o365userupn = utils::get_o365_upn($fileuserid);
-                    $driveid = isset($reference['driveid']) ? (string) $reference['driveid'] : '';
-                    $fileinfo = $sourceclient->get_file_metadata($reference['id'], $o365userupn, $driveid);
+                    $fileinfo = $sourceclient->get_file_metadata($reference['id'], $o365userupn);
                     if (isset($fileinfo['webUrl'])) {
                         $fileurl = $fileinfo['webUrl'];
                     } else {
