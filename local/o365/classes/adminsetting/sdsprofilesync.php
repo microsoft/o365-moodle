@@ -84,14 +84,15 @@ class sdsprofilesync extends admin_setting_configselect {
      * Save the submitted value, unless the school list could not be retrieved.
      *
      * When the Graph API is unavailable the school choices are not authoritative, so leave a previously configured
-     * school untouched rather than risk clearing it from a stale form submission.
+     * school untouched rather than risk clearing it from a stale form submission. If nothing has been stored yet (for
+     * example on the upgrade settings page), the submitted value is still saved so the setting does not stay "new".
      *
      * @param string $data
      * @return string empty string on success, error message otherwise
      */
     public function write_setting($data) {
         [$status] = utils::get_settings_schools();
-        if ($status !== 'ok') {
+        if ($status !== 'ok' && $this->get_setting() !== null) {
             return '';
         }
 
