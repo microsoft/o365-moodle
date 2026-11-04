@@ -453,7 +453,8 @@ class main {
 
         try {
             $image = $apiclient->get_photo($oidcusername);
-            $result = $this->apply_photo($muserid, $image, $printtrace);
+            // Compute the hash the same way the batch photo sync does, so that the photohash is stored on login too.
+            $result = $this->apply_photo($muserid, $image, $printtrace, null, null, hash('sha256', $image));
         } catch (moodle_exception $e) {
             if ($e->getMessage() === get_string('erroro365nophoto', 'local_o365')) {
                 // User has no photo - apply false to handle cleanup.
