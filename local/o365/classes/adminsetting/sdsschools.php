@@ -67,6 +67,23 @@ class sdsschools extends admin_setting_configmulticheckbox {
     }
 
     /**
+     * Get the current setting, treating an unset value as "no schools" when the school list cannot be retrieved.
+     *
+     * Without the school list the setting renders nothing and cannot be saved, so reporting null would leave it
+     * permanently "new" and make admin/upgradesettings.php redirect to itself forever.
+     *
+     * @return array|null the selected schools, or null if not set and the school list is available
+     */
+    public function get_setting() {
+        $setting = parent::get_setting();
+        if ($setting === null && !$this->load_choices()) {
+            return [];
+        }
+
+        return $setting;
+    }
+
+    /**
      * Save the submitted value, unless the school list could not be retrieved.
      *
      * @param array $data
