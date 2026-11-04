@@ -867,7 +867,7 @@ if ($hassiteconfig) {
                 'local_o365/sdsprofilesync',
                 $label,
                 $desc,
-                '0',
+                '',
                 null
             ));
         }
