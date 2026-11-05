@@ -24,8 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2024100740;
+$plugin->version   = 2024100745;
 $plugin->requires  = 2024100700;
 $plugin->component = 'atto_teamsmeeting';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '4.5.8';
+$plugin->release   = '4.5.9';

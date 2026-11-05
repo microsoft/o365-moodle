@@ -25,11 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2024100740;
+$plugin->version = 2024100745;
 $plugin->requires = 2024100700;
-$plugin->release = '4.5.8';
+$plugin->release = '4.5.9';
 $plugin->component = 'block_microsoft';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = [
-    'local_o365' => 2024100740,
+    'local_o365' => 2024100745,
 ];
