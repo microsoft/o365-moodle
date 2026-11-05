@@ -25,11 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2026042000;
-$plugin->requires = 2026042000;
-$plugin->release = '5.2.0';
+$plugin->version = 2026100500;
+$plugin->requires = 2026100500;
+$plugin->release = '5.3.0';
 $plugin->component = 'assignfeedback_onenote';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = [
-    'local_onenote' => 2026042000,
+    'local_onenote' => 2026100500,
 ];
