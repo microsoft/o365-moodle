@@ -26,3 +26,4 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Integrazione Microsoft 365';
+$string['privacy:metadata'] = 'Questo plugin è solo un plugin contenitore.';

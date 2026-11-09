@@ -45,22 +45,21 @@ $string['linkprefs'] = 'Edit settings';
 $string['linkconnection'] = 'Microsoft 365 connection settings';
 $string['microsoft'] = 'Microsoft';
 $string['microsoft:addinstance'] = 'Add a new Microsoft block';
-$string['microsoft:myaddinstance'] = 'Add a New Microsoft block to the My Moodle page';
+$string['microsoft:myaddinstance'] = 'Add a new Microsoft block to the My Moodle page';
+// Do not change this value. It is the title of the notebook in the user's OneNote account and is used to find that notebook,
+// so changing it makes existing notebooks unrecognisable and creates duplicate notebooks.
 $string['notebookname'] = 'Moodle Notebook';
-$string['opennotebook'] = 'Open your notebook';
 $string['workonthis'] = 'Work on this';
 $string['o365matched_title'] = 'You are <span style="color: #960">almost</span> connected to Microsoft 365';
 $string['o365matched_desc'] = 'You have been matched with the Microsoft 365 user <b>"{$a}"</b>';
-$string['o365matched_complete_userpass'] = 'To complete the connection, please enter the password for this Microsoft 365 user and click "Connect"';
 $string['o365matched_complete_authreq'] = 'To complete the connection, please click the link below and log in to this Microsoft 365 account.';
-$string['o365connected'] = '{$a->firstname} you are currently <span class="notifysuccess">connected</span> to Microsoft 365';
+$string['o365connected'] = '{$a->firstname}, you are currently <span class="notifysuccess">connected</span> to Microsoft 365';
 $string['notconnected'] = 'You are <span class="notifyproblem">not connected</span> to any Microsoft services.';
 $string['course_connected_to_team'] = 'The course is <span class="notifysuccess">connected</span> to a <b>Team</b>.';
 $string['course_connected_to_team_pending'] = 'The course is configured to be connected to a <b>Team</b>, but the Team creation is <span class="notifyproblem">pending</span>.';
 $string['course_connected_to_group_pending'] = 'The course is configured to be connected to a <b>Team</b>, but the group creation is <span class="notifyproblem">pending</span>.';
 $string['course_not_connected'] = 'The course is <span class="notifyproblem">not connected</span> to any Microsoft services.';
 $string['cachedef_onenotenotebook'] = 'Stores OneNote notebook.';
-$string['msalogin'] = 'Log in with Microsoft Account';
 $string['logintoo365'] = 'Log in to Microsoft 365';
 $string['connecttoo365'] = 'Connect to Microsoft 365';
 $string['install_office'] = 'Install Office';
@@ -77,7 +76,7 @@ $string['linkvivagoals'] = 'Viva Goals';
 $string['linkvivainsights'] = 'Viva Insights';
 $string['linkvivalearning'] = 'Viva Learning';
 $string['linkvivapulse'] = 'Viva Pulse';
-$string['linklinkedin'] = 'Microsoft LinkedIn';
+$string['linklinkedin'] = 'LinkedIn';
 
 // Configuration settings.
 $string['settings_showemail'] = 'Show "My Email"';
@@ -89,8 +88,6 @@ $string['settings_showmyforms_desc'] = 'Enable or disable the "My Forms" link in
 $string['settings_showmyforms_default'] = 'https://forms.office.com/Pages/DesignPage.aspx#';
 $string['settings_showo365download'] = 'Show "Install Office"';
 $string['settings_showo365download_desc'] = 'Enable or disable the "Install Office" link in the block.';
-$string['settings_showdocsdotcom'] = 'Show "My Docs.com"';
-$string['settings_showdocsdotcom_desc'] = 'Enable or disable the "My Docs.com" link in the block.';
 $string['settings_showsways'] = 'Show "My Sways"';
 $string['settings_showsways_desc'] = 'Enable or disable the "My Sways" link in the block.';
 $string['settings_showmsstream'] = 'Show "Microsoft Stream (on SharePoint)"';
@@ -105,12 +102,12 @@ $string['settings_showonenotenotebook'] = 'Show "My OneNote Notebook"';
 $string['settings_showonenotenotebook_desc'] = 'Enable or disable the "My OneNote Notebook" link in the block.';
 $string['settings_showoutlooksync'] = 'Show "Outlook Calendar sync settings"';
 $string['settings_showoutlooksync_desc'] = 'Enable or disable the "Outlook Calendar sync settings" link in the block.';
-$string['settings_showpreferences'] = 'Show "Edit Settings"';
-$string['settings_showpreferences_desc'] = 'Enable or disable the "Edit Settings" link in the block.';
+$string['settings_showpreferences'] = 'Show "Edit settings"';
+$string['settings_showpreferences_desc'] = 'Enable or disable the "Edit settings" link in the block.';
 $string['settings_showo365connect'] = 'Show "Connect to Microsoft 365"';
 $string['settings_showo365connect_desc'] = 'Enable or disable the "Connect to Microsoft 365" link in the block. <br /><b>Note:</b> This is shown to users who are not connected to Microsoft 365 and takes them to the page that allows them to set up a connection.';
 $string['settings_showmanageo365conection'] = 'Show "Microsoft 365 connection settings"';
-$string['settings_showmanageo365conection_desc'] = 'Enable or disable the "Microsoft 365 connection settings" link in the block. <br /><b>Note:</b> This is shown to Microsoft 365 connected users and takes them to connection management page.';
+$string['settings_showmanageo365conection_desc'] = 'Enable or disable the "Microsoft 365 connection settings" link in the block. <br /><b>Note:</b> This is shown to Microsoft 365 connected users and takes them to the connection management page.';
 $string['settings_showcoursespsite'] = 'Show "Course SharePoint site"';
 $string['settings_showcoursespsite_desc'] = 'Enable or disable the "Course SharePoint site" link in the block. <br /><b>Note:</b> This is shown in the block when viewing a course that has an associated SharePoint site.';
 $string['settings_showcourselinks'] = 'Show course links';
@@ -129,7 +126,6 @@ $string['settings_showcoursenotebook'] = 'Show "Class notebook"';
 $string['settings_showcoursenotebook_desc'] = 'Enable or disable the "Class notebook" link in the course section of the block.';
 $string['settings_showcoursereset'] = 'Show "Course reset options"';
 $string['settings_showcoursereset_desc'] = 'Enable or disable the "Course reset options" link in the course section of the block.';
-$string['defaultprofile'] = 'Profile image';
 $string['settings_geto365link'] = 'Install Office download URL';
 $string['settings_geto365link_desc'] = 'The URL to use for the "Install Office" link.';
 $string['settings_geto365link_default'] = 'https://portal.office.com/OLS/MySoftware.aspx';
@@ -161,8 +157,8 @@ $string['settings_vivalearningurl'] = 'Viva Learning URL';
 $string['settings_vivalearningurl_desc'] = 'The URL of your organization\'s Viva Learning experience, as configured by your Microsoft 365 tenant administrator, e.g. https://web.viva.microsoft.com/learning. Only URLs on a viva.microsoft.com or cloud.microsoft domain are accepted.';
 $string['settings_showvivapulse'] = 'Show "Viva Pulse"';
 $string['settings_showvivapulse_desc'] = 'Enable or disable the "Viva Pulse" link in the block.';
-$string['settings_showlinkedin'] = 'Show "Microsoft LinkedIn"';
-$string['settings_showlinkedin_desc'] = 'Enable or disable the "Microsoft LinkedIn" link in the block.';
+$string['settings_showlinkedin'] = 'Show "LinkedIn"';
+$string['settings_showlinkedin_desc'] = 'Enable or disable the "LinkedIn" link in the block.';
 
 $string['linkmydelve'] = 'My Delve';
 $string['linkmyforms'] = 'My Forms';
@@ -179,22 +175,22 @@ $string['course_feature_notebook'] = 'Class notebook';
 $string['configure_sync'] = 'Configure course sync';
 $string['error_course_sync_not_configurable_per_course'] = 'Course sync cannot be configured per course.';
 $string['sync_page_heading'] = 'Sync course {$a} to Microsoft Teams';
-$string['configure_course_sync'] = 'Configure course sync to Microsoft Team';
+$string['configure_course_sync'] = 'Configure course sync to Microsoft Teams';
 $string['course_sync_option'] = 'Sync option';
 $string['course_sync_option_disabled'] = 'Disabled';
 $string['course_sync_option_enabled'] = 'Enabled';
 $string['sync_setting_saved'] = 'Course sync option is saved';
 
 // Course reset status.
-$string['course_reset_disconnect_and_create_new'] = 'When the course is reset, the Team  connected to the course will be renamed as configured, and archived. A new Team will be created and connected to the course.';
+$string['course_reset_disconnect_and_create_new'] = 'When the course is reset, the Team connected to the course will be renamed as configured, and archived. A new Team will be created and connected to the course.';
 $string['course_reset_do_nothing'] = 'When the course is reset, the connection between the course and the Team will remain. All user changes made to the course will be synced to the Team.';
-$string['course_reset_disconnect_only'] = 'When the course is reset, the Team  connected to the course will be renamed as configured, and archived. No new Team will be created.';
-$string['configure_reset'] = 'Choose Microsoft Team action on course reset';
+$string['course_reset_disconnect_only'] = 'When the course is reset, the Team connected to the course will be renamed as configured, and archived. No new Team will be created.';
+$string['configure_reset'] = 'Choose Microsoft Teams action on course reset';
 
 // Course reset settings page.
 $string['reset_page_heading'] = 'Course reset action for {$a}';
 $string['configure_course_reset'] = 'Configure course reset setting';
-$string['course_reset_option'] = 'Action to the Team when resetting the course';
+$string['course_reset_option'] = 'Action for the Team when resetting the course';
 $string['reset_option_do_nothing'] = 'Do nothing.<br/>The Team will still be connected to the course. User unenrolments will result in user Team ownership/membership removal.';
 $string['reset_option_disconnect_and_create_new'] = 'Disconnect and create a new Team.<br/>The existing Team connected to the course will be renamed as configured, and archived. A new Team will be created and connected to the course.';
 $string['reset_option_disconnect_only'] = 'Disconnect only.<br/>The existing Team connected to the course will be renamed as configured, and archived. No new Team will be created.';
@@ -207,7 +203,7 @@ $string['error_course_sync_disabled'] = 'The course is not configured to be sync
 // Course request.
 $string['linkcourserequest'] = 'Request course from Teams';
 $string['settings_courserequest'] = 'Request course from Teams';
-$string['settings_courserequest_desc'] = 'Request a new course from Microsoft Teams. After approval, the course will be created and connected to a Team. Microsoft Team members will be enrolled in the course.';
+$string['settings_courserequest_desc'] = 'Request a new course from Microsoft Teams. After approval, the course will be created and connected to a Team. Team members will be enrolled in the course.';
 
 $string['customlinks'] = 'Custom links';
 $string['customlink_addanother'] = 'Add another link';

@@ -15,35 +15,40 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for component 'assignfeedback_onenote'
+ * Portuguese (Brazil) language strings.
  *
  * @package assignfeedback_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $string['addfeedback'] = 'Adicionar feedback';
-$string['addfeedbackhelp'] = 'Clique no botão acima para adicionar seu feedback referente ao envio do aluno no OneNote. Você pode voltar aqui posteriormente para salvar seu trabalho de volta no Moodle.';
-$string['configmaxbytes'] = 'Tamanho máximo do OneNote';
+$string['addfeedbackhelp'] = 'Clique no botão acima para adicionar seu feedback referente ao envio do estudante no OneNote. Você pode voltar aqui posteriormente para salvar seu trabalho de volta no Moodle.';
+$string['configmaxbytes'] = 'Tamanho máximo de pacote do OneNote';
 $string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Ativado por padrão';
 $string['default_help'] = 'Quando definido, esse método de feedback é ativado por padrão para todas as novas tarefas.';
+$string['deletefeedbackconfirm'] = 'Confirmação da remoção do feedback do OneNote';
+$string['deletefeedbackconfirmdetail'] = 'Isso removerá o feedback do OneNote salvo para o usuário. Os detalhes continuarão no OneNote.';
+$string['deletefeedbackforuser'] = 'Excluir o feedback do OneNote do usuário';
 $string['enabled'] = 'Feedback no OneNote';
-$string['enabled_help'] = 'Se essa configuração estiver ativada, o professor poderá fazer o upload de páginas do OneNote com feedback ao corrigir suas tarefas. Os professores podem optar por fazer anotações no envio do aluno no OneNote ou fazer o upload de uma página totalmente nova do OneNote.';
+$string['enabled_help'] = 'Se essa configuração estiver ativada, o professor poderá fazer o upload de páginas do OneNote com feedback ao corrigir suas tarefas. Os professores podem optar por fazer anotações no envio do estudante no OneNote ou fazer o upload de uma página totalmente nova do OneNote.';
 $string['feedbackdownloadfailed'] = 'Não foi possível fazer o download do feedback do OneNote. Tente novamente.';
 $string['feedbacklimitexceed'] = 'O tamanho do feedback ultrapassa o limite máximo.';
-$string['feedbacknotstarted'] = 'Adicione seu feedback usando o OneNote e depois salve suas alterações.';
-$string['filesadded'] = 'OneNote de feedback adicionados: {$a}';
 $string['maxbytes'] = 'Tamanho máximo de pacote do OneNote';
-$string['maxfiles'] = 'Número máximo de uploads de OneNote';
-$string['maximumsize'] = 'Tamanho máximo de pacote do OneNote';
-$string['moreusers'] = 'Mais {$a}...';
-$string['nochanges'] = 'Nenhuma alteração';
+$string['maxfiles'] = 'Número máximo de páginas do OneNote enviadas';
 $string['notsignedin'] = 'Faça login no OneNote antes de tentar salvar suas alterações.';
-$string['onenote'] = 'OneNote de feedback';
+$string['onenote'] = 'Feedback no OneNote';
+$string['onenoteactions'] = 'Ações do OneNote:';
 $string['pluginname'] = 'Feedback no OneNote';
-$string['signinhelp1'] = 'Clique no botão acima para fazer login no OneNote e poder adicionar nele seu feedback referente ao envio do aluno.';
+$string['privacy:metadata:assignmentid'] = 'Identificador da tarefa';
+$string['privacy:metadata:gradepurpose'] = 'O ID da nota associado ao registro';
+$string['privacy:metadata:numfiles'] = 'Número de arquivos';
+$string['privacy:metadata:tablepurpose'] = 'Armazena o número de arquivos usados para o feedback.';
+$string['privacy:path'] = 'Feedback no OneNote';
+$string['signinhelp1'] = 'Clique no botão acima para fazer login no OneNote e poder adicionar nele seu feedback referente ao envio do estudante.';
 $string['signinhelp2'] = 'Clique no botão acima para fazer login no OneNote caso queira visualizar o feedback nele.';
 $string['viewfeedback'] = 'Visualizar feedback';

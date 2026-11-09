@@ -47,18 +47,13 @@ $string['privacy:metadata:assignmentid'] = 'Assignment identifier';
 $string['privacy:metadata:numfiles'] = 'Number of files';
 $string['privacy:metadata:submissionpurpose'] = 'The submission ID that links to submissions for the user';
 $string['privacy:metadata:tablepurpose'] = 'Stores the number of files used for the submission.';
-$string['privacy:path'] = 'Number of files';
+$string['privacy:path'] = 'OneNote submissions';
 $string['signinhelp1'] = 'Click on the button above to sign in to OneNote if you want to work on the submission there.';
 $string['signinhelp2'] = 'Click on the button above to sign in to OneNote if you want to view the submission there.';
-$string['siteuploadlimit'] = 'Site upload limit';
 $string['submissiondownloadfailed'] = 'Could not download your submission from OneNote. Please try again.';
-$string['submissionfilearea'] = 'Uploaded submission OneNote pages';
 $string['submissionlimitexceed'] = 'Your submission size exceeds the acceptable limit.';
 $string['submissionnotstarted'] = 'Please work on the assignment in OneNote and then save your changes.';
 $string['viewsubmission'] = 'View submission';
-$string['viewsubmissionwarning'] = 'Warning: View Submission will overwrite your OneNote page for this submission, with the learner\'s latest copy.';
+$string['viewsubmissionwarning'] = 'Warning: "View submission" will overwrite your OneNote page for this submission with the student\'s latest copy.';
 $string['workonthis'] = 'Work on this';
 $string['workonthishelp'] = 'Click on the button above to work on the assignment in OneNote. Remember that you will need to come back here to save your work back into Moodle.';
-
-// Deprecated since Moodle 4.3.
-$string['numfilesforlog'] = 'The number of OneNote page(s) : {$a}';

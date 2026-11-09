@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Portuguese - Brazil language strings.
+ * Portuguese (Brazil) language strings.
  *
  * @package local_office365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
@@ -26,3 +26,4 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Integração ao Microsoft 365';
+$string['privacy:metadata'] = 'Este plugin é apenas um plugin de casca (shell).';

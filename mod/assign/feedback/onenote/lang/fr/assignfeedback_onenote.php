@@ -15,35 +15,40 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for component 'assignfeedback_onenote'
+ * French language strings.
  *
  * @package assignfeedback_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['addfeedback'] = 'Ajouter feed-back';
-$string['addfeedbackhelp'] = 'Cliquez sur le bouton ci-dessus pour ajouter votre feed-back pour la remise de travaux de l\'étudiant dans OneNote. Vous pouvez revenir sur cette page ultérieurement pour enregistrer votre travail dans Moodle.';
-$string['configmaxbytes'] = 'Taille maximale de OneNote';
-$string['countfiles'] = 'Pages OneNote: {$a}';
+$string['addfeedback'] = 'Ajouter un feedback';
+$string['addfeedbackhelp'] = 'Cliquez sur le bouton ci-dessus pour ajouter votre feedback pour la remise de travaux de l’étudiant dans OneNote. Vous pouvez revenir sur cette page ultérieurement pour enregistrer votre travail dans Moodle.';
+$string['configmaxbytes'] = 'Taille maximale du paquet OneNote';
+$string['countfiles'] = 'Pages OneNote : {$a}';
 $string['default'] = 'Activé par défaut';
-$string['default_help'] = 'Si ce réglage est activé, cette méthode de feed-back sera activée par défaut pour tous les nouveaux devoirs.';
-$string['enabled'] = 'Feed-back OneNote';
-$string['enabled_help'] = 'Si ce réglage est activé, l\'enseignant pourra télécharger des pages OneNote avec un feed-back lors de l\'évaluation des devoirs. Les enseignants peuvent choisir d\'annoter la remise de travaux OneNote de l\'étudiant et de télécharger une toute nouvelle page OneNote.';
-$string['feedbackdownloadfailed'] = 'Impossible de télécharger le feed-back depuis OneNote. Veuillez réessayer.';
-$string['feedbacklimitexceed'] = 'La taille de votre feed-back dépasse la limite acceptable.';
-$string['feedbacknotstarted'] = 'Ajoutez votre feed-back à l\'aide de OneNote, puis enregistrez vos modifications.';
-$string['filesadded'] = 'Fichiers OneNote de feed-back ajoutés : {$a}';
+$string['default_help'] = 'Si ce réglage est activé, cette méthode de feedback sera activée par défaut pour tous les nouveaux devoirs.';
+$string['deletefeedbackconfirm'] = 'Confirmation de la suppression du feedback OneNote';
+$string['deletefeedbackconfirmdetail'] = 'Le feedback OneNote enregistré pour l’utilisateur sera supprimé. Les détails resteront disponibles dans OneNote.';
+$string['deletefeedbackforuser'] = 'Supprimer le feedback OneNote de l’utilisateur';
+$string['enabled'] = 'Feedback OneNote';
+$string['enabled_help'] = 'Si ce réglage est activé, l’enseignant pourra télécharger des pages OneNote avec un feedback lors de l’évaluation des devoirs. Les enseignants peuvent choisir d’annoter la remise de travaux OneNote de l’étudiant et de télécharger une toute nouvelle page OneNote.';
+$string['feedbackdownloadfailed'] = 'Impossible de télécharger le feedback depuis OneNote. Veuillez réessayer.';
+$string['feedbacklimitexceed'] = 'La taille de votre feedback dépasse la limite acceptable.';
 $string['maxbytes'] = 'Taille maximale du paquet OneNote';
-$string['maxfiles'] = 'Nombre maximal de fichiers OneNote téléchargés';
-$string['maximumsize'] = 'Taille maximale du paquet OneNote';
-$string['moreusers'] = '{$a} de plus...';
-$string['nochanges'] = 'Aucune modification';
-$string['notsignedin'] = 'Inscrivez-vous à OneNote avant d\'essayer d\'enregistrer vos modifications.';
-$string['onenote'] = 'Fichiers OneNote de feed-back';
-$string['pluginname'] = 'Feed-back OneNote';
-$string['signinhelp1'] = 'Cliquez sur le bouton ci-dessus pour vous inscrire sur OneNote de façon à ajouter votre feed-back dans la remise de travaux de l\'étudiant.';
-$string['signinhelp2'] = 'Cliquez sur le bouton ci-dessus pour vous inscrire sur OneNote si vous souhaitez y afficher le feed-back.';
-$string['viewfeedback'] = 'Afficher le feed-back';
+$string['maxfiles'] = 'Nombre maximal de pages OneNote téléchargées';
+$string['notsignedin'] = 'Connectez-vous à OneNote avant d’essayer d’enregistrer vos modifications.';
+$string['onenote'] = 'Feedback OneNote';
+$string['onenoteactions'] = 'Actions OneNote :';
+$string['pluginname'] = 'Feedback OneNote';
+$string['privacy:metadata:assignmentid'] = 'Identifiant du devoir';
+$string['privacy:metadata:gradepurpose'] = 'L’ID de la note associée à l’enregistrement';
+$string['privacy:metadata:numfiles'] = 'Nombre de fichiers';
+$string['privacy:metadata:tablepurpose'] = 'Stocke le nombre de fichiers utilisés pour le feedback.';
+$string['privacy:path'] = 'Feedback OneNote';
+$string['signinhelp1'] = 'Cliquez sur le bouton ci-dessus pour vous connecter à OneNote afin d’y ajouter votre feedback à la remise de travaux de l’étudiant.';
+$string['signinhelp2'] = 'Cliquez sur le bouton ci-dessus pour vous connecter à OneNote si vous souhaitez y afficher le feedback.';
+$string['viewfeedback'] = 'Afficher le feedback';

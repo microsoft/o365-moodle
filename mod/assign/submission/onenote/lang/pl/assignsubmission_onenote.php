@@ -15,21 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for component 'assignsubmission_onenote'
+ * Polish language strings.
  *
  * @package assignsubmission_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $string['configmaxbytes'] = 'Maksymalny rozmiar strony w programie OneNote';
-$string['countfiles'] = 'Notatki w programie OneNote: {$a}';
+$string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Domyślnie włączone';
 $string['default_help'] = 'Jeśli opcja jest włączona, ta metoda przesyłania będzie domyślnie włączona dla wszystkich nowych zadań.';
+$string['download'] = 'Pobierz';
 $string['enabled'] = 'Przesłane prace w programie OneNote';
-$string['enabled_help'] = 'Jeśli opcja jest włączona, studenci mogą przesłać jedną lub większą liczbę plików jako ich przesłaną pracę.';
+$string['enabled_help'] = 'Jeśli opcja jest włączona, studenci mogą przesłać jedną lub większą liczbę stron programu OneNote jako swoją przesłaną pracę.';
+$string['erroremptyothervalue'] = 'Wartość „filesubmissioncount” musi być ustawiona w polu other.';
 $string['eventassessableuploaded'] = 'Przesłano stronę programu OneNote.';
 $string['maxbytes'] = 'Maksymalny rozmiar strony w programie OneNote';
 $string['maxfilessubmission'] = 'Maksymalna liczba przesłanych stron programu OneNote';
@@ -40,16 +43,17 @@ $string['notsignedin'] = 'Zaloguj się do programu OneNote przed zapisaniem zmia
 $string['onenote'] = 'Przesłane prace w programie OneNote';
 $string['onenoteactions'] = 'Działania w programie OneNote: ';
 $string['pluginname'] = 'Przesłane prace w programie OneNote';
+$string['privacy:metadata:assignmentid'] = 'Identyfikator zadania';
+$string['privacy:metadata:numfiles'] = 'Liczba plików';
+$string['privacy:metadata:submissionpurpose'] = 'Identyfikator przesłanej pracy łączący z przesłanymi pracami użytkownika';
+$string['privacy:metadata:tablepurpose'] = 'Przechowuje liczbę plików użytych w przesłanej pracy.';
+$string['privacy:path'] = 'Przesłane prace w programie OneNote';
 $string['signinhelp1'] = 'Kliknij przycisk powyżej, aby zalogować się do programu OneNote, jeżeli chcesz w nim sporządzić pracę do przesłania.';
 $string['signinhelp2'] = 'Kliknij przycisk powyżej, aby zalogować się do programu OneNote, jeżeli chcesz w nim wyświetlić przesłaną pracę.';
-$string['siteuploadlimit'] = 'Limit przesyłania';
 $string['submissiondownloadfailed'] = 'Nie udało się pobrać przesłanej pracy z programu OneNote. Spróbuj ponownie.';
-$string['submissionfilearea'] = 'Przesłane strony programu OneNote jako praca';
 $string['submissionlimitexceed'] = 'Rozmiar przesłanej pracy przekracza dopuszczalny limit.';
 $string['submissionnotstarted'] = 'Pracuj nad zadaniem w programie OneNote, a następnie zapisz zmiany.';
-$string['viewsubmission'] = 'Wyświetl złożoną pracę';
+$string['viewsubmission'] = 'Wyświetl przesłaną pracę';
+$string['viewsubmissionwarning'] = 'Ostrzeżenie: „Wyświetl przesłaną pracę” nadpisze Twoją stronę OneNote dla tej przesłanej pracy najnowszą kopią studenta.';
 $string['workonthis'] = 'Pracuj nad tym';
 $string['workonthishelp'] = 'Kliknij przycisk powyżej, aby pracować nad zadaniem w programie OneNote. Pamiętaj, że musisz powrócić do tej strony, aby zapisać swoją pracę na platformie Moodle.';
-
-// Deprecated since Moodle 4.3.
-$string['numfilesforlog'] = 'Liczba stron programu OneNote: {$a}';

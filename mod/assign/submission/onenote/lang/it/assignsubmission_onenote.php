@@ -15,11 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for component 'assignsubmission_onenote'
+ * Italian language strings.
  *
  * @package assignsubmission_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -28,8 +29,10 @@ $string['configmaxbytes'] = 'Dimensione massima pagina OneNote';
 $string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Abilitato per default';
 $string['default_help'] = 'Se impostato, questo metodo di consegna è abilitato per default per tutti i nuovi compiti.';
+$string['download'] = 'Scarica';
 $string['enabled'] = 'Consegne OneNote';
 $string['enabled_help'] = 'Abilitando questa opzione, gli studenti saranno in grado di caricare una o più pagine OneNote come consegna.';
+$string['erroremptyothervalue'] = 'Il valore \'filesubmissioncount\' deve essere impostato in other.';
 $string['eventassessableuploaded'] = 'Una pagina OneNote è stata caricata.';
 $string['maxbytes'] = 'Dimensione massima pagina OneNote';
 $string['maxfilessubmission'] = 'Numero massimo di pagine OneNote caricate';
@@ -40,16 +43,17 @@ $string['notsignedin'] = 'Accedi a OneNote prima di provare a salvare le modific
 $string['onenote'] = 'Consegne OneNote';
 $string['onenoteactions'] = 'Azioni OneNote: ';
 $string['pluginname'] = 'Consegne OneNote';
-$string['signinhelp1'] = 'Fai clic sul pulsante precedente per accedere a OneNote se desideri lavorare lì sulla consegna.';
-$string['signinhelp2'] = 'Fai clic sul pulsante precedente per accedere a OneNote se desideri visualizzare lì la consegna.';
-$string['siteuploadlimit'] = 'Limite di caricamento del sito';
-$string['submissiondownloadfailed'] = 'Impossibile scaricare il compito da OneNote. Riprova.';
-$string['submissionfilearea'] = 'Pagine OneNote di consegna caricate';
+$string['privacy:metadata:assignmentid'] = 'Identificativo del compito';
+$string['privacy:metadata:numfiles'] = 'Numero di file';
+$string['privacy:metadata:submissionpurpose'] = 'L\'ID della consegna che collega alle consegne dell\'utente';
+$string['privacy:metadata:tablepurpose'] = 'Memorizza il numero di file utilizzati per la consegna.';
+$string['privacy:path'] = 'Consegne OneNote';
+$string['signinhelp1'] = 'Fai clic sul pulsante sopra per accedere a OneNote se desideri lavorare lì sulla consegna.';
+$string['signinhelp2'] = 'Fai clic sul pulsante sopra per accedere a OneNote se desideri visualizzare lì la consegna.';
+$string['submissiondownloadfailed'] = 'Impossibile scaricare la tua consegna da OneNote. Riprova.';
 $string['submissionlimitexceed'] = 'La dimensione della consegna supera il limite accettabile.';
 $string['submissionnotstarted'] = 'Lavora sul compito in OneNote e poi salva le modifiche.';
 $string['viewsubmission'] = 'Visualizza consegna';
+$string['viewsubmissionwarning'] = 'Attenzione: "Visualizza consegna" sovrascriverà la tua pagina OneNote per questa consegna con la copia più recente dello studente.';
 $string['workonthis'] = 'Lavora su questo';
-$string['workonthishelp'] = 'Fai clic sul pulsante precedente per lavorare sul compito in OneNote. Ricorda che devi tornare qui per salvare nuovamente il lavoro in Moodle.';
-
-// Deprecated since Moodle 4.3.
-$string['numfilesforlog'] = 'Il numero di pagine OneNote: {$a}';
+$string['workonthishelp'] = 'Fai clic sul pulsante sopra per lavorare sul compito in OneNote. Ricorda che devi tornare qui per salvare nuovamente il lavoro in Moodle.';

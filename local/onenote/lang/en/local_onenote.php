@@ -31,10 +31,12 @@ $string['feedbacktitle'] = 'Feedback: {$a->assign_name} [{$a->student_firstname}
 $string['connction_error'] = 'Cannot connect to OneNote. Please wait a few moments and retry.';
 $string['onenote_page_error'] = 'Could not open the OneNote page for this submission or feedback.';
 $string['error_noapiavailable'] = 'No OneNote API is available. Connections to OneNote can only be used by users connected to Microsoft 365.';
+// Do not change this value. It is the title of the notebook in the user's OneNote account and is used to find that notebook,
+// so changing it makes existing notebooks unrecognisable and creates duplicate notebooks.
 $string['notebookname'] = 'Moodle Notebook';
 $string['erroronenoteapibadcall'] = 'Error in API call.';
 $string['erroronenoteapibadcall_message'] = 'Error in API call: {$a}';
-$string['errornosection'] = 'Could not get or create a section in your OneNote Notebook';
+$string['errornosection'] = 'Could not get or create a section in your OneNote notebook.';
 $string['errornopostdata'] = 'Could not create page data to send to OneNote.';
 $string['errorsubmissioninteachercontext'] = 'Attempted to create a submission from teacher grading context.';
 $string['errorinvalidreference'] = 'The requested submission or grade does not belong to this assignment and user.';
@@ -50,7 +52,7 @@ $string['privacy:metadata:local_onenote_assign_pages:user_id'] = 'The ID of the 
 $string['privacy:metadata:local_onenote_assign_pages:assign_id'] = 'The ID of the assignment';
 $string['privacy:metadata:local_onenote_assign_pages:submission_student_page_id'] = 'The page ID for the student submission';
 $string['privacy:metadata:local_onenote_assign_pages:feedback_student_page_id'] = 'The page ID for the student feedback';
-$string['privacy:metadata:local_onenote_assign_pages:submission_teacher_page_id'] = 'The page ID for the teacher submission';
+$string['privacy:metadata:local_onenote_assign_pages:submission_teacher_page_id'] = 'The page ID for the teacher\'s copy of the student submission';
 $string['privacy:metadata:local_onenote_assign_pages:feedback_teacher_page_id'] = 'The page ID for the teacher feedback';
 $string['privacy:metadata:local_onenote_assign_pages:teacher_lastviewed'] = 'The time the teacher last viewed the submission';
 $string['privacy:metadata:local_onenote_assign_pages:student_lastmodified'] = 'The time the student last modified the submission';

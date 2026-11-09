@@ -46,6 +46,6 @@ $string['privacy:metadata:atto_teamsmeeting:timecreated'] = 'The time the meetin
 $string['privacy:metadata:atto_teamsmeeting:title'] = 'The title of the meeting.';
 $string['privacy:metadata:atto_teamsmeeting:userid'] = 'The user who created the meeting.';
 $string['privacy:metadata:msteamsapp'] = 'The Atto Teams Meeting plugin sends the user language code to the Microsoft Teams application to provide a user interface based on the user language.';
-$string['privacy:metadata:msteamsapp:userlang'] = 'User language code sent to Microsoft Teams application.';
+$string['privacy:metadata:msteamsapp:userlang'] = 'User language code sent to the Microsoft Teams application.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Delete expired Teams meeting data';
