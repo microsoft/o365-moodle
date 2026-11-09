@@ -35,6 +35,7 @@ use local_o365\oauth2\clientdata;
 use local_o365\oauth2\token;
 use local_o365\rest\unified;
 use local_o365\utils;
+use local_onenote\notebook;
 use moodle_exception;
 use core\url;
 use stdClass;
@@ -76,6 +77,9 @@ abstract class base {
      * too soon can result in the page's title being dropped.
      */
     const NEW_SECTION_PROPAGATION_DELAY = 2;
+
+    /** The maximum number of pages of notebooks to get, so that a response that keeps linking to a next page cannot loop forever. */
+    const MAX_NOTEBOOK_PAGES = 100;
 
     /** @var base The static stored singleton class. */
     protected static $instance = null;
@@ -402,27 +406,7 @@ abstract class base {
         foreach ($response['value'] as $item) {
             switch ($itemtype) {
                 case 'notebook':
-                    $itemname = 'Notebook';
-                    if (isset($item['displayName'])) {
-                        $itemname = $item['displayName'];
-                    }
-
-                    $itemlastmodified = 'now';
-                    if (isset($item['lastModifiedDateTime'])) {
-                        $itemlastmodified = $item['lastModifiedDateTime'];
-                    }
-
-                    $items[] = [
-                            'title' => $itemname,
-                            'path' => $path . '/' . urlencode($item['id']),
-                            'date' => strtotime($itemlastmodified),
-                            'thumbnail' => $OUTPUT->image_url(file_extension_icon($itemname))->out(false),
-                            'source' => $item['id'],
-                            'url' => $item['links']['oneNoteWebUrl']['href'],
-                            'author' => $item['createdBy'],
-                            'id' => $item['id'],
-                            'children' => [],
-                    ];
+                    $items[] = $this->format_notebook_item($item, $path);
                     break;
 
                 case 'section':
@@ -473,27 +457,158 @@ abstract class base {
     }
 
     /**
+     * Format a notebook returned by the OneNote API like the items returned by get_items_list.
+     *
+     * @param array $item A notebook as returned by the OneNote API.
+     * @param string $path The path of the list that the notebook is displayed in.
+     * @return array The formatted notebook.
+     */
+    protected function format_notebook_item(array $item, string $path = ''): array {
+        global $OUTPUT;
+
+        $itemname = 'Notebook';
+        if (isset($item['displayName'])) {
+            $itemname = $item['displayName'];
+        }
+
+        $itemlastmodified = 'now';
+        if (isset($item['lastModifiedDateTime'])) {
+            $itemlastmodified = $item['lastModifiedDateTime'];
+        }
+
+        return [
+            'title' => $itemname,
+            'path' => $path . '/' . urlencode($item['id']),
+            'date' => strtotime($itemlastmodified),
+            'thumbnail' => $OUTPUT->image_url(file_extension_icon($itemname))->out(false),
+            'source' => $item['id'],
+            'url' => $item['links']['oneNoteWebUrl']['href'],
+            'author' => $item['createdBy'],
+            'id' => $item['id'],
+            'children' => [],
+        ];
+    }
+
+    /**
+     * Get the notebooks in the logged-in user's OneNote account.
+     *
+     * Unlike get_items_list, this gets all the pages of notebooks, and tells a failure to get the notebooks apart from an account
+     * that has no notebooks.
+     *
+     * @return array[]|null The notebooks formatted like the items returned by get_items_list, which is empty if the account has
+     *                      no notebooks, or null if the notebooks, or any page of them, could not be retrieved.
+     */
+    protected function fetch_notebooks(): ?array {
+        $notebooks = [];
+        $endpoint = '/notebooks';
+        $visited = [];
+
+        for ($page = 0; $page < self::MAX_NOTEBOOK_PAGES; $page++) {
+            $response = $this->apicall('get', $endpoint);
+            try {
+                $response = $this->process_apicall_response($response, ['value' => null]);
+            } catch (moodle_exception $e) {
+                \local_onenote\utils::debug('Could not retrieve notebooks', __METHOD__, $e);
+                return null;
+            }
+
+            if (!is_array($response['value'])) {
+                \local_onenote\utils::debug('Bad value parameter', __METHOD__, $response);
+                return null;
+            }
+
+            foreach ($response['value'] as $item) {
+                if (is_array($item) && isset($item['id'])) {
+                    $notebooks[] = $this->format_notebook_item($item);
+                }
+            }
+
+            $nextlink = $response['@odata.nextLink'] ?? $response['odata.nextLink'] ?? '';
+            if (empty($nextlink)) {
+                return $notebooks;
+            }
+
+            // The notebooks are in more than one page. Not having all of them could make the Moodle notebook look missing.
+            $endpoint = $this->get_notebooks_endpoint_from_link((string) $nextlink);
+            if ($endpoint === null || isset($visited[$endpoint])) {
+                \local_onenote\utils::debug('Unexpected link to the next page of notebooks', __METHOD__, $nextlink);
+                return null;
+            }
+            $visited[$endpoint] = true;
+        }
+
+        \local_onenote\utils::debug('Too many pages of notebooks', __METHOD__, self::MAX_NOTEBOOK_PAGES);
+        return null;
+    }
+
+    /**
+     * Get the endpoint to call to get the next page of notebooks from the link to it in the response of the OneNote API.
+     *
+     * Only the path and the query of the link are used, so the request is always sent to the API the calls are made to.
+     *
+     * @param string $link The link to the next page, as returned by the OneNote API.
+     * @return string|null The endpoint, or null if the link is not a link to the notebooks.
+     */
+    protected function get_notebooks_endpoint_from_link(string $link): ?string {
+        $parts = parse_url($link);
+        if (empty($parts['path'])) {
+            return null;
+        }
+
+        $path = rtrim($parts['path'], '/');
+        $notebookspath = '/me/onenote/notebooks';
+        if (substr($path, -strlen($notebookspath)) !== $notebookspath) {
+            return null;
+        }
+
+        $endpoint = '/notebooks';
+        if (!empty($parts['query'])) {
+            $endpoint .= '?' . $parts['query'];
+        }
+
+        return $endpoint;
+    }
+
+    /**
+     * Find the notebook used for Moodle in the logged-in user's OneNote account.
+     *
+     * @return array|null The notebook formatted like the items returned by get_items_list, or null if the user has no notebook for
+     *                    Moodle yet or the notebooks could not be retrieved.
+     */
+    public function find_moodle_notebook(): ?array {
+        global $USER;
+
+        $notebooks = $this->fetch_notebooks();
+        if ($notebooks === null) {
+            return null;
+        }
+
+        return notebook::resolve($notebooks, $USER->id);
+    }
+
+    /**
      * Ensure that notebook and section data in the logged-in user's OneNote account are in sync with our database tables.
      *
      * @return array|bool Course ids for which a new OneNote section was created during this call, or false on failure.
      */
     public function sync_notebook_data() {
-        $notebookname = get_string('notebookname', 'local_onenote');
+        global $USER;
+
         $courses = enrol_get_my_courses(); // Get the current user enrolled courses.
-        $notebooksarray = [];
         $newsectioncourseids = [];
 
-        $notebooks = $this->get_items_list();
-        foreach ($notebooks as $notebook) {
-            if (isset($notebook['id'])) {
-                $notebooksarray[$notebook['id']] = $notebook['title'];
-            }
+        $notebooks = $this->fetch_notebooks();
+        if ($notebooks === null) {
+            // Do not create a notebook if the existing ones could not be retrieved, as the Moodle notebook may already exist.
+            return false;
         }
 
-        if (!(in_array($notebookname, $notebooksarray))) {
+        $moodlenotebook = notebook::resolve($notebooks, $USER->id);
+
+        if (empty($moodlenotebook)) {
             // Moodle notebook not found, create it.
             try {
-                $notebookdata = json_encode(['displayName' => $notebookname]);
+                $notebookdata = json_encode(['displayName' => notebook::get_creation_title()]);
                 $creatednotebook = $this->apicall('post', '/notebooks', $notebookdata);
                 $creatednotebook = $this->process_apicall_response($creatednotebook, ['id' => null]);
             } catch (moodle_exception $e) {
@@ -501,12 +616,14 @@ abstract class base {
                 return false;
             }
 
+            notebook::store_id($USER->id, (string) $creatednotebook['id']);
+
             if (!empty($courses)) {
                 $newsectioncourseids = $this->sync_sections($courses, $creatednotebook['id'], []);
             }
         } else {
             // Moodle notebook found, sync sections with courses.
-            $notebookid = array_search($notebookname, $notebooksarray);
+            $notebookid = $moodlenotebook['id'];
             try {
                 $response = $this->apicall('get', '/notebooks/' . $notebookid . '/sections/');
                 $existingsections = $this->process_apicall_response($response, ['value' => null]);

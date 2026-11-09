@@ -46,9 +46,6 @@ $string['linkconnection'] = 'Microsoft 365 -yhteysasetukset';
 $string['microsoft'] = 'Microsoft';
 $string['microsoft:addinstance'] = 'Lisää uusi Microsoft-lohko';
 $string['microsoft:myaddinstance'] = 'Lisää Työpöydälle uusi Microsoft-lohko';
-// Do not change this value. It is the title of the notebook in the user's OneNote account and is used to find that notebook,
-// so changing it makes existing notebooks unrecognisable and creates duplicate notebooks.
-$string['notebookname'] = 'Moodle-muistikirja';
 $string['workonthis'] = 'Työskentele tämän parissa';
 $string['o365matched_title'] = 'Olet <span style="color: #960">melkein</span> yhdistetty Microsoft 365:een';
 $string['o365matched_desc'] = 'Sinut on yhdistetty Microsoft 365 -käyttäjään <b>"{$a}"</b>';
