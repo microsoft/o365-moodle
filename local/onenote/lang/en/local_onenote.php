@@ -31,9 +31,11 @@ $string['feedbacktitle'] = 'Feedback: {$a->assign_name} [{$a->student_firstname}
 $string['connction_error'] = 'Cannot connect to OneNote. Please wait a few moments and retry.';
 $string['onenote_page_error'] = 'Could not open the OneNote page for this submission or feedback.';
 $string['error_noapiavailable'] = 'No OneNote API is available. Connections to OneNote can only be used by users connected to Microsoft 365.';
-// Do not change this value. It is the title of the notebook in the user's OneNote account and is used to find that notebook,
-// so changing it makes existing notebooks unrecognisable and creates duplicate notebooks.
+// The default title of the notebook created in the user's OneNote account. It is also used to find notebooks created before the
+// notebook id was stored, so do not change an existing translation, or those users will get a second notebook.
 $string['notebookname'] = 'Moodle Notebook';
+$string['settings_notebookname'] = 'Notebook title';
+$string['settings_notebookname_desc'] = 'The title of the notebook that is created for Moodle in the OneNote account of each user. Leave empty to use the default title, in the language of the user. Changing the title does not affect the notebooks that already exist, as they are found by their id.<br />The title cannot be longer than 128 characters and cannot contain any of these characters: <code>? * \\ / : &lt; &gt; | &amp; # &quot; \' % ~</code>';
 $string['erroronenoteapibadcall'] = 'Error in API call.';
 $string['erroronenoteapibadcall_message'] = 'Error in API call: {$a}';
 $string['errornosection'] = 'Could not get or create a section in your OneNote notebook.';
@@ -47,6 +49,11 @@ $string['privacy:metadata:local_onenote_user_sections'] = 'OneNote sections for 
 $string['privacy:metadata:local_onenote_user_sections:user_id'] = 'The ID of the Moodle user';
 $string['privacy:metadata:local_onenote_user_sections:course_id'] = 'The ID of the Moodle course';
 $string['privacy:metadata:local_onenote_user_sections:section_id'] = 'The ID of the OneNote section.';
+$string['privacy:metadata:local_onenote_user_notebooks'] = 'OneNote notebooks used for Moodle';
+$string['privacy:metadata:local_onenote_user_notebooks:userid'] = 'The ID of the Moodle user';
+$string['privacy:metadata:local_onenote_user_notebooks:notebookid'] = 'The ID of the OneNote notebook.';
+$string['privacy:metadata:local_onenote_user_notebooks:timecreated'] = 'The time the record was created.';
+$string['privacy:metadata:local_onenote_user_notebooks:timemodified'] = 'The time the record was modified.';
 $string['privacy:metadata:local_onenote_assign_pages'] = 'OneNote pages for assignment submission and feedback';
 $string['privacy:metadata:local_onenote_assign_pages:user_id'] = 'The ID of the Moodle user';
 $string['privacy:metadata:local_onenote_assign_pages:assign_id'] = 'The ID of the assignment';
