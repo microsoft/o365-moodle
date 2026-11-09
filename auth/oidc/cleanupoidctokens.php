@@ -42,8 +42,7 @@ require_admin();
 $PAGE->set_url($pageurl);
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('admin');
-$PAGE->set_heading(get_string('cleanup_oidc_tokens', 'auth_oidc'));
-$PAGE->set_title(get_string('cleanup_oidc_tokens', 'auth_oidc'));
+$PAGE->set_title(get_string('settings_page_cleanup_oidc_tokens', 'auth_oidc'));
 
 $emptyuseridtokens = auth_oidc_get_tokens_with_empty_ids();
 $mismatchedtokens = auth_oidc_get_tokens_with_mismatched_usernames();
