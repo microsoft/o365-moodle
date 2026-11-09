@@ -162,6 +162,7 @@ final class privacy_provider_test extends provider_testcase {
 
         $this->assertCount(0, $DB->get_records('local_onenote_user_sections', ['user_id' => $user1->id]));
         $this->assertCount(0, $DB->get_records('local_onenote_assign_pages', ['user_id' => $user1->id]));
+        $this->assertCount(0, $DB->get_records('local_onenote_user_notebooks', ['userid' => $user1->id]));
 
         // Get all accounts. There should be one.
         foreach ($user1records as $table => $record) {
@@ -196,6 +197,7 @@ final class privacy_provider_test extends provider_testcase {
 
         $this->assertCount(0, $DB->get_records('local_onenote_user_sections', ['user_id' => $user1->id]));
         $this->assertCount(0, $DB->get_records('local_onenote_assign_pages', ['user_id' => $user1->id]));
+        $this->assertCount(0, $DB->get_records('local_onenote_user_notebooks', ['userid' => $user1->id]));
 
         // Get all accounts. There should be one.
         foreach ($user1records as $table => $record) {
@@ -274,6 +276,7 @@ final class privacy_provider_test extends provider_testcase {
     private static function create_userdata(int $userid): array {
         $records = [
                 'local_onenote_user_sections' => self::create_usersections_record($userid),
+                'local_onenote_user_notebooks' => self::create_usernotebooks_record($userid),
                 'local_onenote_assign_pages' => self::create_assignpages_record($userid),
         ];
         return $records;
@@ -293,6 +296,24 @@ final class privacy_provider_test extends provider_testcase {
         $record->course_id = 2;
         $record->section_id = 'sectionid123';
         $record->id = $DB->insert_record('local_onenote_user_sections', $record);
+        return $record;
+    }
+
+    /**
+     * Create a local_onenote_user_notebooks record for the specified userid.
+     *
+     * @param int $userid
+     * @return stdClass
+     * @throws dml_exception
+     */
+    private static function create_usernotebooks_record(int $userid): stdClass {
+        global $DB;
+        $record = new stdClass();
+        $record->userid = $userid;
+        $record->notebookid = 'notebookid123';
+        $record->timecreated = 123456;
+        $record->timemodified = 123458;
+        $record->id = $DB->insert_record('local_onenote_user_notebooks', $record);
         return $record;
     }
 
