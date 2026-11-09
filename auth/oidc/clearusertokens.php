@@ -43,8 +43,7 @@ require_admin();
 $PAGE->set_url($pageurl);
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('admin');
-$PAGE->set_heading(get_string('clear_user_tokens', 'auth_oidc'));
-$PAGE->set_title(get_string('clear_user_tokens', 'auth_oidc'));
+$PAGE->set_title(get_string('settings_page_clear_user_tokens', 'auth_oidc'));
 
 $confirm = optional_param('confirm', 0, PARAM_BOOL);
 $scope = optional_param('scope', 'selected', PARAM_ALPHA);
@@ -85,7 +84,10 @@ if ($formdata = $form->get_data()) {
     }
 
     echo $OUTPUT->header();
-    echo auth_oidc_get_settings_nav_html('auth_oidc_clear_user_tokens');
+    echo auth_oidc_get_settings_nav_html(
+        'auth_oidc_clear_user_tokens',
+        get_string('settings_page_clear_user_tokens', 'auth_oidc')
+    );
     echo $OUTPUT->confirm($message, new url($pageurl, $params), $pageurl);
     echo $OUTPUT->footer();
     exit;
@@ -93,7 +95,10 @@ if ($formdata = $form->get_data()) {
 
 // Step 1: choose whose tokens to clear.
 echo $OUTPUT->header();
-echo auth_oidc_get_settings_nav_html('auth_oidc_clear_user_tokens');
+echo auth_oidc_get_settings_nav_html(
+    'auth_oidc_clear_user_tokens',
+    get_string('settings_page_clear_user_tokens', 'auth_oidc')
+);
 echo html_writer::div(get_string('clear_user_tokens_desc', 'auth_oidc'), 'mb-3');
 
 // The core user selector prints the full name of a user without a first name and last name as a blank space, which
