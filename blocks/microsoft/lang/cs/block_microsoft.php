@@ -46,9 +46,6 @@ $string['linkconnection'] = 'Nastavení připojení k Microsoft 365';
 $string['microsoft'] = 'Microsoft';
 $string['microsoft:addinstance'] = 'Přidat nový blok Microsoft';
 $string['microsoft:myaddinstance'] = 'Přidat nový blok Microsoft na Nástěnku';
-// Do not change this value. It is the title of the notebook in the user's OneNote account and is used to find that notebook,
-// so changing it makes existing notebooks unrecognisable and creates duplicate notebooks.
-$string['notebookname'] = 'Poznámkový blok Moodle';
 $string['workonthis'] = 'Pracovat na tomto';
 $string['o365matched_title'] = 'Jste <span style="color: #960">téměř</span> připojeni k Microsoft 365';
 $string['o365matched_desc'] = 'Byli jste spárováni s uživatelem Microsoft 365 <b>„{$a}“</b>';
