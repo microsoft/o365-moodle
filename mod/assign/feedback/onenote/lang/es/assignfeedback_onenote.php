@@ -15,35 +15,40 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for component 'assignfeedback_onenote'
+ * Spanish language strings.
  *
  * @package assignfeedback_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $string['addfeedback'] = 'Agregar retroalimentación';
-$string['addfeedbackhelp'] = 'Haga clic en el botón de arriba para agregar sus comentarios para la entrega del alumno en OneNote. Puede volver aquí más tarde para guardar su trabajo en Moodle.';
-$string['configmaxbytes'] = 'Tamaño máximo de OneNote';
+$string['addfeedbackhelp'] = 'Haga clic en el botón de arriba para agregar su retroalimentación para la entrega del estudiante en OneNote. Puede volver aquí más tarde para guardar su trabajo en Moodle.';
+$string['configmaxbytes'] = 'Tamaño de paquete máximo de OneNote';
 $string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Habilitado por defecto';
 $string['default_help'] = 'Si se ajusta esta opción, este método de retroalimentación se habilitará por defecto para todas las tareas nuevas.';
-$string['enabled'] = 'Comentario de OneNote';
-$string['enabled_help'] = 'Si está habilitado, el profesor podrá cargar páginas de OneNote con comentarios cuando marque las tareas. Los profesores pueden optar por anotar en la entrega de OneNote del alumno o cargar una página de OneNote completamente nueva.';
-$string['feedbackdownloadfailed'] = 'No se pudieron descargar los comentarios desde OneNote. Vuelva a intentarlo.';
-$string['feedbacklimitexceed'] = 'El tamaño de sus comentarios excede el límite aceptable.';
-$string['feedbacknotstarted'] = 'Agregue sus comentarios utilizando OneNote y guarde los cambios.';
-$string['filesadded'] = 'OneNote de retroalimentación agregados: {$a}';
+$string['deletefeedbackconfirm'] = 'Confirmación de la eliminación de la retroalimentación de OneNote';
+$string['deletefeedbackconfirmdetail'] = 'Esto eliminará la retroalimentación de OneNote guardada para el usuario. Los detalles seguirán estando en OneNote.';
+$string['deletefeedbackforuser'] = 'Eliminar la retroalimentación de OneNote del usuario';
+$string['enabled'] = 'Retroalimentación de OneNote';
+$string['enabled_help'] = 'Si está habilitado, el profesor podrá subir páginas de OneNote con retroalimentación al calificar las tareas. Los profesores pueden optar por anotar la entrega de OneNote del estudiante o subir una página de OneNote completamente nueva.';
+$string['feedbackdownloadfailed'] = 'No se pudo descargar la retroalimentación desde OneNote. Vuelva a intentarlo.';
+$string['feedbacklimitexceed'] = 'El tamaño de su retroalimentación excede el límite aceptable.';
 $string['maxbytes'] = 'Tamaño de paquete máximo de OneNote';
-$string['maxfiles'] = 'Número máximo de OneNote cargados';
-$string['maximumsize'] = 'Tamaño de paquete máximo de OneNote';
-$string['moreusers'] = '{$a} más...';
-$string['nochanges'] = 'Sin cambios';
+$string['maxfiles'] = 'Número máximo de páginas de OneNote subidas';
 $string['notsignedin'] = 'Inicie sesión en OneNote antes de intentar guardar los cambios.';
-$string['onenote'] = 'OneNote de retroalimentación';
-$string['pluginname'] = 'Comentario de OneNote';
-$string['signinhelp1'] = 'Haga clic en el botón de arriba para iniciar sesión en OneNote para agregar sus comentarios en la entrega del estudiante desde allí.';
-$string['signinhelp2'] = 'Haga clic en el botón de arriba para iniciar sesión en OneNote si desea ver los comentarios allí.';
+$string['onenote'] = 'Retroalimentación de OneNote';
+$string['onenoteactions'] = 'Acciones de OneNote:';
+$string['pluginname'] = 'Retroalimentación de OneNote';
+$string['privacy:metadata:assignmentid'] = 'Identificador de la tarea';
+$string['privacy:metadata:gradepurpose'] = 'El ID de la calificación asociada al registro';
+$string['privacy:metadata:numfiles'] = 'Número de archivos';
+$string['privacy:metadata:tablepurpose'] = 'Almacena el número de archivos utilizados para la retroalimentación.';
+$string['privacy:path'] = 'Retroalimentación de OneNote';
+$string['signinhelp1'] = 'Haga clic en el botón de arriba para iniciar sesión en OneNote para agregar su retroalimentación en la entrega del estudiante desde allí.';
+$string['signinhelp2'] = 'Haga clic en el botón de arriba para iniciar sesión en OneNote si desea ver la retroalimentación allí.';
 $string['viewfeedback'] = 'Ver retroalimentación';

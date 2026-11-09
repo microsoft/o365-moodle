@@ -15,12 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings
- *
+ * Portuguese (Brazil) language strings.
  * @package    local_onenote
- * @category   string
- * @copyright Microsoft, Inc.
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  Microsoft, Inc.
  */
 
 // phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder
@@ -31,8 +30,32 @@ $string['submissiontitle'] = 'Envio: {$a->assign_name} ({$a->student_firstname} 
 $string['feedbacktitle'] = 'Feedback: {$a->assign_name} ({$a->student_firstname} {$a->student_lastname})';
 $string['connction_error'] = 'Não foi possível conectar-se ao OneNote. Aguarde alguns instantes e tente novamente.';
 $string['onenote_page_error'] = 'Não foi possível abrir a página do OneNote para este envio ou feedback.';
-$string['error_noapiavailable'] = 'Não há nenhuma API do OneNote disponível. Caso você esteja usando o conjunto de plugins do Microsoft 365, não foi possível estabelecer contato com o OneNote.';
+$string['error_noapiavailable'] = 'Nenhuma API do OneNote está disponível. As conexões com o OneNote só podem ser usadas por usuários conectados ao Microsoft 365.';
+// Do not change this value. It is the title of the notebook in the user's OneNote account and is used to find that notebook,
+// so changing it makes existing notebooks unrecognisable and creates duplicate notebooks.
 $string['notebookname'] = 'Bloco de anotações do Moodle';
+$string['erroronenoteapibadcall'] = 'Erro na chamada da API.';
+$string['erroronenoteapibadcall_message'] = 'Erro na chamada da API: {$a}';
+$string['errornosection'] = 'Não foi possível obter ou criar uma seção no seu bloco de anotações do OneNote.';
+$string['errornopostdata'] = 'Não foi possível criar os dados da página a serem enviados ao OneNote.';
+$string['errorsubmissioninteachercontext'] = 'Tentativa de criar um envio a partir do contexto de avaliação do professor.';
+$string['errorinvalidreference'] = 'O envio ou a nota solicitada não pertence a esta tarefa e a este usuário.';
+$string['errorfeedbackinstudentcontext'] = 'Tentativa de criar um feedback no contexto de envio do estudante.';
+
+$string['privacy:metadata:local_onenote'] = 'Plugin local Microsoft OneNote';
+$string['privacy:metadata:local_onenote_user_sections'] = 'Seções do OneNote para cursos do Moodle';
+$string['privacy:metadata:local_onenote_user_sections:user_id'] = 'O ID do usuário do Moodle';
+$string['privacy:metadata:local_onenote_user_sections:course_id'] = 'O ID do curso do Moodle';
+$string['privacy:metadata:local_onenote_user_sections:section_id'] = 'O ID da seção do OneNote.';
+$string['privacy:metadata:local_onenote_assign_pages'] = 'Páginas do OneNote para envio e feedback de tarefas';
+$string['privacy:metadata:local_onenote_assign_pages:user_id'] = 'O ID do usuário do Moodle';
+$string['privacy:metadata:local_onenote_assign_pages:assign_id'] = 'O ID da tarefa';
+$string['privacy:metadata:local_onenote_assign_pages:submission_student_page_id'] = 'O ID da página do envio do estudante';
+$string['privacy:metadata:local_onenote_assign_pages:feedback_student_page_id'] = 'O ID da página do feedback do estudante';
+$string['privacy:metadata:local_onenote_assign_pages:submission_teacher_page_id'] = 'O ID da página da cópia do professor do envio do estudante';
+$string['privacy:metadata:local_onenote_assign_pages:feedback_teacher_page_id'] = 'O ID da página do feedback do professor';
+$string['privacy:metadata:local_onenote_assign_pages:teacher_lastviewed'] = 'A hora em que o professor visualizou o envio pela última vez';
+$string['privacy:metadata:local_onenote_assign_pages:student_lastmodified'] = 'A hora em que o estudante modificou o envio pela última vez';
 
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
