@@ -104,6 +104,12 @@ final class page_access_test extends \advanced_testcase {
 
             /**
              * Fail if Graph is called.
+             *
+             * @param string $httpmethod The HTTP method to use.
+             * @param string $apimethod The API endpoint/method to call.
+             * @param string $params Additional parameters to include.
+             * @param array $options Additional options for the request.
+             * @return string Never returns.
              */
             public function apicall($httpmethod, $apimethod, $params = '', $options = []) {
                 throw new \coding_exception('Graph must not be reached by these tests.');
@@ -111,6 +117,10 @@ final class page_access_test extends \advanced_testcase {
 
             /**
              * Stub.
+             *
+             * @param string $url A full URL to get.
+             * @param array $options Additional options for the request.
+             * @return string Always an empty string.
              */
             public function geturl($url, $options = []) {
                 return '';
