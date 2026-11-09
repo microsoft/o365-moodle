@@ -26,3 +26,4 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Integracja pakietu Microsoft 365';
+$string['privacy:metadata'] = 'Ta wtyczka jest jedynie wtyczką-powłoką.';

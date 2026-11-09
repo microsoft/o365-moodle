@@ -15,21 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for component 'assignsubmission_onenote'
+ * Japanese language strings.
  *
  * @package assignsubmission_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $string['configmaxbytes'] = 'OneNote最大ページサイズ';
-$string['countfiles'] = 'OneNote : {$a}';
+$string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'デフォルトで有効にする';
 $string['default_help'] = '設定した場合、すべての新しい課題において、この提出方法がデフォルトで有効になります。';
+$string['download'] = 'ダウンロード';
 $string['enabled'] = 'OneNote提出';
 $string['enabled_help'] = '有効にした場合、学生は1ページ以上のOneNoteページを提出物としてアップロードできます。';
+$string['erroremptyothervalue'] = '\'filesubmissioncount\'の値をotherに設定する必要があります。';
 $string['eventassessableuploaded'] = 'OneNoteページがアップロードされました。';
 $string['maxbytes'] = 'OneNote最大ページサイズ';
 $string['maxfilessubmission'] = 'アップロードできる最大OneNoteページ数';
@@ -38,18 +41,19 @@ $string['maximumsubmissionsize'] = 'OneNoteページサイズ';
 $string['maximumsubmissionsize_help'] = 'OneNoteページの最大提出サイズを設定します。';
 $string['notsignedin'] = '変更を保存する前に、OneNoteにサインインしてください。';
 $string['onenote'] = 'OneNote提出';
-$string['onenoteactions'] = 'OneNoteアクション : ';
+$string['onenoteactions'] = 'OneNoteアクション: ';
 $string['pluginname'] = 'OneNote提出';
+$string['privacy:metadata:assignmentid'] = '課題の識別子';
+$string['privacy:metadata:numfiles'] = 'ファイル数';
+$string['privacy:metadata:submissionpurpose'] = 'ユーザの提出に関連付けられる提出ID';
+$string['privacy:metadata:tablepurpose'] = '提出に使用されるファイル数を保存します。';
+$string['privacy:path'] = 'OneNote提出';
 $string['signinhelp1'] = 'OneNoteで提出の作業を行う場合は、上のボタンをクリックしてOneNoteにサインインします。';
 $string['signinhelp2'] = 'OneNoteで提出を表示する場合は、上のボタンをクリックしてOneNoteにサインインします。';
-$string['siteuploadlimit'] = 'サイトアップロード上限';
 $string['submissiondownloadfailed'] = 'OneNoteから提出をダウンロードできませんでした。もう一度お試しください。';
-$string['submissionfilearea'] = '提出物としてアップロードされたOneNoteページ';
 $string['submissionlimitexceed'] = '提出サイズが上限を超えています。';
 $string['submissionnotstarted'] = 'OneNoteで課題の作業を行い、変更した内容を保存してください。';
 $string['viewsubmission'] = '提出を表示する';
-$string['workonthis'] = 'これを作業';
+$string['viewsubmissionwarning'] = '警告: 「提出を表示する」を実行すると、この提出に対するあなたのOneNoteページが、学生の最新のコピーで上書きされます。';
+$string['workonthis'] = 'これに取り組む';
 $string['workonthishelp'] = 'OneNoteで課題の作業を行うには、上のボタンをクリックします。必ずここに戻り、Moodleに作業内容を保存してください。';
-
-// Deprecated since Moodle 4.3.
-$string['numfilesforlog'] = 'OneNoteページ数 : {$a}';

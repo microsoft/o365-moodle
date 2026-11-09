@@ -15,35 +15,40 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for component 'assignfeedback_onenote'
+ * Dutch language strings.
  *
  * @package assignfeedback_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $string['addfeedback'] = 'Feedback toevoegen';
-$string['addfeedbackhelp'] = 'Klik op de knop hierboven als je in OneNote je feedback wilt toevoegen voor de inzending van de student. Je kunt hier later terugkomen om je weer weer op te slaan in Moodle.';
-$string['configmaxbytes'] = 'Maximum OneNote-formaat';
+$string['addfeedbackhelp'] = 'Klik op de knop hierboven als je in OneNote je feedback wilt toevoegen voor de inzending van de leerling. Je kunt hier later terugkomen om je werk weer op te slaan in Moodle.';
+$string['configmaxbytes'] = 'Maximale grootte OneNote-pakket';
 $string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Standaard ingeschakeld';
 $string['default_help'] = 'Als deze optie is ingeschakeld, is deze feedbackmethode standaard ingeschakeld voor alle nieuwe opdrachten.';
+$string['deletefeedbackconfirm'] = 'Bevestiging van het verwijderen van OneNote-feedback';
+$string['deletefeedbackconfirmdetail'] = 'Hiermee wordt de opgeslagen OneNote-feedback voor de gebruiker verwijderd. De details blijven nog wel in OneNote staan.';
+$string['deletefeedbackforuser'] = 'OneNote-feedback voor gebruiker verwijderen';
 $string['enabled'] = 'OneNote-feedback';
-$string['enabled_help'] = 'Als deze optie is ingeschakeld, kan de leraar OneNote-pagina\'s met feedback uploaden tijdens de beoordeling van de opdrachten. Leraren kunnen de OneNote-inzending van een student van aantekeningen voorzien of een geheel nieuwe OneNote-pagina uploaden.';
+$string['enabled_help'] = 'Als deze optie is ingeschakeld, kan de leraar OneNote-pagina\'s met feedback uploaden tijdens de beoordeling van de opdrachten. Leraren kunnen de OneNote-inzending van een leerling van aantekeningen voorzien of een geheel nieuwe OneNote-pagina uploaden.';
 $string['feedbackdownloadfailed'] = 'Kan de feedback vanuit OneNote niet downloaden. Probeer het nog eens.';
 $string['feedbacklimitexceed'] = 'Je feedback overschrijdt de geaccepteerde limiet.';
-$string['feedbacknotstarted'] = 'Voeg je feedback toe met OneNote en sla daarna je wijzigingen op.';
-$string['filesadded'] = 'Feedback-OneNote toegevoegd: {$a}';
 $string['maxbytes'] = 'Maximale grootte OneNote-pakket';
-$string['maxfiles'] = 'Maximaal aantal geüploade OneNote';
-$string['maximumsize'] = 'Maximale grootte OneNote-pakket';
-$string['moreusers'] = '{$a} meer ...';
-$string['nochanges'] = 'Geen wijzigingen';
+$string['maxfiles'] = 'Maximaal aantal geüploade OneNote-pagina\'s';
 $string['notsignedin'] = 'Meld je aan bij OneNote voordat je probeert je wijzigingen op te slaan.';
-$string['onenote'] = 'Feedback-OneNote';
+$string['onenote'] = 'OneNote-feedback';
+$string['onenoteactions'] = 'OneNote-acties:';
 $string['pluginname'] = 'OneNote-feedback';
-$string['signinhelp1'] = 'Klik op de knop hierboven als je je wilt aanmelden bij OneNote zodat je daar je feedback kunt toevoegen aan de inzending van de student.';
+$string['privacy:metadata:assignmentid'] = 'Opdrachtidentificatie';
+$string['privacy:metadata:gradepurpose'] = 'De beoordelings-ID die bij het record hoort';
+$string['privacy:metadata:numfiles'] = 'Aantal bestanden';
+$string['privacy:metadata:tablepurpose'] = 'Slaat het aantal bestanden op dat voor de feedback is gebruikt.';
+$string['privacy:path'] = 'OneNote-feedback';
+$string['signinhelp1'] = 'Klik op de knop hierboven als je je wilt aanmelden bij OneNote zodat je daar je feedback kunt toevoegen aan de inzending van de leerling.';
 $string['signinhelp2'] = 'Klik op de knop hierboven als je je wilt aanmelden bij OneNote en daar de feedback wilt bekijken.';
 $string['viewfeedback'] = 'Feedback bekijken';

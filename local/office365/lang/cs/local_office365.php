@@ -26,3 +26,4 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Integrace Microsoft 365';
+$string['privacy:metadata'] = 'Tento modul je pouze obalový modul.';

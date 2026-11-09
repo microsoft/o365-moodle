@@ -26,3 +26,4 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Microsoft 365の統合';
+$string['privacy:metadata'] = 'このプラグインは単なるシェルプラグインです。';

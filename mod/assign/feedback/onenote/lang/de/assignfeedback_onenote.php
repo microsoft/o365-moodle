@@ -15,35 +15,40 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for component 'assignfeedback_onenote'
+ * German language strings.
  *
  * @package assignfeedback_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $string['addfeedback'] = 'Feedback hinzufügen';
-$string['addfeedbackhelp'] = 'Klicken Sie auf die Schaltfläche oben, um Ihr Feedback für die abgegebene Seite des Studenten in OneNote hinzuzufügen. Sie können später hierher zurückkehren, um Ihre Arbeit wieder in Moodle zu speichern.';
-$string['configmaxbytes'] = 'Maximale OneNote-Größe';
+$string['addfeedbackhelp'] = 'Klicken Sie auf die Schaltfläche oben, um Ihr Feedback für die Abgabe des Teilnehmers/der Teilnehmerin in OneNote hinzuzufügen. Sie können später hierher zurückkehren, um Ihre Arbeit wieder in Moodle zu speichern.';
+$string['configmaxbytes'] = 'Maximale Größe von OneNote-Paketen';
 $string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Standardmäßig aktiviert';
-$string['default_help'] = 'Mit dieser Einstellung wird die gewählte Feedback-Methode für alle neuen Aufgaben voreingestellt.';
+$string['default_help'] = 'Mit dieser Einstellung wird diese Feedback-Methode für alle neuen Aufgaben standardmäßig aktiviert.';
+$string['deletefeedbackconfirm'] = 'Bestätigung zum Entfernen des OneNote-Feedbacks';
+$string['deletefeedbackconfirmdetail'] = 'Dadurch wird das gespeicherte OneNote-Feedback für den/die Nutzer/in entfernt. Die Details bleiben weiterhin in OneNote erhalten.';
+$string['deletefeedbackforuser'] = 'OneNote-Feedback für Nutzer/in löschen';
 $string['enabled'] = 'OneNote-Feedback';
-$string['enabled_help'] = 'Ist diese Einstellung aktiviert, kann der Trainer bei der Benotung der Zuweisungen OneNote-Seiten mit Feedback hochladen. Trainer können die abgegebene OneNote-Seite des Studenten mit Anmerkungen versehen oder eine ganz neue OneNote-Seite hochladen.';
-$string['feedbackdownloadfailed'] = 'Feedback konnte nicht von OneNote heruntergeladen werden. Versuchen Sie es noch einmal.';
+$string['enabled_help'] = 'Wenn diese Option aktiviert ist, kann der Trainer/die Trainerin bei der Bewertung der Aufgaben OneNote-Seiten mit Feedback hochladen. Trainer/innen können die abgegebene OneNote-Seite des Teilnehmers/der Teilnehmerin mit Anmerkungen versehen oder eine ganz neue OneNote-Seite hochladen.';
+$string['feedbackdownloadfailed'] = 'Das Feedback konnte nicht aus OneNote heruntergeladen werden. Bitte versuchen Sie es noch einmal.';
 $string['feedbacklimitexceed'] = 'Die Größe Ihres Feedbacks übersteigt den zulässigen Grenzwert.';
-$string['feedbacknotstarted'] = 'Fügen Sie Ihr Feedback mit OneNote hinzu und speichern Sie anschließend Ihre Änderungen.';
-$string['filesadded'] = 'Feedback-OneNote hinzugefügt: {$a}';
 $string['maxbytes'] = 'Maximale Größe von OneNote-Paketen';
-$string['maxfiles'] = 'Maximale Anzahl der hochgeladenen OneNote';
-$string['maximumsize'] = 'Maximale Größe von OneNote-Paketen';
-$string['moreusers'] = '{$a} weitere';
-$string['nochanges'] = 'Keine Änderungen';
+$string['maxfiles'] = 'Maximale Anzahl hochgeladener OneNote-Seiten';
 $string['notsignedin'] = 'Melden Sie sich bei OneNote an, bevor Sie versuchen, Ihre Änderungen zu speichern.';
-$string['onenote'] = 'Feedback-OneNote';
+$string['onenote'] = 'OneNote-Feedback';
+$string['onenoteactions'] = 'OneNote-Aktionen:';
 $string['pluginname'] = 'OneNote-Feedback';
-$string['signinhelp1'] = 'Klicken Sie auf die Schaltfläche oben, um sich bei OneNote anzumelden und dort Feedback zur abgegebenen Arbeit des Studenten hinzuzufügen.';
+$string['privacy:metadata:assignmentid'] = 'Aufgabenkennung';
+$string['privacy:metadata:gradepurpose'] = 'Die mit dem Datensatz verknüpfte Bewertungs-ID';
+$string['privacy:metadata:numfiles'] = 'Anzahl der Dateien';
+$string['privacy:metadata:tablepurpose'] = 'Speichert die Anzahl der für das Feedback verwendeten Dateien.';
+$string['privacy:path'] = 'OneNote-Feedback';
+$string['signinhelp1'] = 'Klicken Sie auf die Schaltfläche oben, um sich bei OneNote anzumelden und dort Feedback zur Abgabe des Teilnehmers/der Teilnehmerin hinzuzufügen.';
 $string['signinhelp2'] = 'Klicken Sie auf die Schaltfläche oben, um sich bei OneNote anzumelden, wenn Sie das Feedback dort anzeigen möchten.';
 $string['viewfeedback'] = 'Feedback anzeigen';

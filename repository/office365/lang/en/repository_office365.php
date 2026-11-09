@@ -22,9 +22,9 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-$string['cachedef_unifiedfolderids'] = 'Microsoft 365 Repository - Unified folder IDs';
-$string['cachedef_unifiedgroupfolderids'] = 'Microsoft 365 Repository - Unified folder IDs for groups';
-$string['configplugin'] = 'Configure Microsoft 365 Repository';
+$string['cachedef_unifiedfolderids'] = 'Microsoft 365 repository - Unified folder IDs';
+$string['cachedef_unifiedgroupfolderids'] = 'Microsoft 365 repository - Unified folder IDs for groups';
+$string['configplugin'] = 'Configure Microsoft 365 repository';
 $string['controlledsharelinkdesc'] = 'Shared copy (organization members only)';
 $string['copiedfile'] = 'Copy of file';
 $string['defaultgroupsfolder'] = 'Course Files';
@@ -54,7 +54,7 @@ $string['enableanonymousshare_help'] = 'When checked, users can choose to create
 **Important Notes:**
 * The copy operation may take a few seconds for large files.
 * Users should ensure the file content is appropriate for organization-wide sharing.
-* The copied file will appear in the user\'s OneDrive with " - Shared" suffix.
+* The copied file will appear in the user\'s OneDrive with a " - Shared" suffix.
 * Changes made to the original file will NOT be reflected in the shared copy, and vice versa.
 
 **This option is disabled by default due to display limitations and potential confusion. Check this box only if you want to allow users to create organization-shared copies.**';
@@ -77,19 +77,19 @@ $string['enableanonymoussharewarning'] = '<div class="alert alert-info"><strong>
 <tr>
 <td><strong>Embed</strong></td>
 <td>Working - image is embedded</td>
-<td style="background-color: #ffdddd;">Not working - iframe showing refused to connect error</td>
+<td style="background-color: #ffdddd;">Not working - iframe showing "refused to connect" error</td>
 </tr>
 <tr>
 <td><strong>Force download</strong></td>
-<td colspan="2">Working - redirect to OneDrive</td>
+<td colspan="2">Working - redirected to OneDrive</td>
 </tr>
 <tr>
 <td><strong>Open</strong></td>
-<td colspan="2">Working - redirect to OneDrive</td>
+<td colspan="2">Working - redirected to OneDrive</td>
 </tr>
 <tr>
 <td><strong>In pop-up</strong></td>
-<td colspan="2">Working - open in pop-up</td>
+<td colspan="2">Working - opened in pop-up</td>
 </tr>
 </tbody>
 </table>
@@ -154,11 +154,9 @@ At least one of the three file linking options must be enabled.';
 $string['enableonedrivegroup'] = 'Enable My OneDrive folder in file picker';
 $string['enabletrendinggroup'] = 'Enable Files Trending Around Me folder in file picker';
 
-$string['erroraccessdenied'] = 'Access denied';
 $string['errorauthoidcnotconfig'] = 'Please configure the OpenID Connect authentication plugin before attempting to use the Microsoft 365 repository.';
 $string['errorbadclienttype'] = 'Invalid client type.';
 $string['errorbadpath'] = 'Bad Path';
-$string['errorcoursenotfound'] = 'Course not found';
 $string['errorencodingreference'] = 'Failed to encode file reference';
 $string['errornofilelinkoption'] = 'At least one file linking option must be enabled.';
 $string['erroro365required'] = 'This file is currently only available to Microsoft 365 users.';
@@ -174,7 +172,6 @@ $string['myfiles'] = 'My OneDrive';
 $string['notconfigured'] = '<p class="error">To use this plugin, you must first configure the <a href="{$a}/admin/settings.php?section=local_o365">Microsoft 365 plugins</a></p>';
 $string['office365:view'] = 'View Microsoft 365 repository';
 $string['pluginname'] = 'Microsoft 365';
-$string['pluginname_help'] = 'A Microsoft 365 Repository';
-$string['privacy:metadata'] = 'This plugin communicates with the Microsoft 365 OneDrive API as the current user. Any files uploaded will be sent to the remote server';
+$string['privacy:metadata'] = 'This plugin communicates with the Microsoft Graph API (OneDrive) as the current user. Any files uploaded will be sent to the remote server.';
 $string['trendingaround'] = 'Files Trending Around Me';
 $string['upload'] = 'Upload New File';

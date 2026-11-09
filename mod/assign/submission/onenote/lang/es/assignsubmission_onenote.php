@@ -15,11 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for component 'assignsubmission_onenote'
+ * Spanish language strings.
  *
  * @package assignsubmission_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -28,11 +29,13 @@ $string['configmaxbytes'] = 'Tamaño de página máximo de OneNote';
 $string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Habilitado por defecto';
 $string['default_help'] = 'Si se ajusta esta opción, este método de entrega se habilitará por defecto para todas las tareas nuevas.';
+$string['download'] = 'Descargar';
 $string['enabled'] = 'Entregas de OneNote';
-$string['enabled_help'] = 'Si se habilita esta opción, los alumnos pueden subir una o más páginas de OneNote como parte de su entrega.';
-$string['eventassessableuploaded'] = 'Se cargó una página de OneNote.';
+$string['enabled_help'] = 'Si se habilita esta opción, los estudiantes pueden subir una o más páginas de OneNote como parte de su entrega.';
+$string['erroremptyothervalue'] = 'El valor \'filesubmissioncount\' debe establecerse en other.';
+$string['eventassessableuploaded'] = 'Se subió una página de OneNote.';
 $string['maxbytes'] = 'Tamaño de página máximo de OneNote';
-$string['maxfilessubmission'] = 'Cantidad máxima de páginas de OneNote cargadas';
+$string['maxfilessubmission'] = 'Cantidad máxima de páginas de OneNote subidas';
 $string['maxfilessubmission_help'] = 'Si las entregas de OneNote están habilitadas, cada estudiante será capaz de subir hasta este número de páginas de OneNote en su entrega.';
 $string['maximumsubmissionsize'] = 'Tamaño de página de OneNote';
 $string['maximumsubmissionsize_help'] = 'Establece el tamaño de entrega máximo de las páginas de OneNote.';
@@ -40,16 +43,17 @@ $string['notsignedin'] = 'Inicie sesión en OneNote antes de intentar guardar lo
 $string['onenote'] = 'Entregas de OneNote';
 $string['onenoteactions'] = 'Acciones de OneNote: ';
 $string['pluginname'] = 'Entregas de OneNote';
+$string['privacy:metadata:assignmentid'] = 'Identificador de la tarea';
+$string['privacy:metadata:numfiles'] = 'Número de archivos';
+$string['privacy:metadata:submissionpurpose'] = 'El ID de la entrega que enlaza con las entregas del usuario';
+$string['privacy:metadata:tablepurpose'] = 'Almacena el número de archivos utilizados para la entrega.';
+$string['privacy:path'] = 'Entregas de OneNote';
 $string['signinhelp1'] = 'Haga clic en el botón de arriba para iniciar sesión en OneNote si desea trabajar en la tarea desde allí.';
 $string['signinhelp2'] = 'Haga clic en el botón de arriba para iniciar sesión en OneNote si desea ver la entrega allí.';
-$string['siteuploadlimit'] = 'Límite de subida del sitio';
 $string['submissiondownloadfailed'] = 'No se pudo descargar la entrega desde OneNote. Vuelva a intentarlo.';
-$string['submissionfilearea'] = 'Páginas de entregas de OneNote cargadas';
 $string['submissionlimitexceed'] = 'El tamaño de la entrega excede el límite aceptable.';
 $string['submissionnotstarted'] = 'Trabaje en la tarea en OneNote y luego guarde los cambios.';
 $string['viewsubmission'] = 'Ver entrega';
+$string['viewsubmissionwarning'] = 'Advertencia: "Ver entrega" sobrescribirá su página de OneNote de esta entrega con la última copia del estudiante.';
 $string['workonthis'] = 'Trabajar en esto';
 $string['workonthishelp'] = 'Haga clic en el botón de arriba para trabajar en la tarea desde OneNote. Recuerde que deberá volver aquí para guardar su trabajo en Moodle.';
-
-// Deprecated since Moodle 4.3.
-$string['numfilesforlog'] = 'La cantidad de página(s) de OneNote: {$a}';
