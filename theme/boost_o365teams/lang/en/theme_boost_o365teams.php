@@ -25,20 +25,16 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['advancedsettings'] = 'Advanced settings';
-$string['choosereadme'] = 'Boost o365teams is a modern highly-customisable theme. This theme is intended to be used directly, or as a parent theme when creating new themes utilising Bootstrap 4.';
-$string['configtitle'] = 'Boost Office365 Teams';
-$string['edit_course'] = 'Edit course in browser window';
-$string['editcourse'] = 'Edit course';
+$string['choosereadme'] = 'Boost Microsoft 365 Teams is a modern, highly customisable theme. This theme is intended to be used directly, or as a parent theme when creating new themes utilising Bootstrap 4.';
+$string['configtitle'] = 'Boost Microsoft 365 Teams';
 $string['feedback'] = 'Feedback';
-$string['footer_stamp_desc'] = 'Displays Image or logo at bottom right of tabs.<br/>(Max-Height: 60px)';
+$string['footer_stamp_desc'] = 'Displays an image or logo at the bottom right of tabs.<br/>(Max-Height: 60px)';
 $string['footer_stamp_title'] = 'Tabs Footer Stamp';
 $string['generalsettings'] = 'General settings';
 $string['navigatereturn'] = 'Return to quiz menu';
-$string['open_course'] = 'Open course in browser window';
-$string['placementfrontpage'] = 'Front page';
-$string['pluginname'] = 'Boost Office365 Teams';
-$string['privacy:metadata'] = 'The Boost Office365 Teams plugin does not store any personal data.';
+$string['pluginname'] = 'Boost Microsoft 365 Teams';
+$string['privacy:metadata'] = 'The Boost Microsoft 365 Teams plugin does not store any personal data.';
 $string['region-side-pre'] = 'Right';
 $string['share_feedback'] = 'Share feedback';
 $string['showteamfeedbacklink'] = 'Show feedback link';
-$string['showteamfeedbacklink_desc'] = 'If enabled, a link to leave feedback to Moodle Microsoft 365 integration will be shown when a Moodle tab is opened in Teams.';
+$string['showteamfeedbacklink_desc'] = 'If enabled, a link to leave feedback on the Moodle Microsoft 365 integration will be shown when a Moodle tab is opened in Teams.';

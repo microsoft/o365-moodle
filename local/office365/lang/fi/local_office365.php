@@ -26,3 +26,4 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Microsoft 365 -integrointi';
+$string['privacy:metadata'] = 'Tämä lisäosa on pelkkä kuorilisäosa.';

@@ -15,41 +15,45 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for component 'assignsubmission_onenote'
+ * French language strings.
  *
  * @package assignsubmission_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $string['configmaxbytes'] = 'Taille maximale de la page OneNote';
-$string['countfiles'] = 'Pages OneNote : {$a}';
+$string['countfiles'] = 'Pages OneNote : {$a}';
 $string['default'] = 'Activé par défaut';
 $string['default_help'] = 'Si ce réglage est activé, cette méthode de remise de travaux sera activée par défaut pour tous les nouveaux devoirs.';
+$string['download'] = 'Télécharger';
 $string['enabled'] = 'Remises OneNote';
 $string['enabled_help'] = 'Si ce réglage est activé, les étudiants pourront télécharger une ou plusieurs pages OneNote pour leur devoir.';
+$string['erroremptyothervalue'] = 'La valeur « filesubmissioncount » doit être définie dans other.';
 $string['eventassessableuploaded'] = 'Une page OneNote a été téléchargée.';
 $string['maxbytes'] = 'Taille maximale de la page OneNote';
 $string['maxfilessubmission'] = 'Nombre maximal de pages OneNote téléchargées';
 $string['maxfilessubmission_help'] = 'Si la remise de travaux OneNote est activée, chaque étudiant pourra télécharger au maximum ce nombre de pages OneNote pour son travail.';
 $string['maximumsubmissionsize'] = 'Taille de page OneNote';
 $string['maximumsubmissionsize_help'] = 'Définit la taille maximale de la remise de pages OneNote.';
-$string['notsignedin'] = 'Inscrivez-vous à OneNote avant d\'essayer d\'enregistrer vos modifications.';
+$string['notsignedin'] = 'Connectez-vous à OneNote avant d’essayer d’enregistrer vos modifications.';
 $string['onenote'] = 'Remises OneNote';
 $string['onenoteactions'] = 'Actions OneNote : ';
 $string['pluginname'] = 'Remises OneNote';
-$string['signinhelp1'] = 'Cliquez sur le bouton ci-dessus pour vous inscrire à OneNote si vous souhaitez travailler sur la remise de travaux à cet endroit.';
-$string['signinhelp2'] = 'Cliquez sur le bouton ci-dessus pour vous inscrire à OneNote si vous souhaitez afficher la remise de travaux à cet endroit.';
-$string['siteuploadlimit'] = 'Limite de téléchargement du site';
+$string['privacy:metadata:assignmentid'] = 'Identifiant du devoir';
+$string['privacy:metadata:numfiles'] = 'Nombre de fichiers';
+$string['privacy:metadata:submissionpurpose'] = 'L’ID de la remise qui fait le lien avec les remises de l’utilisateur';
+$string['privacy:metadata:tablepurpose'] = 'Stocke le nombre de fichiers utilisés pour la remise.';
+$string['privacy:path'] = 'Remises OneNote';
+$string['signinhelp1'] = 'Cliquez sur le bouton ci-dessus pour vous connecter à OneNote si vous souhaitez y travailler sur la remise de travaux.';
+$string['signinhelp2'] = 'Cliquez sur le bouton ci-dessus pour vous connecter à OneNote si vous souhaitez y afficher la remise de travaux.';
 $string['submissiondownloadfailed'] = 'Impossible de télécharger votre remise de travaux à partir de OneNote. Veuillez réessayer.';
-$string['submissionfilearea'] = 'Pages de remise OneNote téléchargées';
 $string['submissionlimitexceed'] = 'La taille de votre remise de travaux dépasse la limite acceptable.';
 $string['submissionnotstarted'] = 'Travaillez sur le devoir dans OneNote, puis enregistrez vos modifications.';
 $string['viewsubmission'] = 'Afficher le devoir remis';
+$string['viewsubmissionwarning'] = 'Attention : « Afficher le devoir remis » écrasera votre page OneNote pour cette remise par la dernière copie de l’étudiant.';
 $string['workonthis'] = 'Travailler sur cet élément';
 $string['workonthishelp'] = 'Cliquez sur le bouton ci-dessus pour travailler sur le devoir dans OneNote. Sachez que vous devrez revenir sur cette page pour enregistrer votre travail dans Moodle.';
-
-// Deprecated since Moodle 4.3.
-$string['numfilesforlog'] = 'Nombre de pages OneNote : {$a}';

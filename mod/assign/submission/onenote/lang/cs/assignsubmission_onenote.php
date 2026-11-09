@@ -15,11 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for component 'assignsubmission_onenote'
+ * Czech language strings.
  *
  * @package assignsubmission_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -27,29 +28,32 @@ defined('MOODLE_INTERNAL') || die();
 $string['configmaxbytes'] = 'Maximální velikost stránky OneNote';
 $string['countfiles'] = 'Soubory OneNote: {$a}';
 $string['default'] = 'Ve výchozím nastavení povoleno';
-$string['default_help'] = 'Je-li povoleno, tato metoda odeslání příspěvku bude ve výchozím nastavení povolena pro všechny nové úkoly.';
-$string['enabled'] = 'Příspěvky ve formě OneNote';
-$string['enabled_help'] = 'Je-li povoleno, studenti mohou jako svůj příspěvek nahrát jednu či více stránek OneNote.';
+$string['default_help'] = 'Je-li povoleno, tato metoda odevzdání bude ve výchozím nastavení povolena pro všechny nové úkoly.';
+$string['download'] = 'Stáhnout';
+$string['enabled'] = 'Odevzdání ve formě OneNote';
+$string['enabled_help'] = 'Je-li povoleno, studenti mohou jako své řešení nahrát jednu či více stránek OneNote.';
+$string['erroremptyothervalue'] = 'Hodnota „filesubmissioncount“ musí být nastavena v other.';
 $string['eventassessableuploaded'] = 'Byla nahrána stránka OneNote.';
 $string['maxbytes'] = 'Maximální velikost stránky OneNote';
 $string['maxfilessubmission'] = 'Maximální počet nahraných stránek OneNote';
-$string['maxfilessubmission_help'] = 'Jsou-li povoleny příspěvky ve formě OneNote, každý student může jako svůj příspěvek nahrát maximálně tento počet stránek OneNote.';
+$string['maxfilessubmission_help'] = 'Je-li povoleno odevzdání ve formě OneNote, každý student může jako své řešení nahrát maximálně tento počet stránek OneNote.';
 $string['maximumsubmissionsize'] = 'Velikost stránky OneNote';
-$string['maximumsubmissionsize_help'] = 'Nastavuje maximální velikost příspěvku stránek OneNote.';
+$string['maximumsubmissionsize_help'] = 'Nastavuje maximální velikost odevzdaných stránek OneNote.';
 $string['notsignedin'] = 'Před pokusem o uložení změn se nejprve přihlaste do OneNote.';
-$string['onenote'] = 'Příspěvky ve formě OneNote';
+$string['onenote'] = 'Odevzdání ve formě OneNote';
 $string['onenoteactions'] = 'Akce OneNote: ';
-$string['pluginname'] = 'Příspěvky ve formě OneNote';
-$string['signinhelp1'] = 'Kliknutím na tlačítko výše se přihlásíte do OneNote, pokud chcete na příspěvku pracovat tam.';
-$string['signinhelp2'] = 'Kliknutím na tlačítko výše se přihlásíte do OneNote, pokud chcete příspěvek zobrazit tam.';
-$string['siteuploadlimit'] = 'Limit pro nahrávání na těchto stránkách';
-$string['submissiondownloadfailed'] = 'Nelze stáhnout váš příspěvek z OneNote. Zkuste to znovu.';
-$string['submissionfilearea'] = 'Nahrané stránky OneNote příspěvku';
-$string['submissionlimitexceed'] = 'Váš příspěvek překračuje povolený limit velikosti.';
-$string['submissionnotstarted'] = 'Pracujte na úkolu ve OneNote a potom uložte změny.';
-$string['viewsubmission'] = 'Zobrazit příspěvek';
+$string['pluginname'] = 'Odevzdání ve formě OneNote';
+$string['privacy:metadata:assignmentid'] = 'Identifikátor úkolu';
+$string['privacy:metadata:numfiles'] = 'Počet souborů';
+$string['privacy:metadata:submissionpurpose'] = 'ID odevzdání, které odkazuje na odevzdání uživatele';
+$string['privacy:metadata:tablepurpose'] = 'Ukládá počet souborů použitých pro odevzdání.';
+$string['privacy:path'] = 'Odevzdání ve formě OneNote';
+$string['signinhelp1'] = 'Kliknutím na tlačítko výše se přihlásíte do OneNote, pokud chcete na svém řešení pracovat tam.';
+$string['signinhelp2'] = 'Kliknutím na tlačítko výše se přihlásíte do OneNote, pokud chcete řešení zobrazit tam.';
+$string['submissiondownloadfailed'] = 'Nelze stáhnout vaše řešení z OneNote. Zkuste to znovu.';
+$string['submissionlimitexceed'] = 'Vaše řešení překračuje povolený limit velikosti.';
+$string['submissionnotstarted'] = 'Pracujte na úkolu v OneNote a potom uložte změny.';
+$string['viewsubmission'] = 'Zobrazit řešení';
+$string['viewsubmissionwarning'] = 'Upozornění: „Zobrazit řešení“ přepíše vaši stránku OneNote pro toto řešení nejnovější kopií od studenta.';
 $string['workonthis'] = 'Pracovat na tomto';
-$string['workonthishelp'] = 'Kliknutím na tlačítko výše začnete na úkolu pracovat ve OneNote. Pamatujte, že je třeba se vrátit na tuto stránku, abyste svou práci uložili zpět do Moodlu.';
-
-// Deprecated since Moodle 4.3.
-$string['numfilesforlog'] = 'Počet stránek OneNote: {$a}';
+$string['workonthishelp'] = 'Kliknutím na tlačítko výše začnete na úkolu pracovat v OneNote. Pamatujte, že je třeba se vrátit na tuto stránku, abyste svou práci uložili zpět do Moodlu.';

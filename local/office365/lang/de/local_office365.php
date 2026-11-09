@@ -26,3 +26,4 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Microsoft 365-Integration';
+$string['privacy:metadata'] = 'Dieses Plugin ist lediglich ein Shell-Plugin.';
