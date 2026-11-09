@@ -31,9 +31,11 @@ $string['feedbacktitle'] = 'Palaute: {$a->assign_name} [{$a->student_firstname} 
 $string['connction_error'] = 'OneNote-yhteyttä ei voitu muodostaa. Odota hetki ja yritä uudelleen.';
 $string['onenote_page_error'] = 'Tämän palautuksen tai palautteen OneNote-sivua ei voitu avata.';
 $string['error_noapiavailable'] = 'OneNote-ohjelmointirajapinta ei ole käytettävissä. OneNote-yhteyksiä voivat käyttää vain Microsoft 365:een yhdistetyt käyttäjät.';
-// Do not change this value. It is the title of the notebook in the user's OneNote account and is used to find that notebook,
-// so changing it makes existing notebooks unrecognisable and creates duplicate notebooks.
+// The default title of the notebook created in the user's OneNote account. It is also used to find notebooks created before the
+// notebook id was stored, so do not change an existing translation, or those users will get a second notebook.
 $string['notebookname'] = 'Moodle-muistikirja';
+$string['settings_notebookname'] = 'Muistikirjan nimi';
+$string['settings_notebookname_desc'] = 'Moodlea varten jokaisen käyttäjän OneNote-tilille luotavan muistikirjan nimi. Jätä tyhjäksi, jos haluat käyttää oletusnimeä käyttäjän kielellä. Nimen muuttaminen ei vaikuta jo olemassa oleviin muistikirjoihin, koska ne löydetään niiden tunnuksen perusteella.<br />Nimi saa olla enintään 128 merkkiä pitkä, eikä se saa sisältää mitään seuraavista merkeistä: <code>? * \\ / : &lt; &gt; | &amp; # &quot; \' % ~</code>';
 $string['erroronenoteapibadcall'] = 'Virhe API-kutsussa.';
 $string['erroronenoteapibadcall_message'] = 'Virhe API-kutsussa: {$a}';
 $string['errornosection'] = 'OneNote-muistikirjastasi ei voitu hakea tai luoda osiota.';
@@ -47,6 +49,11 @@ $string['privacy:metadata:local_onenote_user_sections'] = 'OneNote-osiot Moodle-
 $string['privacy:metadata:local_onenote_user_sections:user_id'] = 'Moodle-käyttäjän tunnus';
 $string['privacy:metadata:local_onenote_user_sections:course_id'] = 'Moodle-kurssin tunnus';
 $string['privacy:metadata:local_onenote_user_sections:section_id'] = 'OneNote-osion tunnus.';
+$string['privacy:metadata:local_onenote_user_notebooks'] = 'Moodlea varten käytettävät OneNote-muistikirjat';
+$string['privacy:metadata:local_onenote_user_notebooks:userid'] = 'Moodle-käyttäjän tunnus';
+$string['privacy:metadata:local_onenote_user_notebooks:notebookid'] = 'OneNote-muistikirjan tunnus.';
+$string['privacy:metadata:local_onenote_user_notebooks:timecreated'] = 'Tietueen luontiaika.';
+$string['privacy:metadata:local_onenote_user_notebooks:timemodified'] = 'Tietueen muokkausaika.';
 $string['privacy:metadata:local_onenote_assign_pages'] = 'OneNote-sivut tehtävän palautusta ja palautetta varten';
 $string['privacy:metadata:local_onenote_assign_pages:user_id'] = 'Moodle-käyttäjän tunnus';
 $string['privacy:metadata:local_onenote_assign_pages:assign_id'] = 'Tehtävän tunnus';
