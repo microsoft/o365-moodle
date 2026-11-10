@@ -875,6 +875,14 @@ class observers {
                     // No call to "break;" on purpose.
                 case 'idptype':
                 case 'clientauthmethod':
+                    // Disconnecting (IdP type changed to "Not connected") invalidates the stored tokens.
+                    if (
+                        $eventdata['other']['name'] == 'idptype' &&
+                        (int)$eventdata['other']['value'] === AUTH_OIDC_IDP_TYPE_NOT_CONNECTED
+                    ) {
+                        $DB->delete_records('local_o365_token');
+                    }
+
                     // If client ID, IdP type, or authentication method has changed, unset token and verify setup results.
                     // Azure admin needs to provide consent again.
                     unset_config('apptokens', 'local_o365');

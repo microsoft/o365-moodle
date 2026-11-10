@@ -49,6 +49,9 @@ if ($hassiteconfig) {
     $oidcfolder = new admin_category('oidcfolder', get_string('pluginname', 'auth_oidc'));
     $ADMIN->add('authsettings', $oidcfolder);
 
+    $idptype = get_config('auth_oidc', 'idptype');
+    $notconnected = empty($idptype);
+
     // Application configuration settings page.
     // Registered as 'authsettingoidc' (Moodle's "authsetting<authname>" convention for auth
     // plugins) rather than a custom id, because the core "Manage authentication" page
@@ -91,6 +94,7 @@ if ($hassiteconfig) {
 
     // IdP type.
     $idptypeoptions = [
+        AUTH_OIDC_IDP_TYPE_NOT_CONNECTED => get_string('idp_type_not_connected', 'auth_oidc'),
         AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID => get_string('idp_type_microsoft_entra_id', 'auth_oidc'),
         AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM => get_string('idp_type_microsoft_identity_platform', 'auth_oidc'),
         AUTH_OIDC_IDP_TYPE_OTHER => get_string('idp_type_other', 'auth_oidc'),
@@ -99,11 +103,10 @@ if ($hassiteconfig) {
         'auth_oidc/idptype',
         get_string('idptype', 'auth_oidc'),
         get_string('idptype_help', 'auth_oidc'),
-        AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID,
+        AUTH_OIDC_IDP_TYPE_NOT_CONNECTED,
         $idptypeoptions
     );
-    $idptypesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
-    $idptypesetting->set_updatedcallback('auth_oidc_validate_auth_settings');
+    $idptypesetting->set_updatedcallback('auth_oidc_auth_settings_updated');
     $applicationsettings->add($idptypesetting);
 
     // Microsoft cloud.
@@ -120,7 +123,10 @@ if ($hassiteconfig) {
     );
     $microsoftcloudsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $applicationsettings->add($microsoftcloudsetting);
-    $applicationsettings->hide_if('auth_oidc/microsoftcloud', 'auth_oidc/idptype', 'eq', AUTH_OIDC_IDP_TYPE_OTHER);
+
+    // Settings that only apply to the Microsoft IdP types are hidden when no IdP is configured yet, or for another IdP.
+    $nonmicrosoftidptypes = AUTH_OIDC_IDP_TYPE_NOT_CONNECTED . '|' . AUTH_OIDC_IDP_TYPE_OTHER;
+    $applicationsettings->hide_if('auth_oidc/microsoftcloud', 'auth_oidc/idptype', 'in', $nonmicrosoftidptypes);
 
     // Client ID.
     $clientidsetting = new admin_setting_configtext(
@@ -134,7 +140,7 @@ if ($hassiteconfig) {
     $applicationsettings->add($clientidsetting);
 
     // Authentication heading.
-    $applicationsettings->add(new admin_setting_heading(
+    $applicationsettings->add(new auth_oidc_admin_setting_section_heading(
         'auth_oidc/application_auth_heading',
         get_string('settings_section_authentication', 'auth_oidc'),
         ''
@@ -145,15 +151,14 @@ if ($hassiteconfig) {
         AUTH_OIDC_AUTH_METHOD_SECRET => get_string('auth_method_secret', 'auth_oidc'),
         AUTH_OIDC_AUTH_METHOD_CERTIFICATE => get_string('auth_method_certificate', 'auth_oidc'),
     ];
-    $clientauthmethodsetting = new admin_setting_configselect(
+    $clientauthmethodsetting = new \auth_oidc\adminsetting\auth_oidc_admin_setting_clientauthmethod(
         'auth_oidc/clientauthmethod',
         get_string('clientauthmethod', 'auth_oidc'),
         get_string('clientauthmethod_help', 'auth_oidc'),
         AUTH_OIDC_AUTH_METHOD_SECRET,
         $clientauthmethoptions
     );
-    $clientauthmethodsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
-    $clientauthmethodsetting->set_updatedcallback('auth_oidc_validate_auth_settings');
+    $clientauthmethodsetting->set_updatedcallback('auth_oidc_auth_settings_updated');
     $applicationsettings->add($clientauthmethodsetting);
 
     // Client secret.
@@ -163,8 +168,7 @@ if ($hassiteconfig) {
         get_string('clientsecret_help', 'auth_oidc'),
         ''
     );
-    $clientsecretsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
-    $clientsecretsetting->set_updatedcallback('auth_oidc_validate_auth_settings');
+    $clientsecretsetting->set_updatedcallback('auth_oidc_auth_settings_updated');
     $applicationsettings->add($clientsecretsetting);
 
     // Certificate source.
@@ -179,8 +183,7 @@ if ($hassiteconfig) {
         AUTH_OIDC_AUTH_CERT_SOURCE_TEXT,
         $certsourceoptions
     );
-    $clientcertsourcesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
-    $clientcertsourcesetting->set_updatedcallback('auth_oidc_validate_auth_settings');
+    $clientcertsourcesetting->set_updatedcallback('auth_oidc_auth_settings_updated');
     $applicationsettings->add($clientcertsourcesetting);
 
     // Client certificate private key (plain text).
@@ -191,8 +194,7 @@ if ($hassiteconfig) {
         '',
         PARAM_TEXT
     );
-    $clientprivatekeysetting->set_updatedcallback('auth_oidc_reset_app_tokens');
-    $clientprivatekeysetting->set_updatedcallback('auth_oidc_validate_auth_settings');
+    $clientprivatekeysetting->set_updatedcallback('auth_oidc_auth_settings_updated');
     $applicationsettings->add($clientprivatekeysetting);
 
     // Client certificate public key (plain text).
@@ -203,8 +205,7 @@ if ($hassiteconfig) {
         '',
         PARAM_TEXT
     );
-    $clientcertsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
-    $clientcertsetting->set_updatedcallback('auth_oidc_validate_auth_settings');
+    $clientcertsetting->set_updatedcallback('auth_oidc_auth_settings_updated');
     $applicationsettings->add($clientcertsetting);
 
     // Client certificate private key file name.
@@ -215,8 +216,7 @@ if ($hassiteconfig) {
         '',
         PARAM_FILE
     );
-    $clientprivatekeyfilesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
-    $clientprivatekeyfilesetting->set_updatedcallback('auth_oidc_validate_auth_settings');
+    $clientprivatekeyfilesetting->set_updatedcallback('auth_oidc_auth_settings_updated');
     $applicationsettings->add($clientprivatekeyfilesetting);
 
     // Client certificate public key file name.
@@ -227,8 +227,7 @@ if ($hassiteconfig) {
         '',
         PARAM_FILE
     );
-    $clientcertfilesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
-    $clientcertfilesetting->set_updatedcallback('auth_oidc_validate_auth_settings');
+    $clientcertfilesetting->set_updatedcallback('auth_oidc_auth_settings_updated');
     $applicationsettings->add($clientcertfilesetting);
 
     // Client certificate passphrase.
@@ -238,12 +237,11 @@ if ($hassiteconfig) {
         get_string('clientcertpassphrase_help', 'auth_oidc'),
         ''
     );
-    $clientcertpassphrasesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
-    $clientcertpassphrasesetting->set_updatedcallback('auth_oidc_validate_auth_settings');
+    $clientcertpassphrasesetting->set_updatedcallback('auth_oidc_auth_settings_updated');
     $applicationsettings->add($clientcertpassphrasesetting);
 
     // Endpoints heading.
-    $applicationsettings->add(new admin_setting_heading(
+    $applicationsettings->add(new auth_oidc_admin_setting_section_heading(
         'auth_oidc/application_endpoints_heading',
         get_string('settings_section_endpoints', 'auth_oidc'),
         ''
@@ -272,7 +270,7 @@ if ($hassiteconfig) {
     $applicationsettings->add($tokenendpointsetting);
 
     // Other parameters heading.
-    $applicationsettings->add(new admin_setting_heading(
+    $applicationsettings->add(new auth_oidc_admin_setting_section_heading(
         'auth_oidc/application_otherparams_heading',
         get_string('settings_section_other_params', 'auth_oidc'),
         ''
@@ -431,8 +429,8 @@ if ($hassiteconfig) {
         $applicationsettings->hide_if(
             'auth_oidc/secretexpiryrecipients',
             'auth_oidc/idptype',
-            'eq',
-            AUTH_OIDC_IDP_TYPE_OTHER
+            'in',
+            $nonmicrosoftidptypes
         );
 
         // Hide the section heading too, so an empty section isn't shown when the only
@@ -446,73 +444,78 @@ if ($hassiteconfig) {
         $applicationsettings->hide_if(
             'auth_oidc/application_secretexpiry_heading',
             'auth_oidc/idptype',
-            'eq',
-            AUTH_OIDC_IDP_TYPE_OTHER
+            'in',
+            $nonmicrosoftidptypes
         );
+    }
+
+    // While no IdP type is chosen ("Not connected"), only the IdP type and the redirect URI, which is needed to register
+    // the application, are shown. The other settings stay registered so their defaults are still saved on installation.
+    $alwaysvisible = ['auth_oidc_application_nav', 'auth_oidc/application_basic_heading', 'auth_oidc/redirecturi',
+        'auth_oidc/idptype'];
+    // These settings already have an IdP type condition that also hides them for "Not connected": the Microsoft cloud and
+    // secret expiry settings are hidden for the non Microsoft IdP types, and the OIDC resource for all but Entra ID (v1.0).
+    $alreadyhiddenwhennotconnected = ['auth_oidc/microsoftcloud', 'auth_oidc/oidcresource', 'auth_oidc/secretexpiryrecipients',
+        'auth_oidc/application_secretexpiry_heading'];
+    foreach ($applicationsettings->settings as $setting) {
+        $settingname = ($setting->plugin ? $setting->plugin . '/' : '') . $setting->name;
+        if (!in_array($settingname, $alwaysvisible) && !in_array($settingname, $alreadyhiddenwhennotconnected)) {
+            $applicationsettings->hide_if($settingname, 'auth_oidc/idptype', 'eq', (string) AUTH_OIDC_IDP_TYPE_NOT_CONNECTED);
+        }
     }
 
     $ADMIN->add('oidcfolder', $applicationsettings);
 
-    $idptype = get_config('auth_oidc', 'idptype');
-    if ($idptype) {
-        // Binding username claim settings page.
-        $bindingusernamesettings = new admin_settingpage(
+    // The binding username claim page is registered even before the IdP type is configured, so that its settings are
+    // saved together with the other default settings on the new settings page after installation, instead of appearing
+    // on a second page once the IdP type is stored. Until then the options follow the default IdP type, and the page is
+    // hidden from the admin tree and the tabs.
+    $bindingidptype = $idptype ?: AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID;
+    // Binding username claim settings page.
+    $bindingusernamesettings = new \auth_oidc\adminsetting\auth_oidc_admin_settingpage(
+        'auth_oidc_binding_username_claim',
+        get_string('settings_page_binding_username_claim', 'auth_oidc'),
+        'moodle/site:config',
+        $notconnected
+    );
+
+    // Add navigation tabs, with a warning that this is an advanced setting.
+    $bindingusernamesettings->add(new admin_setting_heading(
+        'auth_oidc_binding_username_claim_nav',
+        '',
+        auth_oidc_get_settings_nav_html(
             'auth_oidc_binding_username_claim',
-            get_string('settings_page_binding_username_claim', 'auth_oidc')
-        );
+            null,
+            auth_oidc_get_binding_username_claim_warning_html()
+        )
+    ));
 
-        // Add navigation tabs, with a warning that this is an advanced setting.
-        $bindingusernamesettings->add(new admin_setting_heading(
-            'auth_oidc_binding_username_claim_nav',
-            '',
-            auth_oidc_get_settings_nav_html(
-                'auth_oidc_binding_username_claim',
-                null,
-                auth_oidc_get_binding_username_claim_warning_html()
-            )
-        ));
-
-        // Determine options and description based on IdP type and user sync state.
-        switch ($idptype) {
-            case AUTH_OIDC_IDP_TYPE_OTHER:
-                $bindingclaimdesc = 'binding_username_claim_help_non_ms';
+    // Determine options and description based on IdP type and user sync state.
+    switch ($bindingidptype) {
+        case AUTH_OIDC_IDP_TYPE_OTHER:
+            $bindingclaimdesc = 'binding_username_claim_help_non_ms';
+            $bindingusernameoptions = [
+                'auto' => get_string('binding_username_auto', 'auth_oidc'),
+                'preferred_username' => 'preferred_username',
+                'email' => 'email',
+                'unique_name' => 'unique_name',
+                'sub' => 'sub',
+                'samaccountname' => 'samaccountname',
+                'custom' => get_string('binding_username_custom', 'auth_oidc'),
+            ];
+            break;
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
+            if (auth_oidc_is_local_365_installed() && auth_oidc_is_user_sync_enabled()) {
+                $bindingclaimdesc = 'binding_username_claim_help_ms_with_user_sync';
                 $bindingusernameoptions = [
                     'auto' => get_string('binding_username_auto', 'auth_oidc'),
-                    'preferred_username' => 'preferred_username',
                     'email' => 'email',
-                    'unique_name' => 'unique_name',
-                    'sub' => 'sub',
+                    'upn' => 'upn',
+                    'oid' => 'oid',
                     'samaccountname' => 'samaccountname',
-                    'custom' => get_string('binding_username_custom', 'auth_oidc'),
                 ];
-                break;
-            case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
-            case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
-                if (auth_oidc_is_local_365_installed() && auth_oidc_is_user_sync_enabled()) {
-                    $bindingclaimdesc = 'binding_username_claim_help_ms_with_user_sync';
-                    $bindingusernameoptions = [
-                        'auto' => get_string('binding_username_auto', 'auth_oidc'),
-                        'email' => 'email',
-                        'upn' => 'upn',
-                        'oid' => 'oid',
-                        'samaccountname' => 'samaccountname',
-                    ];
-                } else {
-                    $bindingclaimdesc = 'binding_username_claim_help_ms_no_user_sync';
-                    $bindingusernameoptions = [
-                        'auto' => get_string('binding_username_auto', 'auth_oidc'),
-                        'preferred_username' => 'preferred_username',
-                        'email' => 'email',
-                        'upn' => 'upn',
-                        'unique_name' => 'unique_name',
-                        'oid' => 'oid',
-                        'sub' => 'sub',
-                        'samaccountname' => 'samaccountname',
-                        'custom' => get_string('binding_username_custom', 'auth_oidc'),
-                    ];
-                }
-                break;
-            default:
+            } else {
                 $bindingclaimdesc = 'binding_username_claim_help_ms_no_user_sync';
                 $bindingusernameoptions = [
                     'auto' => get_string('binding_username_auto', 'auth_oidc'),
@@ -520,49 +523,65 @@ if ($hassiteconfig) {
                     'email' => 'email',
                     'upn' => 'upn',
                     'unique_name' => 'unique_name',
-                    'sub' => 'sub',
                     'oid' => 'oid',
+                    'sub' => 'sub',
                     'samaccountname' => 'samaccountname',
                     'custom' => get_string('binding_username_custom', 'auth_oidc'),
                 ];
-        }
+            }
+            break;
+        default:
+            $bindingclaimdesc = 'binding_username_claim_help_ms_no_user_sync';
+            $bindingusernameoptions = [
+                'auto' => get_string('binding_username_auto', 'auth_oidc'),
+                'preferred_username' => 'preferred_username',
+                'email' => 'email',
+                'upn' => 'upn',
+                'unique_name' => 'unique_name',
+                'sub' => 'sub',
+                'oid' => 'oid',
+                'samaccountname' => 'samaccountname',
+                'custom' => get_string('binding_username_custom', 'auth_oidc'),
+            ];
+    }
 
-        $bindingusernamesettings->add(new admin_setting_configselect(
-            'auth_oidc/bindingusernameclaim',
-            get_string('bindingusernameclaim', 'auth_oidc'),
-            get_string($bindingclaimdesc, 'auth_oidc'),
-            'auto',
-            $bindingusernameoptions
-        ));
+    $bindingusernamesettings->add(new admin_setting_configselect(
+        'auth_oidc/bindingusernameclaim',
+        get_string('bindingusernameclaim', 'auth_oidc'),
+        get_string($bindingclaimdesc, 'auth_oidc'),
+        'auto',
+        $bindingusernameoptions
+    ));
 
-        // Custom claim name (only when the 'custom' option is available for the current IdP type).
-        if (array_key_exists('custom', $bindingusernameoptions)) {
-            $bindingusernamesettings->add(
-                new admin_setting_configtext(
-                    'auth_oidc/customclaimname',
-                    get_string('customclaimname', 'auth_oidc'),
-                    get_string('customclaimname_description', 'auth_oidc'),
-                    '',
-                    PARAM_TEXT
-                )
-            );
-            $bindingusernamesettings->hide_if(
+    // Custom claim name (only when the 'custom' option is available for the current IdP type).
+    if (array_key_exists('custom', $bindingusernameoptions)) {
+        $bindingusernamesettings->add(
+            new admin_setting_configtext(
                 'auth_oidc/customclaimname',
-                'auth_oidc/bindingusernameclaim',
-                'neq',
-                'custom'
-            );
-        }
+                get_string('customclaimname', 'auth_oidc'),
+                get_string('customclaimname_description', 'auth_oidc'),
+                '',
+                PARAM_TEXT
+            )
+        );
+        $bindingusernamesettings->hide_if(
+            'auth_oidc/customclaimname',
+            'auth_oidc/bindingusernameclaim',
+            'neq',
+            'custom'
+        );
+    }
 
-        $toolurl = new url('/auth/oidc/change_binding_username_claim_tool.php');
-        $bindingusernamesettings->add(new admin_setting_heading(
-            'auth_oidc_binding_username_claim_tool_link',
-            '',
-            get_string('binding_username_claim_tool_link_desc', 'auth_oidc', $toolurl->out())
-        ));
+    $toolurl = new url('/auth/oidc/change_binding_username_claim_tool.php');
+    $bindingusernamesettings->add(new admin_setting_heading(
+        'auth_oidc_binding_username_claim_tool_link',
+        '',
+        get_string('binding_username_claim_tool_link_desc', 'auth_oidc', $toolurl->out())
+    ));
 
-        $ADMIN->add('oidcfolder', $bindingusernamesettings);
+    $ADMIN->add('oidcfolder', $bindingusernamesettings);
 
+    if ($idptype) {
         // Change binding username claim tool page (bulk migration tool, not a settings page).
         $ADMIN->add(
             'oidcfolder',
@@ -575,7 +594,12 @@ if ($hassiteconfig) {
     }
 
     // Other settings page and its settings.
-    $settings = new admin_settingpage('auth_oidc_other_settings', get_string('settings_page_other_settings', 'auth_oidc'));
+    $settings = new \auth_oidc\adminsetting\auth_oidc_admin_settingpage(
+        'auth_oidc_other_settings',
+        get_string('settings_page_other_settings', 'auth_oidc'),
+        'moodle/site:config',
+        $notconnected
+    );
 
     // Add navigation tabs.
     $settings->add(new admin_setting_heading(
@@ -929,7 +953,9 @@ if ($hassiteconfig) {
         new admin_externalpage(
             'auth_oidc_cleanup_oidc_tokens',
             get_string('settings_page_cleanup_oidc_tokens', 'auth_oidc'),
-            new url('/auth/oidc/cleanupoidctokens.php')
+            new url('/auth/oidc/cleanupoidctokens.php'),
+            'moodle/site:config',
+            $notconnected
         )
     );
 
@@ -939,12 +965,19 @@ if ($hassiteconfig) {
         new admin_externalpage(
             'auth_oidc_clear_user_tokens',
             get_string('settings_page_clear_user_tokens', 'auth_oidc'),
-            new url('/auth/oidc/clearusertokens.php')
+            new url('/auth/oidc/clearusertokens.php'),
+            'moodle/site:config',
+            $notconnected
         )
     );
 
     // Other settings page and its settings.
-    $fieldmappingspage = new admin_settingpage('auth_oidc_field_mapping', get_string('settings_page_field_mapping', 'auth_oidc'));
+    $fieldmappingspage = new \auth_oidc\adminsetting\auth_oidc_admin_settingpage(
+        'auth_oidc_field_mapping',
+        get_string('settings_page_field_mapping', 'auth_oidc'),
+        'moodle/site:config',
+        $notconnected
+    );
 
     // Add navigation tabs.
     $fieldmappingspage->add(new admin_setting_heading(

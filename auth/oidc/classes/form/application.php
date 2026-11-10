@@ -25,6 +25,8 @@
 
 namespace auth_oidc\form;
 
+use auth_oidc\utils;
+use html_writer;
 use moodleform;
 
 defined('MOODLE_INTERNAL') || die();
@@ -43,11 +45,28 @@ class application extends moodleform {
     protected function definition() {
         $mform =& $this->_form;
 
+        // The IdP type being submitted, or the saved one when the form is just displayed. The required rules below are
+        // QuickForm rules, which are also checked on the server, so they are only added while an IdP type is chosen, as
+        // the fields are hidden and not configured otherwise. The requirement is also checked in validation().
+        $currentidptype = (int) optional_param(
+            'idptype',
+            $this->_customdata['oidcconfig']->idptype ?? AUTH_OIDC_IDP_TYPE_NOT_CONNECTED,
+            PARAM_INT
+        );
+        $idptypeconfigured = $currentidptype != AUTH_OIDC_IDP_TYPE_NOT_CONNECTED;
+
         // Basic settings header.
         $mform->addElement('header', 'basic', get_string('settings_section_basic', 'auth_oidc'));
 
+        // Redirect URI. Always shown, also while no IdP type is chosen, as it is needed to register the application.
+        $redirecturilabel = get_string('cfg_redirecturi_key', 'auth_oidc') .
+            html_writer::span('auth_oidc | redirecturi', 'form-shortname d-block small text-muted');
+        $mform->addElement('static', 'redirecturi', $redirecturilabel, html_writer::tag('h5', utils::get_redirecturl()));
+        $mform->addElement('static', 'redirecturi_help', '', get_string('cfg_redirecturi_desc', 'auth_oidc'));
+
         // IdP type.
         $idptypeoptions = [
+            AUTH_OIDC_IDP_TYPE_NOT_CONNECTED => get_string('idp_type_not_connected', 'auth_oidc'),
             AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID => get_string('idp_type_microsoft_entra_id', 'auth_oidc'),
             AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM => get_string('idp_type_microsoft_identity_platform', 'auth_oidc'),
             AUTH_OIDC_IDP_TYPE_OTHER => get_string('idp_type_other', 'auth_oidc'),
@@ -68,14 +87,21 @@ class application extends moodleform {
         );
         $mform->setDefault('microsoftcloud', AUTH_OIDC_MICROSOFT_CLOUD_GLOBAL);
         $mform->addElement('static', 'microsoftcloud_help', '', get_string('microsoftcloud_help', 'auth_oidc'));
-        $mform->hideIf('microsoftcloud', 'idptype', 'eq', AUTH_OIDC_IDP_TYPE_OTHER);
-        $mform->hideIf('microsoftcloud_help', 'idptype', 'eq', AUTH_OIDC_IDP_TYPE_OTHER);
+        // The Microsoft cloud only applies to the Microsoft IdP types.
+        foreach ([AUTH_OIDC_IDP_TYPE_NOT_CONNECTED, AUTH_OIDC_IDP_TYPE_OTHER] as $nonmicrosofttype) {
+            $mform->hideIf('microsoftcloud', 'idptype', 'eq', $nonmicrosofttype);
+            $mform->hideIf('microsoftcloud_help', 'idptype', 'eq', $nonmicrosofttype);
+        }
 
         // Client ID.
         $mform->addElement('text', 'clientid', auth_oidc_config_name_in_form('clientid'), ['size' => 40]);
         $mform->setType('clientid', PARAM_TEXT);
         $mform->addElement('static', 'clientid_help', '', get_string('clientid_help', 'auth_oidc'));
-        $mform->addRule('clientid', null, 'required', null, 'client');
+        if ($idptypeconfigured) {
+            $mform->addRule('clientid', null, 'required', null, 'client');
+        }
+        $mform->hideIf('clientid', 'idptype', 'eq', AUTH_OIDC_IDP_TYPE_NOT_CONNECTED);
+        $mform->hideIf('clientid_help', 'idptype', 'eq', AUTH_OIDC_IDP_TYPE_NOT_CONNECTED);
 
         // Authentication header.
         $mform->addElement('header', 'authentication', get_string('settings_section_authentication', 'auth_oidc'));
@@ -220,14 +246,18 @@ class application extends moodleform {
         $mform->setType('authendpoint', PARAM_URL);
         $mform->setDefault('authendpoint', auth_oidc_get_login_baseurl() . '/organizations/oauth2/authorize');
         $mform->addElement('static', 'authendpoint_help', '', get_string('authendpoint_help', 'auth_oidc'));
-        $mform->addRule('authendpoint', null, 'required', null, 'client');
+        if ($idptypeconfigured) {
+            $mform->addRule('authendpoint', null, 'required', null, 'client');
+        }
 
         // Token endpoint.
         $mform->addElement('text', 'tokenendpoint', auth_oidc_config_name_in_form('tokenendpoint'), ['size' => 60]);
         $mform->setType('tokenendpoint', PARAM_URL);
         $mform->setDefault('tokenendpoint', auth_oidc_get_login_baseurl() . '/organizations/oauth2/token');
         $mform->addElement('static', 'tokenendpoint_help', '', get_string('tokenendpoint_help', 'auth_oidc'));
-        $mform->addRule('tokenendpoint', null, 'required', null, 'client');
+        if ($idptypeconfigured) {
+            $mform->addRule('tokenendpoint', null, 'required', null, 'client');
+        }
 
         // Other parameters header.
         $mform->addElement('header', 'otherparams', get_string('settings_section_other_params', 'auth_oidc'));
@@ -285,6 +315,19 @@ class application extends moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+
+        // Nothing else is configured, or shown, while no IdP type is chosen.
+        if ($data['idptype'] == AUTH_OIDC_IDP_TYPE_NOT_CONNECTED) {
+            return $errors;
+        }
+
+        // These fields are required once an IdP type is chosen. The form rules for them are only added when the form is
+        // submitted or saved with an IdP type, so check them here as well, for example when switching from "Not connected".
+        foreach (['clientid', 'authendpoint', 'tokenendpoint'] as $requiredfield) {
+            if (!isset($errors[$requiredfield]) && trim((string) ($data[$requiredfield] ?? '')) === '') {
+                $errors[$requiredfield] = get_string('required');
+            }
+        }
 
         if (!isset($data['clientauthmethod'])) {
             $data['clientauthmethod'] = $this->optional_param('clientauthmethod', AUTH_OIDC_AUTH_METHOD_SECRET, PARAM_INT);

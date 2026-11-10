@@ -69,6 +69,7 @@ $string['idptype_help'] = 'V současné době jsou podporovány tři typy IdP:
 Rozdíly mezi možnostmi <b>Microsoft Entra ID (v1.0)</b> a <b>Microsoft identity platform (v2.0)</b> najdete na <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
 Zejména může nakonfigurovaná aplikace při použití IdP <b>Microsoft identity platform (v2.0)</b> k ověřování kromě <b>tajného klíče</b> použít také <b>certifikát</b>.<br/>
 Koncové body autorizace a tokenů je třeba nakonfigurovat podle nastaveného typu IdP.';
+$string['idp_type_not_connected'] = 'Nepřipojeno';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Jiný';
@@ -275,6 +276,7 @@ $string['erroroidccall_message'] = 'Chyba v OpenID Connect: {$a}';
 $string['errorinvalidredirect_message'] = 'URL, na kterou se pokoušíte přesměrovat, neexistuje.';
 $string['errorinvalidcertificatesource'] = 'Neplatný zdroj certifikátu';
 $string['error_invalid_client_authentication_method'] = 'Neplatná metoda ověřování klienta';
+$string['error_certificate_requires_identity_platform'] = 'Ověřování certifikátem vyžaduje typ IdP „Microsoft identity platform (v2.0)“.';
 $string['error_empty_client_secret'] = 'Při použití metody ověřování „tajným klíčem“ nemůže být tajný klíč klienta prázdný';
 $string['error_empty_client_private_key'] = 'Při použití metody ověřování „certifikátem“ nemůže být soukromý klíč certifikátu klienta prázdný';
 $string['error_empty_client_cert'] = 'Při použití metody ověřování „certifikátem“ nemůže být veřejný klíč certifikátu klienta prázdný';
