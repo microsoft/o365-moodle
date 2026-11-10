@@ -32,6 +32,13 @@ use core\url;
 
 // IdP types.
 /**
+ * No identity provider configured yet. This is the default until the integration is set up.
+ *
+ * It is deliberately falsy, so that the existing empty checks of the IdP type treat it as "not set up".
+ */
+const AUTH_OIDC_IDP_TYPE_NOT_CONNECTED = 0;
+
+/**
  * Microsoft Entra ID identity provider type.
  */
 const AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID = 1;
@@ -165,6 +172,20 @@ function auth_oidc_reset_app_tokens($settingname) {
 }
 
 /**
+ * Callback invoked when an application setting that also needs validation is updated.
+ *
+ * A setting can only have one updated callback, so this callback runs both the token reset and the validation.
+ * The token reset only affects the local_o365 plugin when it is installed, and the validation only reports problems.
+ *
+ * @param string $settingname The full name of the setting that was updated.
+ * @return void
+ */
+function auth_oidc_auth_settings_updated($settingname) {
+    auth_oidc_reset_app_tokens($settingname);
+    auth_oidc_validate_auth_settings($settingname);
+}
+
+/**
  * Validate authentication settings for invalid combinations.
  *
  * Checks for invalid combinations that could break authentication:
@@ -237,7 +258,13 @@ function auth_oidc_validate_auth_settings(string $settingname) {
             $message .= '<li>' . $error . '</li>';
         }
         $message .= '</ul>';
-        \core\notification::error($message);
+
+        // Several settings share this callback, so saving them together would queue the same message repeatedly.
+        static $shownmessages = [];
+        if (!in_array($message, $shownmessages)) {
+            $shownmessages[] = $message;
+            \core\notification::error($message);
+        }
     }
 }
 
@@ -1335,6 +1362,17 @@ function auth_oidc_is_setup_complete() {
 }
 
 /**
+ * Determine whether an IdP type has been chosen.
+ *
+ * Until then ("Not connected") none of the other settings of the Microsoft plugins make sense, so their pages are hidden.
+ *
+ * @return bool
+ */
+function auth_oidc_is_idp_type_configured(): bool {
+    return !empty(get_config('auth_oidc', 'idptype'));
+}
+
+/**
  * Return the name of the configured IdP type.
  *
  * @return lang_string|string
@@ -1343,6 +1381,9 @@ function auth_oidc_get_idp_type_name() {
     $idptypename = '';
 
     switch (get_config('auth_oidc', 'idptype')) {
+        case AUTH_OIDC_IDP_TYPE_NOT_CONNECTED:
+            $idptypename = get_string('idp_type_not_connected', 'auth_oidc');
+            break;
         case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
             $idptypename = get_string('idp_type_microsoft_entra_id', 'auth_oidc');
             break;
@@ -1573,17 +1614,15 @@ function auth_oidc_get_settings_nav_html(string $currentpage, ?string $subtitle 
         'authsettingoidc' => get_string('settings_page_application', 'auth_oidc'),
     ];
 
-    // Only include the binding username claim tab if IdP type is configured.
-    $idptype = get_config('auth_oidc', 'idptype');
-    if ($idptype) {
-        $pages['auth_oidc_binding_username_claim'] = get_string('settings_page_binding_username_claim', 'auth_oidc');
+    // The other tabs are only included once the IdP type is configured.
+    if (auth_oidc_is_idp_type_configured()) {
+        $pages += [
+            'auth_oidc_binding_username_claim' => get_string('settings_page_binding_username_claim', 'auth_oidc'),
+            'auth_oidc_other_settings' => get_string('settings_page_other_settings', 'auth_oidc'),
+            'auth_oidc_clear_user_tokens' => get_string('settings_page_clear_user_tokens', 'auth_oidc'),
+            'auth_oidc_field_mapping' => get_string('settings_page_field_mapping', 'auth_oidc'),
+        ];
     }
-
-    $pages += [
-        'auth_oidc_other_settings' => get_string('settings_page_other_settings', 'auth_oidc'),
-        'auth_oidc_clear_user_tokens' => get_string('settings_page_clear_user_tokens', 'auth_oidc'),
-        'auth_oidc_field_mapping' => get_string('settings_page_field_mapping', 'auth_oidc'),
-    ];
 
     // Tabs for admin_externalpage pages, which can't be opened through /admin/settings.php?section=.
     $externalpageurls = [

@@ -69,6 +69,7 @@ $string['idptype_help'] = 'Tällä hetkellä tuetaan kolmea IdP-tyyppiä:
 Vaihtoehtojen <b>Microsoft Entra ID (v1.0)</b> ja <b>Microsoft identity platform (v2.0)</b> erot löytyvät osoitteesta <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
 Huomaa erityisesti, että määritetty sovellus voi käyttää tunnistautumiseen <b>salaisuuden</b> lisäksi <b>varmennetta</b>, kun käytetään <b>Microsoft identity platform (v2.0)</b> -IdP:tä.<br/>
 Valtuutus- ja tunnuspäätepisteet on määritettävä määritetyn IdP-tyypin mukaisesti.';
+$string['idp_type_not_connected'] = 'Ei yhdistetty';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Muu';
@@ -275,6 +276,7 @@ $string['erroroidccall_message'] = 'Virhe OpenID Connect -palvelussa: {$a}';
 $string['errorinvalidredirect_message'] = 'URL-osoitetta, johon yrität ohjata, ei ole olemassa.';
 $string['errorinvalidcertificatesource'] = 'Virheellinen varmenteen lähde';
 $string['error_invalid_client_authentication_method'] = 'Virheellinen asiakkaan tunnistautumistapa';
+$string['error_certificate_requires_identity_platform'] = 'Varmennetunnistautuminen edellyttää IdP-tyyppiä ”Microsoft identity platform (v2.0)”.';
 $string['error_empty_client_secret'] = 'Asiakassalaisuus ei voi olla tyhjä, kun käytetään "salaisuus"-tunnistautumistapaa';
 $string['error_empty_client_private_key'] = 'Asiakasvarmenteen yksityinen avain ei voi olla tyhjä, kun käytetään "varmenne"-tunnistautumistapaa';
 $string['error_empty_client_cert'] = 'Asiakasvarmenteen julkinen avain ei voi olla tyhjä, kun käytetään "varmenne"-tunnistautumistapaa';
