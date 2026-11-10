@@ -38,6 +38,20 @@ require_once($CFG->dirroot . '/lib/adminlib.php');
  */
 class team_type_custom_id extends \admin_setting_configtext {
     /**
+     * Get the current setting, falling back to the default value when it has never been stored.
+     *
+     * The input is disabled, and so not submitted, unless the custom template type is selected. Without this the setting
+     * would stay unset after the new settings page is saved, and admin/upgradesettings.php would keep listing it.
+     *
+     * @return string|null
+     */
+    public function get_setting() {
+        $setting = parent::get_setting();
+
+        return $setting === null ? $this->get_defaultsetting() : $setting;
+    }
+
+    /**
      * Validate and save the setting.
      *
      * @param mixed $data

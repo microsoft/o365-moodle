@@ -29,6 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/authlib.php');
 require_once($CFG->dirroot . '/login/lib.php');
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 /**
  * OpenID Connect Authentication Plugin.
@@ -155,6 +156,9 @@ class auth_plugin_oidc extends \auth_plugin_base {
         }
         if (!isset($this->config->forceredirect) || !$this->config->forceredirect) {
             return false; // Never redirect if we haven't enabled the forceredirect setting.
+        }
+        if (!auth_oidc_is_idp_type_configured()) {
+            return false; // Never redirect if no IdP is configured, for example after disconnecting ("Not connected").
         }
         // Never redirect on POST.
         if (isset($_SERVER['REQUEST_METHOD']) && ($_SERVER['REQUEST_METHOD'] == 'POST')) {
