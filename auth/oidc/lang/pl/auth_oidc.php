@@ -69,6 +69,7 @@ $string['idptype_help'] = 'Obecnie obsługiwane są trzy typy IdP:
 Różnice między opcjami <b>Microsoft Entra ID (v1.0)</b> i <b>Microsoft identity platform (v2.0)</b> opisano pod adresem <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
 W szczególności skonfigurowana aplikacja może używać do uwierzytelniania <b>certyfikatu</b> zamiast <b>klucza tajnego</b>, gdy używany jest IdP <b>Microsoft identity platform (v2.0)</b>.<br/>
 Punkty końcowe autoryzacji i tokenów należy skonfigurować zgodnie ze skonfigurowanym typem IdP.';
+$string['idp_type_not_connected'] = 'Niepołączony';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Inny';
@@ -275,6 +276,7 @@ $string['erroroidccall_message'] = 'Błąd w OpenID Connect: {$a}';
 $string['errorinvalidredirect_message'] = 'Adres URL, na który próbujesz przekierować, nie istnieje.';
 $string['errorinvalidcertificatesource'] = 'Nieprawidłowe źródło certyfikatu';
 $string['error_invalid_client_authentication_method'] = 'Nieprawidłowa metoda uwierzytelniania klienta';
+$string['error_certificate_requires_identity_platform'] = 'Uwierzytelnianie certyfikatem wymaga typu IdP „Microsoft identity platform (v2.0)”.';
 $string['error_empty_client_secret'] = 'Klucz tajny klienta nie może być pusty, gdy używana jest metoda uwierzytelniania „klucz tajny”';
 $string['error_empty_client_private_key'] = 'Klucz prywatny certyfikatu klienta nie może być pusty, gdy używana jest metoda uwierzytelniania „certyfikat”';
 $string['error_empty_client_cert'] = 'Klucz publiczny certyfikatu klienta nie może być pusty, gdy używana jest metoda uwierzytelniania „certyfikat”';

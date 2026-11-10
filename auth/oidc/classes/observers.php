@@ -33,6 +33,7 @@ use core\event\user_loggedout;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/lib/filelib.php');
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 /**
  * Handles events.
@@ -76,8 +77,8 @@ class observers {
      *
      * When the configured client (application) ID changes, the plugin is authenticating against a
      * different application registration, so every stored OIDC token is bound to the old application
-     * and can no longer be used. Clear the token table so affected users re-authenticate on their
-     * next login and fresh tokens are stored.
+     * and can no longer be used. Likewise, tokens are no longer used once the IdP type is set to "Not connected".
+     * Clear the token table so affected users re-authenticate on their next login and fresh tokens are stored.
      *
      * @param config_log_created $event The triggered event.
      * @return bool Success/Failure.
@@ -87,8 +88,13 @@ class observers {
 
         $other = $event->get_data()['other'] ?? [];
 
-        if (($other['plugin'] ?? '') === 'auth_oidc' && ($other['name'] ?? '') === 'clientid') {
-            $DB->delete_records('auth_oidc_token');
+        if (($other['plugin'] ?? '') === 'auth_oidc') {
+            $name = $other['name'] ?? '';
+            // Disconnecting (IdP type changed to "Not connected") also invalidates the stored tokens.
+            $disconnected = $name === 'idptype' && (int)($other['value'] ?? 0) === AUTH_OIDC_IDP_TYPE_NOT_CONNECTED;
+            if ($name === 'clientid' || $disconnected) {
+                $DB->delete_records('auth_oidc_token');
+            }
         }
 
         return true;
