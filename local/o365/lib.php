@@ -274,6 +274,28 @@ function local_o365_show_teams_moodle_app_id_tab() {
 }
 
 /**
+ * Determine if the School Data Sync (SDS) settings tab needs to appear.
+ *
+ * The tab is only shown when the site is connected to Microsoft 365 and the tenant has an Education license, as
+ * recorded by the cached license status. When that status has not been determined yet, the tab is only shown if SDS
+ * has already been configured, so existing SDS setups are not affected.
+ *
+ * @return bool
+ */
+function local_o365_show_sds_tab(): bool {
+    if (!\local_o365\utils::is_configured()) {
+        return false;
+    }
+
+    $cachedlicense = get_config('local_o365', 'education_license_cached');
+    if ($cachedlicense !== false) {
+        return (bool)$cachedlicense;
+    }
+
+    return !empty(get_config('local_o365', 'sdsschools')) || !empty(get_config('local_o365', 'sdsprofilesync'));
+}
+
+/**
  * Attempt to get authorization token from request header.
  *
  * @return false|string|null
@@ -477,6 +499,9 @@ function local_o365_get_settings_nav_html(string $currentpage, ?string $subtitle
         'local_o365_sds' => get_string('settings_header_sds', 'local_o365'),
         'local_o365_teams' => get_string('settings_header_teams', 'local_o365'),
     ];
+    if (!local_o365_show_sds_tab()) {
+        unset($pages['local_o365_sds']);
+    }
     if (local_o365_show_teams_moodle_app_id_tab()) {
         $pages['local_o365_moodle_app'] = get_string('settings_header_moodle_app', 'local_o365');
     }
