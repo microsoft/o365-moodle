@@ -477,7 +477,10 @@ function local_o365_get_settings_nav_html(string $currentpage, ?string $subtitle
         'local_o365_sds' => get_string('settings_header_sds', 'local_o365'),
         'local_o365_teams' => get_string('settings_header_teams', 'local_o365'),
     ];
-    if (local_o365_show_teams_moodle_app_id_tab()) {
+    if (!auth_oidc_is_idp_type_configured()) {
+        // Only the Setup page is useful until an IdP type is chosen.
+        $pages = array_slice($pages, 0, 1, true);
+    } else if (local_o365_show_teams_moodle_app_id_tab()) {
         $pages['local_o365_moodle_app'] = get_string('settings_header_moodle_app', 'local_o365');
     }
 

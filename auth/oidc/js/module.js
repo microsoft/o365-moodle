@@ -2,7 +2,7 @@
 
 M.auth_oidc = {};
 
-M.auth_oidc.init = function(Y, idptype_ms, authmethodsecret, authmethodcertificate, authmethodcertificatetext) {
+M.auth_oidc.init = function(Y, idptype_ms, authmethodsecret, authmethodcertificate, authmethodcertificatetext, idptype_notconnected) {
     var $idptype = $("#id_idptype");
     var $clientauthmethod = $("#id_clientauthmethod");
     var $clientsecret = $("#id_clientsecret");
@@ -37,6 +37,18 @@ M.auth_oidc.init = function(Y, idptype_ms, authmethodsecret, authmethodcertifica
             originalSecretValue = $clientsecret.val();
         }
     }
+
+    // While no IdP type is chosen, only the IdP type is shown. Moodle's hideIf() can't hide the section headers, so hide
+    // them here, and skip the client side validation of the hidden fields, such as the required application ID.
+    var $sections = $("#id_authentication, #id_endpoints, #id_otherparams, #id_secretexpirynotification");
+    var toggleNotConnected = function() {
+        $sections.closest("fieldset").toggle($idptype.val() != idptype_notconnected);
+    };
+    toggleNotConnected();
+    $idptype.change(toggleNotConnected);
+    $("#id_submitbutton").on("click", function() {
+        window.skipClientValidation = ($idptype.val() == idptype_notconnected);
+    });
 
     $idptype.change(function() {
         if ($(this).val() != idptype_ms) {

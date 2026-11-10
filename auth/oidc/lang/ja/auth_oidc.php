@@ -69,6 +69,7 @@ $string['idptype_help'] = '現在、3種類のIdPがサポートされていま�
 <b>Microsoft Entra ID (v1.0)</b>オプションと<b>Microsoft identity platform (v2.0)</b>オプションの違いについては、<a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a> をご覧ください。<br/>
 特に、<b>Microsoft identity platform (v2.0)</b> IdPを使用する場合、設定されたアプリケーションは認証に<b>シークレット</b>だけでなく<b>証明書</b>も使用できます。<br/>
 認可エンドポイントおよびトークンエンドポイントは、設定されたIdPタイプに応じて設定する必要があります。';
+$string['idp_type_not_connected'] = '未接続';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'その他';
@@ -275,6 +276,7 @@ $string['erroroidccall_message'] = 'OpenID Connectのエラー: {$a}';
 $string['errorinvalidredirect_message'] = 'リダイレクトしようとしているURLは存在しません。';
 $string['errorinvalidcertificatesource'] = '無効な証明書ソース';
 $string['error_invalid_client_authentication_method'] = '無効なクライアント認証方法';
+$string['error_certificate_requires_identity_platform'] = '証明書認証には、IdPタイプ「Microsoft identity platform (v2.0)」が必要です。';
 $string['error_empty_client_secret'] = '「シークレット」認証方法を使用する場合、クライアントシークレットを空にすることはできません';
 $string['error_empty_client_private_key'] = '「証明書」認証方法を使用する場合、クライアント証明書の秘密鍵を空にすることはできません';
 $string['error_empty_client_cert'] = '「証明書」認証方法を使用する場合、クライアント証明書の公開鍵を空にすることはできません';

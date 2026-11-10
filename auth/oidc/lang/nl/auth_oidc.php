@@ -69,6 +69,7 @@ $string['idptype_help'] = 'Er worden momenteel drie typen IdP ondersteund:
 De verschillen tussen de opties <b>Microsoft Entra ID (v1.0)</b> en <b>Microsoft identity platform (v2.0)</b> vind je op <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
 De geconfigureerde toepassing kan bij de IdP <b>Microsoft identity platform (v2.0)</b> naast een <b>geheim</b> ook een <b>certificaat</b> gebruiken voor authenticatie.<br/>
 De autorisatie- en tokenendpoints moeten worden geconfigureerd volgens het geconfigureerde IdP-type.';
+$string['idp_type_not_connected'] = 'Niet verbonden';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Overig';
@@ -275,6 +276,7 @@ $string['erroroidccall_message'] = 'Fout in OpenID Connect: {$a}';
 $string['errorinvalidredirect_message'] = 'De URL waarnaar je probeert door te verwijzen bestaat niet.';
 $string['errorinvalidcertificatesource'] = 'Ongeldige certificaatbron';
 $string['error_invalid_client_authentication_method'] = 'Ongeldige clientauthenticatiemethode';
+$string['error_certificate_requires_identity_platform'] = 'Certificaatauthenticatie vereist het IdP-type "Microsoft identity platform (v2.0)".';
 $string['error_empty_client_secret'] = 'Het clientgeheim mag niet leeg zijn bij de authenticatiemethode "geheim"';
 $string['error_empty_client_private_key'] = 'De privésleutel van het clientcertificaat mag niet leeg zijn bij de authenticatiemethode "certificaat"';
 $string['error_empty_client_cert'] = 'De openbare sleutel van het clientcertificaat mag niet leeg zijn bij de authenticatiemethode "certificaat"';
