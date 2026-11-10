@@ -42,7 +42,7 @@ $PAGE->set_heading(get_string('settings_page_application_wizard', 'auth_oidc'));
 $PAGE->set_title(get_string('settings_page_application_wizard', 'auth_oidc'));
 
 $jsparams = [AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, AUTH_OIDC_AUTH_METHOD_SECRET, AUTH_OIDC_AUTH_METHOD_CERTIFICATE,
-    get_string('auth_method_certificate', 'auth_oidc')];
+    get_string('auth_method_certificate', 'auth_oidc'), AUTH_OIDC_IDP_TYPE_NOT_CONNECTED];
 $jsmodule = [
     'name' => 'auth_oidc',
     'fullpath' => '/auth/oidc/js/module.js',
@@ -132,6 +132,11 @@ if ($form->is_cancelled()) {
             break;
     }
 
+    // Only the IdP type is saved while no IdP type is chosen: the other fields are hidden and not configured.
+    if ($fromform->idptype == AUTH_OIDC_IDP_TYPE_NOT_CONNECTED) {
+        $configstosave = ['idptype'];
+    }
+
     // Save config settings.
     $updateapplicationtokenrequired = false;
     $settingschanged = false;
@@ -177,7 +182,7 @@ if ($form->is_cancelled()) {
 
     // Redirect destination and message depend on IdP type.
     $isgraphapiconnected = false;
-    if ($fromform->idptype != AUTH_OIDC_IDP_TYPE_OTHER) {
+    if (!in_array($fromform->idptype, [AUTH_OIDC_IDP_TYPE_NOT_CONNECTED, AUTH_OIDC_IDP_TYPE_OTHER])) {
         if (auth_oidc_is_local_365_installed()) {
             $isgraphapiconnected = true;
         }
