@@ -239,10 +239,10 @@ class ajax extends base {
 
             // Cache education license status to avoid Graph API calls in settings page.
             try {
-                $educationlicensestatus = $unifiedapiclient->has_education_license();
+                $educationlicensestatus = $unifiedapiclient->has_education_license(true);
                 set_config('education_license_cached', (int)$educationlicensestatus, 'local_o365');
             } catch (Exception $e) {
-                // If we can't determine license, leave the existing cache value.
+                // If we can't determine the license (e.g. temporary Graph API failure), keep the last successfully cached value.
                 utils::debug('Could not determine education license status: ' . $e->getMessage(), __METHOD__);
             }
 

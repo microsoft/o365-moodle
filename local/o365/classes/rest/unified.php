@@ -3733,9 +3733,12 @@ class unified extends o365api {
     /**
      * Determine if the tenant that the Azure app is created in has Education license.
      *
+     * @param bool $throwonerror Whether to rethrow the exception when the license status cannot be retrieved, instead of
+     *                           returning false. This allows callers to tell a failed check from a confirmed negative result.
      * @return bool
+     * @throws moodle_exception When $throwonerror is true and the license status cannot be retrieved.
      */
-    public function has_education_license(): bool {
+    public function has_education_license(bool $throwonerror = false): bool {
         $endpoint = '/organization';
         $odataqueries = [];
         $odataqueries[] = '$select=assignedPlans';
@@ -3756,6 +3759,9 @@ class unified extends o365api {
         } catch (moodle_exception $e) {
             // Failed to get assigned plans.
             utils::debug($e->getMessage(), __METHOD__, $e);
+            if ($throwonerror) {
+                throw $e;
+            }
         }
 
         return false;
