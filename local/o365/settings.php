@@ -757,9 +757,15 @@ if ($hassiteconfig) {
         ));
 
         // SCHOOL DATA SYNC (SDS) PAGE.
+        // The page is always registered (like the other pages of this plugin, outside of the core install mode), so its
+        // default settings are saved when the plugin is installed or upgraded and do not show up as new settings once the
+        // site is connected and has an Education license. It is hidden from the admin tree and the tabs for sites that are
+        // not connected to Microsoft 365 or whose tenant has no Education license.
         $sdssettings = new admin_settingpage(
             'local_o365_sds',
-            get_string('settings_header_sds', 'local_o365')
+            get_string('settings_header_sds', 'local_o365'),
+            'moodle/site:config',
+            !local_o365_show_sds_tab()
         );
         $ADMIN->add('local_o365_folder', $sdssettings);
         if ($ADMIN->fulltree) {
