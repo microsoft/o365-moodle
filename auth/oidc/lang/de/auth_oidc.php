@@ -69,6 +69,7 @@ $string['idptype_help'] = 'Derzeit werden drei IdP-Typen unterstützt:
 Die Unterschiede zwischen den Optionen <b>Microsoft Entra ID (v1.0)</b> und <b>Microsoft identity platform (v2.0)</b> finden Sie unter <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
 Beim IdP <b>Microsoft identity platform (v2.0)</b> kann sich die konfigurierte Anwendung außer mit einem <b>geheimen Schlüssel</b> auch mit einem <b>Zertifikat</b> authentifizieren.<br/>
 Autorisierungs- und Token-Endpunkt müssen passend zum konfigurierten IdP-Typ eingerichtet werden.';
+$string['idp_type_not_connected'] = 'Nicht verbunden';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Andere';
@@ -275,6 +276,7 @@ $string['erroroidccall_message'] = 'Fehler in OpenID Connect: {$a}';
 $string['errorinvalidredirect_message'] = 'Die URL, zu der Sie weitergeleitet werden sollen, existiert nicht.';
 $string['errorinvalidcertificatesource'] = 'Ungültige Zertifikatsquelle';
 $string['error_invalid_client_authentication_method'] = 'Ungültige Client-Authentifizierungsmethode';
+$string['error_certificate_requires_identity_platform'] = 'Die Zertifikatsauthentifizierung erfordert den IdP-Typ „Microsoft identity platform (v2.0)“.';
 $string['error_empty_client_secret'] = 'Der geheime Clientschlüssel darf bei der Authentifizierungsmethode "Geheimer Schlüssel" nicht leer sein';
 $string['error_empty_client_private_key'] = 'Der private Schlüssel des Clientzertifikats darf bei der Authentifizierungsmethode "Zertifikat" nicht leer sein';
 $string['error_empty_client_cert'] = 'Der öffentliche Schlüssel des Clientzertifikats darf bei der Authentifizierungsmethode "Zertifikat" nicht leer sein';

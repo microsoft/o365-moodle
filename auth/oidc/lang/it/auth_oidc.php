@@ -69,6 +69,7 @@ $string['idptype_help'] = 'Attualmente sono supportati tre tipi di IdP:
 Le differenze tra le opzioni <b>Microsoft Entra ID (v1.0)</b> e <b>Microsoft identity platform (v2.0)</b> sono descritte in <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
 In particolare, con l\'IdP <b>Microsoft identity platform (v2.0)</b> l\'applicazione configurata può utilizzare per l\'autenticazione un <b>certificato</b> oltre al <b>segreto</b>.<br/>
 Gli endpoint di autorizzazione e del token devono essere configurati in base al tipo di IdP configurato.';
+$string['idp_type_not_connected'] = 'Non connesso';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Altro';
@@ -275,6 +276,7 @@ $string['erroroidccall_message'] = 'Si è verificato un errore in OpenID Connect
 $string['errorinvalidredirect_message'] = 'L\'URL verso cui stai tentando di essere reindirizzato non esiste.';
 $string['errorinvalidcertificatesource'] = 'Origine del certificato non valida';
 $string['error_invalid_client_authentication_method'] = 'Metodo di autenticazione del client non valido';
+$string['error_certificate_requires_identity_platform'] = 'L\'autenticazione con certificato richiede il tipo di IdP "Microsoft identity platform (v2.0)".';
 $string['error_empty_client_secret'] = 'Il segreto client non può essere vuoto se si utilizza il metodo di autenticazione "segreto"';
 $string['error_empty_client_private_key'] = 'La chiave privata del certificato client non può essere vuota se si utilizza il metodo di autenticazione "certificato"';
 $string['error_empty_client_cert'] = 'La chiave pubblica del certificato client non può essere vuota se si utilizza il metodo di autenticazione "certificato"';

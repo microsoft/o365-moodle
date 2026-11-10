@@ -88,6 +88,10 @@ foreach ($courseroles as $courserole) {
 
 if ($hassiteconfig) {
     // Create the top-level folder for all Microsoft 365 integration settings pages.
+    // While no IdP type is chosen ("Not connected"), only the Setup page is shown. The other pages stay registered, so
+    // their default settings are still saved on installation and do not show up as new settings once connected.
+    $notconnected = !auth_oidc_is_idp_type_configured();
+
     $o365folder = new admin_category('local_o365_folder', new lang_string('pluginname', 'local_o365'));
     $ADMIN->add('localplugins', $o365folder);
 
@@ -188,9 +192,11 @@ if ($hassiteconfig) {
     // Remaining pages are only registered outside of install mode.
     if (empty($install)) {
         // USER SYNC SETTINGS PAGE.
-        $usersyncsettings = new admin_settingpage(
+        $usersyncsettings = new \auth_oidc\adminsetting\auth_oidc_admin_settingpage(
             'local_o365_usersync',
-            get_string('settings_header_usersync', 'local_o365')
+            get_string('settings_header_usersync', 'local_o365'),
+            'moodle/site:config',
+            $notconnected
         );
         $ADMIN->add('local_o365_folder', $usersyncsettings);
         $usersyncsettings->add(new admin_setting_heading(
@@ -256,9 +262,11 @@ if ($hassiteconfig) {
         ));
 
         // COURSE SYNC SETTINGS PAGE.
-        $coursesyncsettings = new admin_settingpage(
+        $coursesyncsettings = new \auth_oidc\adminsetting\auth_oidc_admin_settingpage(
             'local_o365_coursesync',
-            get_string('settings_header_coursesync', 'local_o365')
+            get_string('settings_header_coursesync', 'local_o365'),
+            'moodle/site:config',
+            $notconnected
         );
         $ADMIN->add('local_o365_folder', $coursesyncsettings);
         $coursesyncsettings->add(new admin_setting_heading(
@@ -546,9 +554,11 @@ if ($hassiteconfig) {
         ));
 
         // ADVANCED SETTINGS PAGE.
-        $advancedsettings = new admin_settingpage(
+        $advancedsettings = new \auth_oidc\adminsetting\auth_oidc_admin_settingpage(
             'local_o365_advanced',
-            get_string('settings_header_advanced', 'local_o365')
+            get_string('settings_header_advanced', 'local_o365'),
+            'moodle/site:config',
+            $notconnected
         );
         $ADMIN->add('local_o365_folder', $advancedsettings);
         $advancedsettings->add(new admin_setting_heading(
@@ -757,9 +767,11 @@ if ($hassiteconfig) {
         ));
 
         // SCHOOL DATA SYNC (SDS) PAGE.
-        $sdssettings = new admin_settingpage(
+        $sdssettings = new \auth_oidc\adminsetting\auth_oidc_admin_settingpage(
             'local_o365_sds',
-            get_string('settings_header_sds', 'local_o365')
+            get_string('settings_header_sds', 'local_o365'),
+            'moodle/site:config',
+            $notconnected
         );
         $ADMIN->add('local_o365_folder', $sdssettings);
         if ($ADMIN->fulltree) {
@@ -967,9 +979,11 @@ if ($hassiteconfig) {
         }
 
         // TEAMS PAGE.
-        $teamssettings = new admin_settingpage(
+        $teamssettings = new \auth_oidc\adminsetting\auth_oidc_admin_settingpage(
             'local_o365_teams',
-            get_string('settings_header_teams', 'local_o365')
+            get_string('settings_header_teams', 'local_o365'),
+            'moodle/site:config',
+            $notconnected
         );
         $ADMIN->add('local_o365_folder', $teamssettings);
         $teamssettings->add(new admin_setting_heading(
@@ -1044,9 +1058,11 @@ if ($hassiteconfig) {
 
         // MOODLE APP PAGE (conditional on feature flag).
         if (local_o365_show_teams_moodle_app_id_tab()) {
-            $moodleappsettings = new admin_settingpage(
+            $moodleappsettings = new \auth_oidc\adminsetting\auth_oidc_admin_settingpage(
                 'local_o365_moodle_app',
-                get_string('settings_header_moodle_app', 'local_o365')
+                get_string('settings_header_moodle_app', 'local_o365'),
+                'moodle/site:config',
+                $notconnected
             );
             $ADMIN->add('local_o365_folder', $moodleappsettings);
             if ($ADMIN->fulltree) {
