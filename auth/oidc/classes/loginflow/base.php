@@ -152,7 +152,8 @@ class base {
 
         $fieldmappingfromtoken = true;
 
-        if (auth_oidc_is_local_365_installed()) {
+        // Microsoft Entra External ID users have no Microsoft Graph profile, so their fields always come from the tokens.
+        if (auth_oidc_is_local_365_installed() && !auth_oidc_is_entra_external_id()) {
             // User from additional tenants can only sync fields from token.
             // Read the tenant id from the access token, falling back to the ID token: in real Entra
             // flows the access token can be opaque while the ID token is still a JWT carrying 'tid'.
@@ -225,7 +226,7 @@ class base {
                         }
 
                         if (!isset($userdata['userPrincipalName'])) {
-                            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+                            if (auth_oidc_uses_v2_endpoints()) {
                                 $upn = $token->claim('preferred_username');
                                 if (empty($upn)) {
                                     $upn = $token->claim('email');
@@ -318,7 +319,7 @@ class base {
                 }
 
                 if (!isset($userdata['userPrincipalName'])) {
-                    if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+                    if (auth_oidc_uses_v2_endpoints()) {
                         $upn = $token->claim('preferred_username');
                         if (empty($upn)) {
                             $upn = $token->claim('email');
@@ -671,6 +672,11 @@ class base {
      * @return bool Whether the restriction check passed.
      */
     protected function checkrestrictions(jwt $idtoken) {
+        // User restrictions are not available for Microsoft Entra External ID, so a saved restriction is not applied.
+        if (auth_oidc_is_entra_external_id()) {
+            return true;
+        }
+
         $restrictions = (isset($this->config->userrestrictions)) ? trim($this->config->userrestrictions) : '';
         $hasrestrictions = false;
         $userpassed = false;
@@ -691,6 +697,8 @@ class base {
                         $count = @preg_match($pattern, $oidcusername, $matches);
                         if (!empty($count)) {
                             $userpassed = true;
+                            // Close the output buffer started above before leaving the loop.
+                            ob_end_clean();
                             break;
                         }
                     } catch (moodle_exception $e) {
@@ -850,7 +858,18 @@ class base {
                 $oidcusername = $idtoken->claim($bindingusernameclaim);
                 break;
             case 'auto':
-                if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+                if (auth_oidc_is_entra_external_id()) {
+                    // The sign-in name and the email address of an External ID user can change, which would break the link
+                    // to the Moodle account, so use the stable identifiers.
+                    $oidcusername = $idtoken->claim('oid');
+                    if (empty($oidcusername)) {
+                        $oidcusername = $idtoken->claim('sub');
+                    }
+
+                    break;
+                }
+
+                if (auth_oidc_uses_v2_endpoints()) {
                     $oidcusername = $idtoken->claim('preferred_username');
                     if (empty($oidcusername)) {
                         $oidcusername = $idtoken->claim('email');
@@ -873,6 +892,15 @@ class base {
                 break;
             default:
                 $oidcusername = '';
+        }
+
+        // The claim selected for Microsoft Entra External ID users may be missing from the token, for example when the
+        // optional claim was not added to the app registration. Fall back to the stable identifiers, as for automatic choice.
+        if (empty($oidcusername) && auth_oidc_is_entra_external_id()) {
+            $oidcusername = $idtoken->claim('oid');
+            if (empty($oidcusername)) {
+                $oidcusername = $idtoken->claim('sub');
+            }
         }
 
         return $oidcusername;

@@ -71,6 +71,8 @@ class update_coursesync extends external_api {
     public static function coursesync_update($courses) {
         global $DB;
 
+        \local_o365\utils::require_features_enabled();
+
         $params = self::validate_parameters(self::coursesync_update_parameters(), ['courses' => $courses]);
 
         $context = system::instance();

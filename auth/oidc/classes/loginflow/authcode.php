@@ -761,6 +761,43 @@ class authcode extends base {
     }
 
     /**
+     * Check whether the Microsoft username of a connected user is different from the one saved in the token record.
+     *
+     * For Microsoft Entra External ID, the selected binding claim, such as the email address, can be added to or removed from
+     * the ID token between two logins, for example when the optional claim is added to the app registration. The identifier
+     * of the user then changes between the claim and the object ID (or subject), which is not a change of the identity of the
+     * user, as the object ID is stable. The existing binding is kept in that case.
+     *
+     * @param jwt $idtoken The ID token received in the login.
+     * @param stdClass|false|null $tokenrec The token record of the connected user, if any.
+     * @param string $oidcusername The Microsoft username in the ID token, based on the binding claim.
+     * @return bool
+     */
+    protected function has_username_changed(jwt $idtoken, $tokenrec, string $oidcusername): bool {
+        if (!$oidcusername || !$tokenrec || strtolower($oidcusername) === strtolower($tokenrec->useridentifier)) {
+            return false;
+        }
+
+        if (auth_oidc_is_entra_external_id()) {
+            $stableidentifier = $idtoken->claim('oid');
+            if (empty($stableidentifier)) {
+                $stableidentifier = $idtoken->claim('sub');
+            }
+
+            // One of the two identifiers is the stable one, which is used when the selected claim is missing.
+            if (
+                !empty($stableidentifier) &&
+                (strtolower($oidcusername) === strtolower($stableidentifier) ||
+                    strtolower($tokenrec->useridentifier) === strtolower($stableidentifier))
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Handle a user migration event.
      *
      * @param string $oidcuniqid A unique identifier for the user.
@@ -919,10 +956,7 @@ class authcode extends base {
         // Find the latest real Microsoft username.
         $oidcusername = $this->get_oidc_username_from_token_claim($idtoken);
 
-        $usernamechanged = false;
-        if ($oidcusername && $tokenrec && strtolower($oidcusername) !== strtolower($tokenrec->useridentifier)) {
-            $usernamechanged = true;
-        }
+        $usernamechanged = $this->has_username_changed($idtoken, $tokenrec, (string) $oidcusername);
 
         $existingmatching = null;
         if (auth_oidc_is_local_365_installed()) {
@@ -1061,7 +1095,8 @@ class authcode extends base {
                 $username = $oidcuniqid;
 
                 // If upn claim is missing, it can mean either the IdP is not Microsoft Entra ID, or it's a guest user.
-                if (auth_oidc_is_local_365_installed()) {
+                // Microsoft Entra External ID has no Microsoft Graph application, so there is nothing to look up there.
+                if (auth_oidc_is_local_365_installed() && !auth_oidc_is_entra_external_id()) {
                     $apiclient = \local_o365\utils::get_api();
                     $userdetails = $apiclient->get_user($oidcuniqid);
                     if (
@@ -1129,7 +1164,8 @@ class authcode extends base {
                 $username = $oidcuniqid;
 
                 // If upn claim is missing, it can mean either the IdP is not Microsoft Entra ID, or it's a guest user.
-                if (auth_oidc_is_local_365_installed()) {
+                // Microsoft Entra External ID has no Microsoft Graph application, so there is nothing to look up there.
+                if (auth_oidc_is_local_365_installed() && !auth_oidc_is_entra_external_id()) {
                     $apiclient = \local_o365\utils::get_api();
                     $userdetails = $apiclient->get_user($oidcuniqid, true);
                     if (

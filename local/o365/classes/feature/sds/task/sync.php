@@ -1166,6 +1166,10 @@ class sync extends scheduled_task {
      * @return bool
      */
     public function execute(): bool {
+        if (\local_o365\utils::skip_task_for_idp_type()) {
+            return true;
+        }
+
         if (utils::is_connected() !== true) {
             static::mtrace('local_o365 reported unconfigured during SDS sync task, so exiting.');
             return false;

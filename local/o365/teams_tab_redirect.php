@@ -26,5 +26,7 @@
 // phpcs:ignore moodle.Files.RequireLogin.Missing -- This file is called from Microsoft Teams tab.
 require_once(__DIR__ . '/../../config.php');
 
+\local_o365\utils::require_features_enabled();
+
 unset($SESSION->theme);
 throw new moodle_exception('errornodirectaccess', 'local_o365');
