@@ -139,6 +139,8 @@ class update_grade extends external_api {
     ) {
         global $DB;
 
+        \local_o365\utils::require_features_enabled();
+
         $params = self::validate_parameters(self::grade_update_parameters(), ['assignmentid' => $assignmentid,
             'userid' => $userid, 'grade' => $grade, 'attemptnumber' => $attemptnumber, 'workflowstate' => $workflowstate,
             'addattempt' => $addattempt, 'applytoall' => $applytoall, 'plugindata' => $plugindata,

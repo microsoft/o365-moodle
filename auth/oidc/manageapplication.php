@@ -48,6 +48,7 @@ $jsmodule = [
     'fullpath' => '/auth/oidc/js/module.js',
 ];
 $PAGE->requires->js_init_call('M.auth_oidc.init', $jsparams, true, $jsmodule);
+auth_oidc_require_endpoint_autoupdate_js('id_idptype', 'id_authendpoint', 'id_tokenendpoint');
 
 navigation_node::require_admin_tree();
 
@@ -138,9 +139,15 @@ if ($form->is_cancelled()) {
     }
 
     // Save config settings.
+    $previousidptype = (int) get_config('auth_oidc', 'idptype');
     $updateapplicationtokenrequired = false;
     $settingschanged = false;
     foreach ($configstosave as $config) {
+        // A setting that is hidden in the form, such as the resource for the IdP types that do not use it, is not submitted.
+        if (!property_exists($fromform, $config)) {
+            continue;
+        }
+
         $existingsetting = get_config('auth_oidc', $config);
         $newvalue = $fromform->$config;
 
@@ -180,9 +187,18 @@ if ($form->is_cancelled()) {
         }
     }
 
+    // The logout endpoint follows the IdP type.
+    auth_oidc_convert_logout_endpoint($previousidptype, (int) $fromform->idptype);
+
     // Redirect destination and message depend on IdP type.
     $isgraphapiconnected = false;
-    if (!in_array($fromform->idptype, [AUTH_OIDC_IDP_TYPE_NOT_CONNECTED, AUTH_OIDC_IDP_TYPE_OTHER])) {
+    // Microsoft Entra External ID has no Microsoft Graph application either.
+    $nographidptypes = [
+        AUTH_OIDC_IDP_TYPE_NOT_CONNECTED,
+        AUTH_OIDC_IDP_TYPE_OTHER,
+        AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID,
+    ];
+    if (!in_array($fromform->idptype, $nographidptypes)) {
         if (auth_oidc_is_local_365_installed()) {
             $isgraphapiconnected = true;
         }

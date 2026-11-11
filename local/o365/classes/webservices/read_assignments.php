@@ -111,6 +111,8 @@ class read_assignments extends external_api {
     ) {
         global $USER, $DB;
 
+        \local_o365\utils::require_features_enabled();
+
         $params = self::validate_parameters(
             self::assignments_read_parameters(),
             [

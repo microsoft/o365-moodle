@@ -47,8 +47,8 @@ $string['heading_stateredirect'] = 'Login state error page';
 $string['heading_stateredirect_desc'] = 'By default, if a user takes too long to complete login at the identity provider (for example, while approving a multi-factor authentication prompt) and the stored login state has since been cleaned up, Moodle shows its generic error page. The settings below let you extend how long login state is kept, and let you show a friendlier, customizable message instead of the generic error page, automatically redirecting the user back to the login page.';
 $string['heading_user_restrictions'] = 'User restrictions';
 $string['heading_user_restrictions_desc'] = '';
-$string['heading_sign_out'] = 'Sign out integration';
-$string['heading_sign_out_desc'] = '';
+$string['heading_logout'] = 'Logout integration';
+$string['heading_logout_desc'] = '';
 $string['heading_display'] = 'Display';
 $string['heading_display_desc'] = '';
 $string['heading_debugging'] = 'Debugging';
@@ -60,10 +60,11 @@ Select "Microsoft 365 operated by 21Vianet (China)" if your organisation uses Mi
 $string['microsoftcloud_global'] = 'Microsoft 365 (global)';
 $string['microsoftcloud_china'] = 'Microsoft 365 operated by 21Vianet (China)';
 $string['idptype'] = 'Identity Provider (IdP) Type';
-$string['idptype_help'] = 'Three types of IdP are currently supported:
+$string['idptype_help'] = 'Four types of IdP are currently supported:
 <ul>
 <li><b>Microsoft Entra ID (v1.0)</b>: Microsoft Entra ID with oauth2 v1.0 endpoints, e.g. https://login.microsoftonline.com/organizations/oauth2/authorize.</li>
 <li><b>Microsoft identity platform (v2.0)</b>: Microsoft Entra ID with oauth2 v2.0 endpoints, e.g. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize.</li>
+<li><b>Microsoft Entra External ID</b>: a Microsoft Entra External ID (customer) tenant, with oauth2 v2.0 endpoints on the ciamlogin.com host, e.g. https://contoso.ciamlogin.com/&lt;tenant-id&gt;/oauth2/v2.0/authorize. Microsoft 365 features of the local_o365 plugin are not available for this IdP type.</li>
 <li><b>Other</b>: any non Microsoft IdP.</li>
 </ul>
 The differences between <b>Microsoft Entra ID (v1.0)</b> and <b>Microsoft identity platform (v2.0)</b> options can be found at <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
@@ -73,10 +74,11 @@ $string['idp_type_not_connected'] = 'Not connected';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Other';
+$string['idp_type_microsoft_entra_external_id'] = 'Microsoft Entra External ID';
 $string['settings_application_wizard_desc'] = 'To configure these settings using a guided form with step-by-step instructions and input validation, use the <a href="{$a}">Application Configuration Wizard</a>.';
 $string['authendpoint'] = 'Authorization Endpoint';
 $string['authendpoint_help'] = 'The URI of the Authorization endpoint from your IdP to use.<br/>
-Note if the site is to be configured to allow users from other tenants to access, tenant specific authorization endpoint cannot be used.';
+<span data-auth-oidc-idptypes="1,2">Note if the site is to be configured to allow users from other tenants to access, tenant specific authorization endpoint cannot be used.</span><span data-auth-oidc-idptypes="4">For Microsoft Entra External ID, use the "OAuth 2.0 authorization endpoint (v2)" shown on the Endpoints page of the application registration in your External ID tenant. It must be a v2.0 endpoint specific to your tenant.</span>';
 $string['clientid'] = 'Application ID';
 $string['clientid_help'] = 'The registered Application / Client ID on the IdP.';
 $string['clientauthmethod'] = 'Client authentication method';
@@ -114,6 +116,7 @@ $string['cfg_usepkce_key'] = 'Use PKCE';
 $string['cfg_usepkce_desc'] = 'When using the <b>Authorization Code</b> login flow, send a PKCE (RFC 7636) "code_challenge" with the S256 method in the authorization request, and the matching "code_verifier" when exchanging the authorization code. Microsoft Entra ID supports this. For other providers, enable this only if your provider supports PKCE, as some providers reject authorization requests with parameters they do not recognise.';
 $string['cfg_domainhint_key'] = 'Domain Hint';
 $string['cfg_domainhint_desc'] = 'When using the <b>Authorization Code</b> login flow, pass this value as the "domain_hint" parameter. "domain_hint" is used by some OpenID Connect IdP to make the login process easier for users. Check with your provider to see whether they support this parameter.';
+$string['cfg_domainhint_external_id_note'] = 'For Microsoft Entra External ID, this value sends users straight to a federated identity provider instead of showing the sign-in page. Use google, facebook or apple, or the domain of a custom OpenID Connect provider (for example contoso.onmicrosoft.com for a Microsoft Entra ID tenant). Do not use a tenant ID.';
 $string['cfg_forceselectaccount_key'] = 'Always show account selection';
 $string['cfg_forceselectaccount_desc'] = 'If enabled, users are always asked to choose which account to sign in with, instead of being signed in automatically with the account active in their browser. Useful when users have several accounts, for example a student and an admin account.<br/>
 Silent Login Mode takes precedence: while it is enabled, the account selection is not forced when signing in silently.';
@@ -172,7 +175,7 @@ $string['customclaims_help'] = 'Space-separated list of custom claim names from 
 <li>A claim name cannot be a reserved name, such as a standard JWT/OpenID Connect claim (e.g., <code>sub</code>, <code>email</code>), one specific to Microsoft Entra ID (e.g., <code>oid</code>, <code>upn</code>) or Keycloak (e.g., <code>realm_access</code>, <code>resource_access</code>), or an existing field mapping option</li>
 <li>The <code>roles</code> claim (App roles in Microsoft Entra ID tokens) and the <code>groups</code> claim (group IDs) are allowed. They are listed as "roles (token claim)" and "groups (token claim)" in field mapping, separate from the built-in "Roles" and "Groups" options, which map Microsoft Entra directory roles and group names from Microsoft Graph. Claims containing a list of values are stored as a comma-separated list</li>
 <li>Examples: <code>employee_type badge_number costCenter custom_role</code></li>
-<li>At login, custom claims are always read from the token, whether or not Microsoft Graph is also used. During the scheduled user sync task, there is no user token to read from, so a custom claim is only synced when its name also happens to be a selectable Microsoft Graph user property, such as a directory extension attribute (e.g., <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). A custom claim that Microsoft Graph rejects is skipped for that sync run, with a warning in the task log, rather than failing the whole sync.</li>
+<li data-auth-oidc-idptypes="1,2">At login, custom claims are always read from the token, whether or not Microsoft Graph is also used. During the scheduled user sync task, there is no user token to read from, so a custom claim is only synced when its name also happens to be a selectable Microsoft Graph user property, such as a directory extension attribute (e.g., <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). A custom claim that Microsoft Graph rejects is skipped for that sync run, with a warning in the task log, rather than failing the whole sync.</li>
 </ul>';
 $string['secretexpiryrecipients'] = 'Secret Expiry Notification Recipients';
 $string['secretexpiryrecipients_help'] = 'A comma-separated list of email addresses to send secret expiry notifications to.<br/>
@@ -186,22 +189,24 @@ $string['cfg_redirecturi_key'] = 'Redirect URI';
 $string['cfg_redirecturi_desc'] = 'This is the URI to register as the "Redirect URI". Your OpenID Connect IdP should ask for this when registering Moodle as a client. <br /><b>NOTE:</b> You must enter this in your OpenID Connect IdP *exactly* as it appears here. Any difference will prevent logins using OpenID Connect.';
 $string['tokenendpoint'] = 'Token Endpoint';
 $string['tokenendpoint_help'] = 'The URI of the token endpoint from your IdP to use.<br/>
-Note if the site is to be configured to allow users from other tenants to access, tenant specific token endpoint cannot be used.';
+<span data-auth-oidc-idptypes="1,2">Note if the site is to be configured to allow users from other tenants to access, tenant specific token endpoint cannot be used.</span><span data-auth-oidc-idptypes="4">For Microsoft Entra External ID, use the "OAuth 2.0 token endpoint (v2)" shown on the Endpoints page of the application registration in your External ID tenant. It must be a v2.0 endpoint specific to your tenant.</span>';
 $string['cfg_userrestrictions_key'] = 'User Restrictions';
 $string['cfg_userrestrictions_desc'] = 'Only allow users that meet certain restrictions to log in. <br /><b>How to use user restrictions: </b> <ul><li>Enter a <a href="https://en.wikipedia.org/wiki/Regular_expression">regular expression</a> pattern that matches the usernames of users you want to allow.</li><li>Enter one pattern per line</li><li>If you enter multiple patterns a user will be allowed if they match ANY of the patterns.</li><li>The character "/" should be escaped with "\".</li><li>If you don\'t enter any restrictions above, all users that can log in to the OpenID Connect IdP will be accepted by Moodle.</li><li>Any user that does not match any entered pattern(s) will be prevented from logging in using OpenID Connect.</li></ul>';
+$string['cfg_userrestrictions_disabled_external_id'] = 'User restrictions are not available for Microsoft Entra External ID, so this setting is disabled and the restrictions are not applied when users log in. Restrictions are matched against the binding username claim, which is the object ID (oid) for External ID users by default, so the patterns would have to match GUIDs. Control who can access the site in your External ID tenant instead, for example with user flows or application assignment.';
 $string['cfg_userrestrictionscasesensitive_key'] = 'User Restrictions Case Sensitive';
 $string['cfg_userrestrictionscasesensitive_desc'] = 'This controls if the "/i" option in regular expression is used in the user restriction match.<br/>If enabled, all user restriction checks will be case sensitive. Note if this is disabled, any patterns on letter cases will be ignored.';
 $string['heading_dummy_email'] = 'Placeholder email addresses';
-$string['heading_dummy_email_desc'] = 'Moodle requires every user account to have an email address, but Microsoft Entra ID accounts are not required to have one. The settings below let Moodle generate a non-deliverable placeholder address for users who don\'t have a usable email address from the IdP, instead of leaving their email address blank.';
+$string['heading_dummy_email_desc'] = 'Moodle requires every user account to have an email address, but some identity providers, such as Microsoft Entra ID, do not require their accounts to have one. The settings below let Moodle generate a non-deliverable placeholder address for users who don\'t have a usable email address from the IdP, instead of leaving their email address blank.';
 $string['cfg_generatedummyemail_key'] = 'Generate placeholder email addresses';
-$string['cfg_generatedummyemail_desc'] = 'If enabled, when a user has no email address and no usable email-formatted user principal name from the IdP, Moodle will generate a placeholder email address for them using their Microsoft user principal name (or object ID, if no user principal name is available) and the domain configured below, instead of leaving their email address blank. This applies both when a user logs in and when they are provisioned by the user sync task.';
+$string['cfg_generatedummyemail_desc'] = 'If enabled, when a user has no email address and no usable email-formatted user principal name from the IdP, Moodle will generate a placeholder email address for them using their user principal name (or object ID, if no user principal name is available) and the domain configured below, instead of leaving their email address blank. This applies both when a user logs in and when they are provisioned by the user sync task. The user principal name and object ID are read from the token claims of the IdP, so no address is generated if the IdP provides neither.';
 $string['cfg_dummyemaildomain_key'] = 'Placeholder email domain';
 $string['cfg_dummyemaildomain_desc'] = 'The domain to use when generating placeholder email addresses, for example "example.test". Use a domain that cannot receive mail, so that generated addresses can never be mistaken for a real, deliverable one.';
-$string['cfg_signoffintegration_key'] = 'Single Sign Out (from Moodle to IdP)';
-$string['cfg_signoffintegration_desc'] = 'If the option is enabled, when a Moodle user connected to the configured IdP logs out of Moodle, the integration will trigger a request at the logout endpoint below, attempting to log the user off from IdP as well.<br/>
-Note for integration with Microsoft Entra ID, the URL of Moodle site ({$a}) needs to be added as a redirect URI in the Microsoft Entra ID app created for Moodle and Microsoft 365 integration.';
+$string['cfg_singlelogout_key'] = 'Single logout (SLO) (from Moodle to IdP)';
+$string['cfg_singlelogout_desc'] = 'If the option is enabled, when a Moodle user connected to the configured IdP logs out of Moodle, the integration will trigger a request at the logout endpoint below, attempting to log the user off from IdP as well.<br/>
+Note for integration with Microsoft Entra ID, the URL of Moodle site ({$a}) needs to be added as a redirect URI in the Microsoft Entra ID app created for Moodle and Microsoft 365 integration.<br/>Single logout only ends the session of the login service that Moodle used. Other sessions of the same account in the browser, for example one created by signing in to the Azure portal, are not affected.';
 $string['cfg_logoutendpoint_key'] = 'IdP Logout Endpoint';
 $string['cfg_logoutendpoint_desc'] = 'The URI of the logout endpoint from your IdP to use.';
+$string['cfg_logoutendpoint_external_id_note'] = 'For Microsoft Entra External ID, users are asked to pick an account on the logout page of Microsoft, unless the login_hint optional claim is added to the ID token in the app registration (Token configuration > Add optional claim > ID > login_hint). Users have to log in again after the claim is added.';
 $string['cfg_frontchannellogouturl_key'] = 'Front-channel Logout URL';
 $string['cfg_frontchannellogouturl_desc'] = 'This is the URL that your IdP needs to trigger when it tries to log users out of Moodle.<br/>
 For Microsoft Entra ID / Microsoft identity platform, the setting is called "Front-channel logout URL" and is configurable in the Microsoft Entra ID app.';
@@ -217,6 +222,24 @@ The claims available from the ID and access tokens vary depending on IdP type, b
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">Access token claims</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">ID token claims</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">Optional claim configuration</a>: Note "Email" is an optional claim in Microsoft Entra ID (v1.0) IdP type.</li>
+</ul>';
+$string['cfg_field_mapping_desc_generic'] = 'User profile data can be mapped from the OpenID Connect IdP to Moodle. The remote fields available to map depend on the IdP type.<br/>
+<ul>
+<li>Basic profile fields are available from the claims of the ID token and access token that your IdP issues. The fields you can map, such as the first name, last name and email address, therefore depend on the claims your IdP includes in these tokens.</li>
+<li>Additional claims can be added to the list of fields available to map using the "{$a}" setting.</li>
+</ul>
+Most IdPs allow some level of customisation of the claims they issue. Check the documentation of your IdP for the claims it supports.';
+$string['cfg_field_mapping_desc_external_id'] = 'User profile data can be mapped from Microsoft Entra External ID to Moodle. The remote fields available to map are the claims of the ID token and access token, because Microsoft Graph is not used for this IdP type.<br/>
+<ul>
+<li>Basic profile fields are available from the claims of the ID token and access token.</li>
+<li>By default, the ID token of an External ID tenant only contains the name, object ID and sign-in name of the user. To map the first name, last name and email address, add the given_name, family_name and email claims as optional claims to the ID token in the application registration of your External ID tenant (Token configuration). The email claim is only issued if the user has an email address in the tenant.</li>
+<li>Additional claims can be added to the list of fields available to map using the "{$a}" setting.</li>
+</ul>
+Documentation on the claims of Microsoft tokens is linked below:
+<ul>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">Access token claims</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">ID token claims</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">Optional claim configuration</a></li>
 </ul>';
 
 $string['cfg_cleanupoidctokens_key'] = 'Clean up OpenID Connect tokens';
@@ -284,8 +307,16 @@ $string['error_empty_client_private_key_file'] = 'Client certificate private key
 $string['error_empty_client_cert_file'] = 'Client certificate public key file cannot be empty when using "certificate" authentication method';
 $string['error_endpoint_mismatch_auth_endpoint'] = 'The configured authorization endpoint does not match the configured IdP type. For "Microsoft Entra ID (v1.0)" use a v1.0 endpoint (e.g. https://login.microsoftonline.com/organizations/oauth2/authorize). For "Microsoft identity platform (v2.0)" use a v2.0 endpoint (e.g. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize).';
 $string['error_endpoint_mismatch_token_endpoint'] = 'The configured token endpoint does not match the configured IdP type. For "Microsoft Entra ID (v1.0)" use a v1.0 endpoint (e.g. https://login.microsoftonline.com/organizations/oauth2/token). For "Microsoft identity platform (v2.0)" use a v2.0 endpoint (e.g. https://login.microsoftonline.com/organizations/oauth2/v2.0/token).';
+$string['error_endpoint_external_id'] = 'The endpoint must be a Microsoft Entra External ID v2.0 endpoint on the ciamlogin.com host, e.g. https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/authorize.';
+$string['error_logoutendpoint_external_id'] = 'The logout endpoint must be a Microsoft Entra External ID v2.0 endpoint on the ciamlogin.com host, e.g. https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/logout. Leave the field empty to use the endpoint derived from the authorization endpoint.';
+$string['error_endpoint_external_id_placeholder'] = 'Replace the placeholders [tenant-name] and [tenant-id] with the values of your Microsoft Entra External ID tenant.';
+$string['error_endpoint_external_id_tenant'] = 'Microsoft Entra External ID tenants are single-tenant. Use the tenant ID or name in the endpoint instead of common, organizations or consumers.';
+$string['error_endpoint_external_id_v1'] = 'This is a v1.0 endpoint. Microsoft Entra External ID requires the v2.0 endpoint, with /oauth2/v2.0/ in its path.';
+$string['error_endpoint_external_id_kind'] = 'The endpoint must end with /{$a}.';
+$string['error_endpoint_external_id_mismatch'] = 'The authorization and token endpoints must belong to the same Microsoft Entra External ID tenant.';
+$string['error_endpoint_is_external_id'] = 'This is a Microsoft Entra External ID endpoint. Set the IdP type to Microsoft Entra External ID, or use a login.microsoftonline.com endpoint for this IdP type.';
 $string['error_tenant_specific_endpoint_required'] = 'When using "Microsoft identity platform (v2.0)" IdP type and "Certificate" authentication method, tenant specific endpoint (i.e. not common/organizations/consumers) is required.';
-$string['error_empty_oidcresource'] = 'Resource cannot be empty when using Microsoft Entra ID (v1.0) or other types of IdP.';
+$string['error_empty_oidcresource'] = 'Resource cannot be empty when using Microsoft Entra ID (v1.0).';
 $string['error_invalid_custom_claim'] = 'Invalid custom claim name(s): {$a}. Custom claim names can only contain alphanumeric characters, hyphens, and underscores, and cannot be a reserved claim name (e.g. a standard JWT/OpenID Connect claim, or one specific to Microsoft Entra ID or Keycloak) or an existing field mapping option.';
 $string['error_masked_secret_not_changed'] = 'Please enter a new value or uncheck the "Change" checkbox to keep the current value.';
 $string['error_secretexpiryrecipients_invalid'] = 'The following secret expiry notification recipients are not valid email addresses: {$a}';
@@ -431,6 +462,7 @@ $string['cleanup_oidc_tokens_link_desc'] = 'To clean up obsolete OpenID Connect 
 $string['clear_user_tokens_link_desc'] = 'To remove the stored tokens of all users, or of selected users, use the <a href="{$a}">Clear user tokens</a> tool.';
 $string['clear_user_tokens'] = 'Clear user tokens';
 $string['clear_user_tokens_desc'] = 'Removes the OpenID Connect and Microsoft 365 tokens stored for users. Affected users will get new tokens the next time they log in using OpenID Connect, or connect to Microsoft 365. Their links to Microsoft 365 accounts are kept. WARNING: This may interrupt logins in progress, so it\'s best to do this during downtime.';
+$string['clear_user_tokens_desc_generic'] = 'Removes the OpenID Connect tokens stored for users. Affected users will get new tokens the next time they log in using OpenID Connect. WARNING: This may interrupt logins in progress, so it\'s best to do this during downtime.';
 $string['clear_user_tokens_scope_selected'] = 'Selected users';
 $string['clear_user_tokens_scope_all'] = 'All users';
 $string['clear_user_tokens_users'] = 'Users';
@@ -471,6 +503,16 @@ $string['binding_username_claim_help_non_ms'] = 'The options for non-Microsoft I
 <li><b>samaccountname</b></li>
 <li><b>custom</b>: Custom claim.</li>
 </ul>';
+$string['binding_username_claim_help_external_id'] = 'The options for Microsoft Entra External ID include:
+<ul>
+<li><b>Choose automatically</b>: Uses <b>oid</b>, then <b>sub</b>.</li>
+<li><b>oid</b>: Unique and stable object ID of the user in the tenant (recommended).</li>
+<li><b>sub</b></li>
+<li><b>email</b>: The email address of the user. It can change, which breaks the link to the Moodle account.</li>
+<li><b>preferred_username</b>: The sign-in name of the user. It can change, which breaks the link to the Moodle account.</li>
+<li><b>custom</b>: Custom claim.</li>
+</ul>
+External ID tokens do not carry workforce claims such as upn or samaccountname. Make sure the chosen claim is unique and stable.';
 $string['warning_binding_username_claim_custom_unsupported'] = 'The "Binding username claim" setting is currently set to "Custom", which is not supported for the configured IdP type with user sync enabled. Review the <a href="{$a}">Binding username claim</a> settings.';
 $string['examplecsv'] = 'Example upload file';
 $string['usernamefile'] = 'File';
@@ -497,7 +539,7 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <ul>
 <li>Moodle account usernames,</li>
 <li>Binding usernames in stored OpenID Connect ID tokens,</li>
-<li>Moodle and Microsoft account connection records.</li>
+<!--o365-start--><li>Moodle and Microsoft account connection records.</li><!--o365-end-->
 </ul>
 <p>This should only be used when changing the <b>Binding username claim</b> settings.</p>
 <p>The tool accepts a simple CSV file with two columns:</p>
@@ -514,12 +556,12 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <li>If no record is found above, it will try to find a record in the <span class="auth_oidc_code">auth_oidc_token</span> table with <span class="auth_oidc_code">oidcusername</span> column matching the old <span class="auth_oidc_code">username</span>, and update it to be <span class="auth_oidc_code">new_username</span>.</li>
 </ul>
 </li>
-<li>Provided the <span class="auth_oidc_code">local_o365</span> plugin is installed, update user connection record.
+<!--o365-start--><li>Provided the <span class="auth_oidc_code">local_o365</span> plugin is installed, update user connection record.
 <ul>
 <li>If a user is found in step 1 above, then find the connection record of the user in the <span class="auth_oidc_code">local_o365_objects</span> table, and update the <span class="auth_oidc_code">o365name</span> column to be the same as <span class="auth_oidc_code">new_username</span>.</li>
 <li>If no user is found in step 1, then it will try to find a record for a user in <span class="auth_oidc_code">local_o365_objects</span> table with <span class="auth_oidc_code">o365name</span> matching the <span class="auth_oidc_code">username</span> value, and update it to be <span class="auth_oidc_code">new_username</span> value.</li>
 </ul>
-</li>
+</li><!--o365-end-->
 </ol>
 <p>The example file below would change the binding username claim from <span class="auth_oidc_code">upn</span> or <span class="auth_oidc_code">email</span> to <span class="auth_oidc_code">oid</span>.</p>';
 $string['change_binding_username_claim_tool_result'] = 'Update results';
