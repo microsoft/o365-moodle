@@ -47,8 +47,8 @@ $string['heading_stateredirect'] = 'Foutpagina voor aanmeldstatus';
 $string['heading_stateredirect_desc'] = 'Als een gebruiker er standaard te lang over doet om de aanmelding bij de identiteitsprovider te voltooien (bijvoorbeeld tijdens het goedkeuren van een multifactorauthenticatieverzoek) en de opgeslagen aanmeldstatus inmiddels is opgeschoond, toont Moodle zijn algemene foutpagina. Met de onderstaande instellingen kun je de bewaartermijn van de aanmeldstatus verlengen en in plaats van de algemene foutpagina een vriendelijker, aanpasbaar bericht tonen, waarbij de gebruiker automatisch wordt teruggestuurd naar de aanmeldpagina.';
 $string['heading_user_restrictions'] = 'Gebruikersbeperkingen';
 $string['heading_user_restrictions_desc'] = '';
-$string['heading_sign_out'] = 'Integratie voor afmelden';
-$string['heading_sign_out_desc'] = '';
+$string['heading_logout'] = 'Integratie voor afmelden';
+$string['heading_logout_desc'] = '';
 $string['heading_display'] = 'Weergave';
 $string['heading_display_desc'] = '';
 $string['heading_debugging'] = 'Foutopsporing';
@@ -60,10 +60,11 @@ Selecteer "Microsoft 365 operated by 21Vianet (China)" als je organisatie Micros
 $string['microsoftcloud_global'] = 'Microsoft 365 (globaal)';
 $string['microsoftcloud_china'] = 'Microsoft 365 operated by 21Vianet (China)';
 $string['idptype'] = 'Type identiteitsprovider (IdP)';
-$string['idptype_help'] = 'Er worden momenteel drie typen IdP ondersteund:
+$string['idptype_help'] = 'Er worden momenteel vier typen IdP ondersteund:
 <ul>
 <li><b>Microsoft Entra ID (v1.0)</b>: Microsoft Entra ID met oauth2 v1.0-endpoints, bijvoorbeeld https://login.microsoftonline.com/organizations/oauth2/authorize.</li>
 <li><b>Microsoft identity platform (v2.0)</b>: Microsoft Entra ID met oauth2 v2.0-endpoints, bijvoorbeeld https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize.</li>
+<li><b>Microsoft Entra External ID</b>: een Microsoft Entra External ID-tenant (klanten), met oauth2 v2.0-endpoints op de host ciamlogin.com, bijvoorbeeld https://contoso.ciamlogin.com/&lt;tenant-id&gt;/oauth2/v2.0/authorize. De Microsoft 365-functies van de plugin local_o365 zijn niet beschikbaar voor dit IdP-type.</li>
 <li><b>Overig</b>: elke IdP die niet van Microsoft is.</li>
 </ul>
 De verschillen tussen de opties <b>Microsoft Entra ID (v1.0)</b> en <b>Microsoft identity platform (v2.0)</b> vind je op <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
@@ -73,10 +74,11 @@ $string['idp_type_not_connected'] = 'Niet verbonden';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Overig';
+$string['idp_type_microsoft_entra_external_id'] = 'Microsoft Entra External ID';
 $string['settings_application_wizard_desc'] = 'Om deze instellingen te configureren met een begeleid formulier met stapsgewijze instructies en invoervalidatie, gebruik je de <a href="{$a}">wizard voor toepassingsconfiguratie</a>.';
 $string['authendpoint'] = 'Autorisatie-endpoint';
 $string['authendpoint_help'] = 'De URI van het autorisatie-endpoint van je IdP dat gebruikt moet worden.<br/>
-Let op: als de site is geconfigureerd om gebruikers van andere tenants toegang te geven, kan geen tenantspecifiek autorisatie-endpoint worden gebruikt.';
+<span data-auth-oidc-idptypes="1,2">Let op: als de site is geconfigureerd om gebruikers van andere tenants toegang te geven, kan geen tenantspecifiek autorisatie-endpoint worden gebruikt.</span><span data-auth-oidc-idptypes="4">Gebruik voor Microsoft Entra External ID het "OAuth 2.0 authorization endpoint (v2)" dat wordt getoond op de pagina Endpoints van de toepassingsregistratie in uw External ID-tenant. Het moet een tenantspecifiek v2.0-endpoint zijn.</span>';
 $string['clientid'] = 'Toepassings-ID';
 $string['clientid_help'] = 'De geregistreerde toepassings-/client-ID bij de IdP.';
 $string['clientauthmethod'] = 'Clientauthenticatiemethode';
@@ -114,6 +116,7 @@ $string['cfg_usepkce_key'] = 'PKCE gebruiken';
 $string['cfg_usepkce_desc'] = 'Bij de aanmeldprocedure <b>Authorization Code</b> wordt een PKCE-"code_challenge" (RFC 7636) met de S256-methode meegestuurd in het autorisatieverzoek, en de bijbehorende "code_verifier" bij het inwisselen van de autorisatiecode. Microsoft Entra ID ondersteunt dit. Schakel dit bij andere providers alleen in als je provider PKCE ondersteunt, omdat sommige providers autorisatieverzoeken met onbekende parameters weigeren.';
 $string['cfg_domainhint_key'] = 'Domeinhint';
 $string['cfg_domainhint_desc'] = 'Bij de aanmeldprocedure <b>Authorization Code</b> wordt deze waarde meegegeven als de parameter "domain_hint". "domain_hint" wordt door sommige OpenID Connect-IdP\'s gebruikt om het aanmeldproces voor gebruikers te vergemakkelijken. Vraag je provider of deze parameter wordt ondersteund.';
+$string['cfg_domainhint_external_id_note'] = 'Voor Microsoft Entra External ID stuurt deze waarde gebruikers rechtstreeks naar een gefedereerde identiteitsprovider in plaats van de aanmeldpagina te tonen. Gebruik google, facebook of apple, of het domein van een aangepaste OpenID Connect-provider (bijvoorbeeld contoso.onmicrosoft.com voor een Microsoft Entra ID-tenant). Gebruik geen tenant-ID.';
 $string['cfg_forceselectaccount_key'] = 'Accountselectie altijd tonen';
 $string['cfg_forceselectaccount_desc'] = 'Indien ingeschakeld wordt gebruikers altijd gevraagd met welk account ze zich willen aanmelden, in plaats van automatisch aangemeld te worden met het account dat actief is in hun browser. Handig als gebruikers meerdere accounts hebben, bijvoorbeeld een leerlingen- en een beheerdersaccount.<br/>
 De stille aanmeldmodus heeft voorrang: zolang deze is ingeschakeld, wordt de accountselectie niet afgedwongen bij stil aanmelden.';
@@ -172,7 +175,7 @@ $string['customclaims_help'] = 'Door spaties gescheiden lijst met namen van aang
 <li>Een claimnaam mag geen gereserveerde naam zijn, zoals een standaard JWT-/OpenID Connect-claim (bijvoorbeeld <code>sub</code>, <code>email</code>), een claim die specifiek is voor Microsoft Entra ID (bijvoorbeeld <code>oid</code>, <code>upn</code>) of Keycloak (bijvoorbeeld <code>realm_access</code>, <code>resource_access</code>), of een bestaande optie voor veldkoppeling</li>
 <li>De claim <code>roles</code> (app-rollen in Microsoft Entra ID-tokens) en de claim <code>groups</code> (groeps-ID\'s) zijn toegestaan. Ze worden bij de veldkoppeling vermeld als "roles (token claim)" en "groups (token claim)", los van de ingebouwde opties "Rollen" en "Groepen", die Microsoft Entra-maprollen en groepsnamen uit Microsoft Graph koppelen. Claims met een lijst van waarden worden opgeslagen als een door komma\'s gescheiden lijst</li>
 <li>Voorbeelden: <code>employee_type badge_number costCenter custom_role</code></li>
-<li>Bij het aanmelden worden aangepaste claims altijd uit het token gelezen, ongeacht of ook Microsoft Graph wordt gebruikt. Tijdens de geplande taak voor gebruikerssynchronisatie is er geen gebruikerstoken om uit te lezen, dus een aangepaste claim wordt alleen gesynchroniseerd als de naam ervan toevallig ook een selecteerbare Microsoft Graph-gebruikerseigenschap is, zoals een directory-extensieattribuut (bijvoorbeeld <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). Een aangepaste claim die door Microsoft Graph wordt geweigerd, wordt voor die synchronisatie overgeslagen, met een waarschuwing in het taaklogboek, in plaats van dat de hele synchronisatie mislukt.</li>
+<li data-auth-oidc-idptypes="1,2">Bij het aanmelden worden aangepaste claims altijd uit het token gelezen, ongeacht of ook Microsoft Graph wordt gebruikt. Tijdens de geplande taak voor gebruikerssynchronisatie is er geen gebruikerstoken om uit te lezen, dus een aangepaste claim wordt alleen gesynchroniseerd als de naam ervan toevallig ook een selecteerbare Microsoft Graph-gebruikerseigenschap is, zoals een directory-extensieattribuut (bijvoorbeeld <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). Een aangepaste claim die door Microsoft Graph wordt geweigerd, wordt voor die synchronisatie overgeslagen, met een waarschuwing in het taaklogboek, in plaats van dat de hele synchronisatie mislukt.</li>
 </ul>';
 $string['secretexpiryrecipients'] = 'Ontvangers van meldingen over verlopen geheim';
 $string['secretexpiryrecipients_help'] = 'Een door komma\'s gescheiden lijst met e-mailadressen waarnaar meldingen over het verlopen van het geheim worden verzonden.<br/>
@@ -186,22 +189,24 @@ $string['cfg_redirecturi_key'] = 'Omleidings-URI';
 $string['cfg_redirecturi_desc'] = 'Dit is de URI die als "Omleidings-URI" moet worden geregistreerd. Je OpenID Connect-IdP vraagt hier naar wanneer je Moodle als client registreert. <br /><b>LET OP:</b> je moet dit *exact* zo invullen in je OpenID Connect-IdP als het hier wordt weergegeven. Elk verschil maakt aanmelden met OpenID Connect onmogelijk.';
 $string['tokenendpoint'] = 'Token-endpoint';
 $string['tokenendpoint_help'] = 'De URI van het token-endpoint van je IdP dat gebruikt moet worden.<br/>
-Let op: als de site is geconfigureerd om gebruikers van andere tenants toegang te geven, kan geen tenantspecifiek token-endpoint worden gebruikt.';
+<span data-auth-oidc-idptypes="1,2">Let op: als de site is geconfigureerd om gebruikers van andere tenants toegang te geven, kan geen tenantspecifiek token-endpoint worden gebruikt.</span><span data-auth-oidc-idptypes="4">Gebruik voor Microsoft Entra External ID het "OAuth 2.0 token endpoint (v2)" dat wordt getoond op de pagina Endpoints van de toepassingsregistratie in uw External ID-tenant. Het moet een tenantspecifiek v2.0-endpoint zijn.</span>';
 $string['cfg_userrestrictions_key'] = 'Gebruikersbeperkingen';
 $string['cfg_userrestrictions_desc'] = 'Laat alleen gebruikers aanmelden die aan bepaalde beperkingen voldoen. <br /><b>Gebruikersbeperkingen gebruiken: </b> <ul><li>Voer een patroon met een <a href="https://en.wikipedia.org/wiki/Regular_expression">reguliere expressie</a> in dat overeenkomt met de gebruikersnamen van gebruikers die je wilt toestaan.</li><li>Voer één patroon per regel in</li><li>Als je meerdere patronen invoert, wordt een gebruiker toegestaan als deze aan EEN VAN de patronen voldoet.</li><li>Het teken "/" moet worden ge-escaped met "\\".</li><li>Als je hierboven geen beperkingen invoert, worden alle gebruikers die zich kunnen aanmelden bij de OpenID Connect-IdP door Moodle geaccepteerd.</li><li>Elke gebruiker die niet aan de ingevoerde patro(o)n(en) voldoet, kan zich niet aanmelden met OpenID Connect.</li></ul>';
+$string['cfg_userrestrictions_disabled_external_id'] = 'Gebruikersbeperkingen zijn niet beschikbaar voor Microsoft Entra External ID, daarom is deze instelling uitgeschakeld en worden de beperkingen niet toegepast wanneer gebruikers inloggen. Beperkingen worden vergeleken met de claim voor de koppeling van de gebruikersnaam, die voor External ID-gebruikers standaard de object-ID (oid) is, waardoor de patronen op GUID\'s moeten passen. Beheer in plaats daarvan wie toegang heeft tot de site in uw External ID-tenant, bijvoorbeeld met gebruikersstromen of toepassingstoewijzing.';
 $string['cfg_userrestrictionscasesensitive_key'] = 'Gebruikersbeperkingen hoofdlettergevoelig';
 $string['cfg_userrestrictionscasesensitive_desc'] = 'Dit bepaalt of de optie "/i" van de reguliere expressie wordt gebruikt bij het controleren van de gebruikersbeperkingen.<br/>Indien ingeschakeld zijn alle controles van gebruikersbeperkingen hoofdlettergevoelig. Let op: als dit is uitgeschakeld, worden patronen op basis van hoofd- en kleine letters genegeerd.';
 $string['heading_dummy_email'] = 'Tijdelijke e-mailadressen';
-$string['heading_dummy_email_desc'] = 'Moodle vereist dat elk gebruikersaccount een e-mailadres heeft, maar Microsoft Entra ID-accounts hoeven er geen te hebben. Met de onderstaande instellingen kan Moodle voor gebruikers zonder bruikbaar e-mailadres van de IdP een niet-bezorgbaar tijdelijk adres genereren, in plaats van hun e-mailadres leeg te laten.';
+$string['heading_dummy_email_desc'] = 'Moodle vereist dat elk gebruikersaccount een e-mailadres heeft, maar sommige identiteitsproviders, zoals Microsoft Entra ID, vereisen dat niet voor hun accounts. Met de onderstaande instellingen kan Moodle voor gebruikers zonder bruikbaar e-mailadres van de IdP een niet-bezorgbaar tijdelijk adres genereren, in plaats van hun e-mailadres leeg te laten.';
 $string['cfg_generatedummyemail_key'] = 'Tijdelijke e-mailadressen genereren';
-$string['cfg_generatedummyemail_desc'] = 'Indien ingeschakeld genereert Moodle, wanneer een gebruiker geen e-mailadres en geen bruikbare, als e-mailadres opgemaakte user principal name van de IdP heeft, een tijdelijk e-mailadres voor die gebruiker met hun Microsoft user principal name (of object-ID, als er geen user principal name beschikbaar is) en het hieronder geconfigureerde domein, in plaats van het e-mailadres leeg te laten. Dit geldt zowel wanneer een gebruiker zich aanmeldt als wanneer deze wordt aangemaakt door de taak voor gebruikerssynchronisatie.';
+$string['cfg_generatedummyemail_desc'] = 'Indien ingeschakeld genereert Moodle, wanneer een gebruiker geen e-mailadres en geen bruikbare, als e-mailadres opgemaakte user principal name van de IdP heeft, een tijdelijk e-mailadres voor die gebruiker met hun user principal name (of object-ID, als er geen user principal name beschikbaar is) en het hieronder geconfigureerde domein, in plaats van het e-mailadres leeg te laten. Dit geldt zowel wanneer een gebruiker zich aanmeldt als wanneer deze wordt aangemaakt door de taak voor gebruikerssynchronisatie. De user principal name en object-ID worden uit de tokenclaims van de IdP gelezen, dus er wordt geen adres gegenereerd als de IdP geen van beide levert.';
 $string['cfg_dummyemaildomain_key'] = 'Domein voor tijdelijke e-mailadressen';
 $string['cfg_dummyemaildomain_desc'] = 'Het domein dat wordt gebruikt bij het genereren van tijdelijke e-mailadressen, bijvoorbeeld "example.test". Gebruik een domein dat geen e-mail kan ontvangen, zodat gegenereerde adressen nooit voor een echt, bezorgbaar adres kunnen worden aangezien.';
-$string['cfg_signoffintegration_key'] = 'Eenmalig afmelden (van Moodle naar IdP)';
-$string['cfg_signoffintegration_desc'] = 'Als deze optie is ingeschakeld, activeert de integratie wanneer een Moodle-gebruiker die met de geconfigureerde IdP is verbonden zich afmeldt bij Moodle een verzoek bij het onderstaande afmeldendpoint, in een poging de gebruiker ook van de IdP af te melden.<br/>
-Let op: voor integratie met Microsoft Entra ID moet de URL van de Moodle-site ({$a}) worden toegevoegd als omleidings-URI in de Microsoft Entra ID-app die is aangemaakt voor de integratie van Moodle en Microsoft 365.';
+$string['cfg_singlelogout_key'] = 'Eenmalig afmelden (SLO) (van Moodle naar IdP)';
+$string['cfg_singlelogout_desc'] = 'Als deze optie is ingeschakeld, activeert de integratie wanneer een Moodle-gebruiker die met de geconfigureerde IdP is verbonden zich afmeldt bij Moodle een verzoek bij het onderstaande afmeldendpoint, in een poging de gebruiker ook van de IdP af te melden.<br/>
+Let op: voor integratie met Microsoft Entra ID moet de URL van de Moodle-site ({$a}) worden toegevoegd als omleidings-URI in de Microsoft Entra ID-app die is aangemaakt voor de integratie van Moodle en Microsoft 365.<br/>Eenmalig afmelden beëindigt alleen de sessie van de aanmeldingsservice die Moodle heeft gebruikt. Andere sessies van hetzelfde account in de browser, bijvoorbeeld een sessie die is gemaakt door aan te melden bij de Azure-portal, worden niet beïnvloed.';
 $string['cfg_logoutendpoint_key'] = 'Afmeldendpoint van IdP';
 $string['cfg_logoutendpoint_desc'] = 'De URI van het afmeldendpoint van je IdP dat gebruikt moet worden.';
+$string['cfg_logoutendpoint_external_id_note'] = 'Bij Microsoft Entra External ID worden gebruikers op de afmeldpagina van Microsoft gevraagd een account te kiezen, tenzij de optionele claim login_hint aan het ID-token wordt toegevoegd in de app-registratie (Tokenconfiguratie > Optionele claim toevoegen > ID > login_hint). Gebruikers moeten opnieuw inloggen nadat de claim is toegevoegd.';
 $string['cfg_frontchannellogouturl_key'] = 'Front-channel-afmeld-URL';
 $string['cfg_frontchannellogouturl_desc'] = 'Dit is de URL die je IdP moet activeren wanneer deze probeert gebruikers af te melden bij Moodle.<br/>
 Voor Microsoft Entra ID / Microsoft identity platform heet de instelling "Front-channel logout URL" en deze kan worden geconfigureerd in de Microsoft Entra ID-app.';
@@ -217,6 +222,24 @@ De beschikbare claims in de ID- en toegangstokens verschillen per IdP-type, maar
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">Claims van toegangstokens</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">Claims van ID-tokens</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">Configuratie van optionele claims</a>: let op: "Email" is een optionele claim bij het IdP-type Microsoft Entra ID (v1.0).</li>
+</ul>';
+$string['cfg_field_mapping_desc_generic'] = 'Gebruikersprofielgegevens kunnen vanuit de OpenID Connect-IdP worden gekoppeld aan Moodle. De beschikbare externe velden zijn afhankelijk van het IdP-type.<br/>
+<ul>
+<li>Basisprofielvelden zijn beschikbaar via de claims van het ID-token en het toegangstoken dat uw IdP uitgeeft. De velden die u kunt koppelen, zoals voornaam, achternaam en e-mailadres, zijn dus afhankelijk van de claims die uw IdP in deze tokens opneemt.</li>
+<li>Extra claims kunnen worden toegevoegd aan de lijst met velden die beschikbaar zijn om te koppelen via de instelling "{$a}".</li>
+</ul>
+De meeste IdP\'s staan enige aanpassing van de uitgegeven claims toe. Raadpleeg de documentatie van uw IdP voor de ondersteunde claims.';
+$string['cfg_field_mapping_desc_external_id'] = 'Gebruikersprofielgegevens kunnen vanuit Microsoft Entra External ID worden gekoppeld aan Moodle. De beschikbare externe velden zijn de claims van het ID-token en het toegangstoken, omdat Microsoft Graph voor dit IdP-type niet wordt gebruikt.<br/>
+<ul>
+<li>Basisprofielvelden zijn beschikbaar via de claims van het ID-token en het toegangstoken.</li>
+<li>Standaard bevat het ID-token van een External ID-tenant alleen de naam, de object-ID en de inlognaam van de gebruiker. Om voornaam, achternaam en e-mailadres te koppelen, voegt u de claims given_name, family_name en email als optionele claims toe aan het ID-token in de toepassingsregistratie van uw External ID-tenant (Tokenconfiguratie). De claim email wordt alleen uitgegeven als de gebruiker een e-mailadres in de tenant heeft.</li>
+<li>Extra claims kunnen worden toegevoegd aan de lijst met velden die beschikbaar zijn om te koppelen via de instelling "{$a}".</li>
+</ul>
+Documentatie over de claims van Microsoft-tokens is hieronder gelinkt:
+<ul>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">Claims van toegangstokens</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">Claims van ID-tokens</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">Configuratie van optionele claims</a></li>
 </ul>';
 
 $string['cfg_cleanupoidctokens_key'] = 'OpenID Connect-tokens opschonen';
@@ -284,8 +307,16 @@ $string['error_empty_client_private_key_file'] = 'Het bestand met de privésleut
 $string['error_empty_client_cert_file'] = 'Het bestand met de openbare sleutel van het clientcertificaat mag niet leeg zijn bij de authenticatiemethode "certificaat"';
 $string['error_endpoint_mismatch_auth_endpoint'] = 'Het geconfigureerde autorisatie-endpoint komt niet overeen met het geconfigureerde IdP-type. Gebruik voor "Microsoft Entra ID (v1.0)" een v1.0-endpoint (bijvoorbeeld https://login.microsoftonline.com/organizations/oauth2/authorize). Gebruik voor "Microsoft identity platform (v2.0)" een v2.0-endpoint (bijvoorbeeld https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize).';
 $string['error_endpoint_mismatch_token_endpoint'] = 'Het geconfigureerde token-endpoint komt niet overeen met het geconfigureerde IdP-type. Gebruik voor "Microsoft Entra ID (v1.0)" een v1.0-endpoint (bijvoorbeeld https://login.microsoftonline.com/organizations/oauth2/token). Gebruik voor "Microsoft identity platform (v2.0)" een v2.0-endpoint (bijvoorbeeld https://login.microsoftonline.com/organizations/oauth2/v2.0/token).';
+$string['error_endpoint_external_id'] = 'Het endpoint moet een Microsoft Entra External ID v2.0-endpoint zijn op de host ciamlogin.com, bijvoorbeeld https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/authorize.';
+$string['error_logoutendpoint_external_id'] = 'Het afmeldeindpunt moet een Microsoft Entra External ID v2.0-eindpunt op de host ciamlogin.com zijn, bijv. https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/logout. Laat het veld leeg om het eindpunt te gebruiken dat is afgeleid van het autorisatie-eindpunt.';
+$string['error_endpoint_external_id_placeholder'] = 'Vervang de plaatsaanduidingen [tenant-name] en [tenant-id] door de waarden van uw Microsoft Entra External ID-tenant.';
+$string['error_endpoint_external_id_tenant'] = 'Microsoft Entra External ID-tenants zijn enkelvoudige tenants. Gebruik in het endpoint de tenant-ID of naam in plaats van common, organizations of consumers.';
+$string['error_endpoint_external_id_v1'] = 'Dit is een v1.0-endpoint. Microsoft Entra External ID vereist het v2.0-endpoint, met /oauth2/v2.0/ in het pad.';
+$string['error_endpoint_external_id_kind'] = 'Het endpoint moet eindigen op /{$a}.';
+$string['error_endpoint_external_id_mismatch'] = 'Het autorisatie- en het tokenendpoint moeten tot dezelfde Microsoft Entra External ID-tenant behoren.';
+$string['error_endpoint_is_external_id'] = 'Dit is een Microsoft Entra External ID-endpoint. Stel het IdP-type in op Microsoft Entra External ID of gebruik voor dit IdP-type een login.microsoftonline.com-endpoint.';
 $string['error_tenant_specific_endpoint_required'] = 'Bij het IdP-type "Microsoft identity platform (v2.0)" en de authenticatiemethode "Certificaat" is een tenantspecifiek endpoint vereist (dus niet common/organizations/consumers).';
-$string['error_empty_oidcresource'] = 'De resource mag niet leeg zijn bij Microsoft Entra ID (v1.0) of andere typen IdP.';
+$string['error_empty_oidcresource'] = 'De resource mag niet leeg zijn bij gebruik van Microsoft Entra ID (v1.0).';
 $string['error_invalid_custom_claim'] = 'Ongeldige naam/namen van aangepaste claim: {$a}. Namen van aangepaste claims mogen alleen alfanumerieke tekens, koppeltekens en underscores bevatten en mogen geen gereserveerde claimnaam zijn (bijvoorbeeld een standaard JWT-/OpenID Connect-claim, of een claim die specifiek is voor Microsoft Entra ID of Keycloak) of een bestaande optie voor veldkoppeling.';
 $string['error_masked_secret_not_changed'] = 'Voer een nieuwe waarde in of schakel het selectievakje "Wijzigen" uit om de huidige waarde te behouden.';
 $string['auth_settings_validation_error'] = 'Ongeldige authenticatie-instellingen aangetroffen. De volgende configuratieproblemen moeten worden opgelost om succesvolle authenticatie te garanderen:';
@@ -431,6 +462,7 @@ $string['cleanup_oidc_tokens_link_desc'] = 'Om verouderde OpenID Connect-tokens 
 $string['clear_user_tokens_link_desc'] = 'Om de opgeslagen tokens van alle gebruikers, of van geselecteerde gebruikers, te verwijderen, gebruik je het hulpmiddel <a href="{$a}">Gebruikerstokens wissen</a>.';
 $string['clear_user_tokens'] = 'Gebruikerstokens wissen';
 $string['clear_user_tokens_desc'] = 'Verwijdert de OpenID Connect- en Microsoft 365-tokens die voor gebruikers zijn opgeslagen. Betrokken gebruikers krijgen nieuwe tokens de volgende keer dat ze zich aanmelden met OpenID Connect of verbinding maken met Microsoft 365. Hun koppelingen met Microsoft 365-accounts blijven behouden. WAARSCHUWING: dit kan aanmeldingen die bezig zijn onderbreken, dus doe dit bij voorkeur tijdens een onderhoudsperiode.';
+$string['clear_user_tokens_desc_generic'] = 'Verwijdert de OpenID Connect-tokens die voor gebruikers zijn opgeslagen. Betrokken gebruikers krijgen nieuwe tokens de volgende keer dat ze inloggen met OpenID Connect. WAARSCHUWING: Dit kan lopende aanmeldingen onderbreken, dus voer dit bij voorkeur uit tijdens een onderhoudsperiode.';
 $string['clear_user_tokens_scope_selected'] = 'Geselecteerde gebruikers';
 $string['clear_user_tokens_scope_all'] = 'Alle gebruikers';
 $string['clear_user_tokens_users'] = 'Gebruikers';
@@ -471,6 +503,16 @@ $string['binding_username_claim_help_non_ms'] = 'De opties voor niet-Microsoft-I
 <li><b>samaccountname</b></li>
 <li><b>custom</b>: aangepaste claim.</li>
 </ul>';
+$string['binding_username_claim_help_external_id'] = 'De opties voor Microsoft Entra External ID zijn onder andere:
+<ul>
+<li><b>Automatisch kiezen</b>: Gebruikt <b>oid</b>, daarna <b>sub</b>.</li>
+<li><b>oid</b>: Unieke en stabiele object-ID van de gebruiker in de tenant (aanbevolen).</li>
+<li><b>sub</b></li>
+<li><b>email</b>: Het e-mailadres van de gebruiker. Dit kan veranderen, waardoor de koppeling met het Moodle-account verbroken wordt.</li>
+<li><b>preferred_username</b>: De inlognaam van de gebruiker. Deze kan veranderen, waardoor de koppeling met het Moodle-account verbroken wordt.</li>
+<li><b>custom</b>: Aangepaste claim.</li>
+</ul>
+External ID-tokens bevatten geen werknemersclaims zoals upn of samaccountname. Zorg ervoor dat de gekozen claim uniek en stabiel is.';
 $string['warning_binding_username_claim_custom_unsupported'] = 'De instelling "Claim voor koppeling van gebruikersnaam" staat momenteel op "Aangepast", wat niet wordt ondersteund voor het geconfigureerde IdP-type met ingeschakelde gebruikerssynchronisatie. Controleer de instellingen voor de <a href="{$a}">claim voor koppeling van gebruikersnaam</a>.';
 $string['examplecsv'] = 'Voorbeeldbestand voor uploaden';
 $string['usernamefile'] = 'Bestand';
@@ -497,7 +539,7 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <ul>
 <li>Gebruikersnamen van Moodle-accounts,</li>
 <li>Gekoppelde gebruikersnamen in opgeslagen OpenID Connect-ID-tokens,</li>
-<li>Verbindingsrecords tussen Moodle- en Microsoft-accounts.</li>
+<!--o365-start--><li>Verbindingsrecords tussen Moodle- en Microsoft-accounts.</li><!--o365-end-->
 </ul>
 <p>Dit mag alleen worden gebruikt bij het wijzigen van de instellingen voor de <b>claim voor koppeling van gebruikersnaam</b>.</p>
 <p>Het hulpmiddel accepteert een eenvoudig CSV-bestand met twee kolommen:</p>
@@ -514,12 +556,12 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <li>Als hierboven geen record wordt gevonden, wordt geprobeerd een record in de tabel <span class="auth_oidc_code">auth_oidc_token</span> te vinden waarvan de kolom <span class="auth_oidc_code">oidcusername</span> overeenkomt met de oude <span class="auth_oidc_code">username</span>, en dit bij te werken naar <span class="auth_oidc_code">new_username</span>.</li>
 </ul>
 </li>
-<li>Mits de plugin <span class="auth_oidc_code">local_o365</span> is geïnstalleerd, werk het verbindingsrecord van de gebruiker bij.
+<!--o365-start--><li>Mits de plugin <span class="auth_oidc_code">local_o365</span> is geïnstalleerd, werk het verbindingsrecord van de gebruiker bij.
 <ul>
 <li>Als in stap 1 hierboven een gebruiker is gevonden, zoek dan het verbindingsrecord van de gebruiker in de tabel <span class="auth_oidc_code">local_o365_objects</span> en werk de kolom <span class="auth_oidc_code">o365name</span> bij naar dezelfde waarde als <span class="auth_oidc_code">new_username</span>.</li>
 <li>Als in stap 1 geen gebruiker is gevonden, wordt geprobeerd een record van een gebruiker in de tabel <span class="auth_oidc_code">local_o365_objects</span> te vinden waarvan <span class="auth_oidc_code">o365name</span> overeenkomt met de waarde van <span class="auth_oidc_code">username</span>, en dit bij te werken naar de waarde van <span class="auth_oidc_code">new_username</span>.</li>
 </ul>
-</li>
+</li><!--o365-end-->
 </ol>
 <p>Het onderstaande voorbeeldbestand zou de claim voor koppeling van gebruikersnaam wijzigen van <span class="auth_oidc_code">upn</span> of <span class="auth_oidc_code">email</span> naar <span class="auth_oidc_code">oid</span>.</p>';
 $string['change_binding_username_claim_tool_result'] = 'Updateresultaten';

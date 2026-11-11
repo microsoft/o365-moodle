@@ -30,6 +30,8 @@ use local_o365\page\acp;
 
 require_once(__DIR__ . '/../../config.php');
 
+\local_o365\utils::require_features_enabled();
+
 require_login();
 require_capability('moodle/site:config', system::instance());
 

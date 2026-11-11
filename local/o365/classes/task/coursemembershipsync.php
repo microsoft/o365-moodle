@@ -55,6 +55,9 @@ class coursemembershipsync extends scheduled_task {
      * @return bool
      */
     public function execute(): bool {
+        if (\local_o365\utils::skip_task_for_idp_type()) {
+            return true;
+        }
         // If the sync direction is Moodle to Teams, we don't want to sync the course membership.
         $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
         if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_MOODLE_TO_TEAMS) {

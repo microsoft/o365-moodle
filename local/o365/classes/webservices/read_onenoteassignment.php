@@ -62,6 +62,8 @@ class read_onenoteassignment extends external_api {
      * @return array An array of parameters, if successful.
      */
     public static function assignment_read($data) {
+        \local_o365\utils::require_features_enabled();
+
         $params = self::validate_parameters(self::assignment_read_parameters(), ['data' => $data]);
         $params = $params['data'];
         [$course, $module, $assign] = utils::verify_assignment(

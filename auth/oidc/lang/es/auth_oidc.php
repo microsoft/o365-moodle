@@ -47,8 +47,8 @@ $string['heading_stateredirect'] = 'Página de error del estado de inicio de ses
 $string['heading_stateredirect_desc'] = 'De forma predeterminada, si un usuario tarda demasiado en completar el inicio de sesión en el proveedor de identidad (por ejemplo, mientras aprueba una solicitud de autenticación multifactor) y el estado de inicio de sesión almacenado ya se ha limpiado, Moodle muestra su página de error genérica. Los ajustes siguientes le permiten ampliar el tiempo durante el que se conserva el estado de inicio de sesión y mostrar un mensaje más amigable y personalizable en lugar de la página de error genérica, redirigiendo automáticamente al usuario a la página de inicio de sesión.';
 $string['heading_user_restrictions'] = 'Restricciones de usuario';
 $string['heading_user_restrictions_desc'] = '';
-$string['heading_sign_out'] = 'Integración del cierre de sesión';
-$string['heading_sign_out_desc'] = '';
+$string['heading_logout'] = 'Integración del cierre de sesión';
+$string['heading_logout_desc'] = '';
 $string['heading_display'] = 'Visualización';
 $string['heading_display_desc'] = '';
 $string['heading_debugging'] = 'Depuración';
@@ -60,10 +60,11 @@ Seleccione "Microsoft 365 operado por 21Vianet (China)" si su organización usa 
 $string['microsoftcloud_global'] = 'Microsoft 365 (global)';
 $string['microsoftcloud_china'] = 'Microsoft 365 operado por 21Vianet (China)';
 $string['idptype'] = 'Tipo de proveedor de identidad (IdP)';
-$string['idptype_help'] = 'Actualmente se admiten tres tipos de IdP:
+$string['idptype_help'] = 'Actualmente se admiten cuatro tipos de IdP:
 <ul>
 <li><b>Microsoft Entra ID (v1.0)</b>: Microsoft Entra ID con puntos de conexión de oauth2 v1.0, p. ej. https://login.microsoftonline.com/organizations/oauth2/authorize.</li>
 <li><b>Microsoft identity platform (v2.0)</b>: Microsoft Entra ID con puntos de conexión de oauth2 v2.0, p. ej. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize.</li>
+<li><b>Microsoft Entra External ID</b>: un inquilino de Microsoft Entra External ID (clientes), con puntos de conexión de oauth2 v2.0 en el host ciamlogin.com, p. ej. https://contoso.ciamlogin.com/&lt;tenant-id&gt;/oauth2/v2.0/authorize. Las funciones de Microsoft 365 del plugin local_o365 no están disponibles para este tipo de IdP.</li>
 <li><b>Otro</b>: cualquier IdP que no sea de Microsoft.</li>
 </ul>
 Las diferencias entre las opciones <b>Microsoft Entra ID (v1.0)</b> y <b>Microsoft identity platform (v2.0)</b> se pueden consultar en <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
@@ -73,10 +74,11 @@ $string['idp_type_not_connected'] = 'No conectado';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Otro';
+$string['idp_type_microsoft_entra_external_id'] = 'Microsoft Entra External ID';
 $string['settings_application_wizard_desc'] = 'Para configurar estos ajustes mediante un formulario guiado con instrucciones paso a paso y validación de datos, use el <a href="{$a}">Asistente de configuración de la aplicación</a>.';
 $string['authendpoint'] = 'Punto de conexión de autorización';
 $string['authendpoint_help'] = 'La URI del punto de conexión de autorización de su IdP que se va a usar.<br/>
-Tenga en cuenta que, si el sitio se va a configurar para permitir el acceso a usuarios de otros inquilinos, no se puede usar un punto de conexión de autorización específico del inquilino.';
+<span data-auth-oidc-idptypes="1,2">Tenga en cuenta que, si el sitio se va a configurar para permitir el acceso a usuarios de otros inquilinos, no se puede usar un punto de conexión de autorización específico del inquilino.</span><span data-auth-oidc-idptypes="4">Para Microsoft Entra External ID, use el «OAuth 2.0 authorization endpoint (v2)» que aparece en la página Endpoints del registro de la aplicación en su inquilino de External ID. Debe ser un punto de conexión v2.0 específico de su inquilino.</span>';
 $string['clientid'] = 'ID de la aplicación';
 $string['clientid_help'] = 'El ID de aplicación / cliente registrado en el IdP.';
 $string['clientauthmethod'] = 'Método de autenticación del cliente';
@@ -114,6 +116,7 @@ $string['cfg_usepkce_key'] = 'Usar PKCE';
 $string['cfg_usepkce_desc'] = 'Al usar el flujo de inicio de sesión <b>Código de autorización</b>, envía un "code_challenge" PKCE (RFC 7636) con el método S256 en la solicitud de autorización, y el "code_verifier" correspondiente al canjear el código de autorización. Microsoft Entra ID lo admite. Para otros proveedores, actívelo solo si su proveedor admite PKCE, ya que algunos proveedores rechazan las solicitudes de autorización con parámetros que no reconocen.';
 $string['cfg_domainhint_key'] = 'Sugerencia de dominio';
 $string['cfg_domainhint_desc'] = 'Al usar el flujo de inicio de sesión <b>Código de autorización</b>, pasa este valor como parámetro "domain_hint". Algunos IdP de OpenID Connect usan "domain_hint" para facilitar el proceso de inicio de sesión a los usuarios. Consulte con su proveedor si admite este parámetro.';
+$string['cfg_domainhint_external_id_note'] = 'Para Microsoft Entra External ID, este valor envía a los usuarios directamente a un proveedor de identidad federado en lugar de mostrar la página de inicio de sesión. Use google, facebook o apple, o el dominio de un proveedor de OpenID Connect personalizado (por ejemplo, contoso.onmicrosoft.com para un inquilino de Microsoft Entra ID). No use un ID de inquilino.';
 $string['cfg_forceselectaccount_key'] = 'Mostrar siempre la selección de cuenta';
 $string['cfg_forceselectaccount_desc'] = 'Si está activado, siempre se pide a los usuarios que elijan con qué cuenta iniciar sesión, en lugar de iniciar sesión automáticamente con la cuenta activa en su navegador. Es útil cuando los usuarios tienen varias cuentas, por ejemplo una de estudiante y otra de administrador.<br/>
 El modo de inicio de sesión silencioso tiene prioridad: mientras está activado, no se fuerza la selección de cuenta al iniciar sesión de forma silenciosa.';
@@ -172,7 +175,7 @@ $string['customclaims_help'] = 'Lista separada por espacios de nombres de reclam
 <li>El nombre de una reclamación no puede ser un nombre reservado, como una reclamación estándar de JWT/OpenID Connect (p. ej., <code>sub</code>, <code>email</code>), una específica de Microsoft Entra ID (p. ej., <code>oid</code>, <code>upn</code>) o de Keycloak (p. ej., <code>realm_access</code>, <code>resource_access</code>), ni una opción de asignación de campos existente</li>
 <li>Se permiten la reclamación <code>roles</code> (roles de aplicación en los tokens de Microsoft Entra ID) y la reclamación <code>groups</code> (ID de grupos). Aparecen como "roles (token claim)" y "groups (token claim)" en la asignación de campos, separadas de las opciones integradas "Roles" y "Grupos", que asignan los roles de directorio de Microsoft Entra y los nombres de grupos de Microsoft Graph. Las reclamaciones que contienen una lista de valores se almacenan como una lista separada por comas</li>
 <li>Ejemplos: <code>employee_type badge_number costCenter custom_role</code></li>
-<li>Al iniciar sesión, las reclamaciones personalizadas siempre se leen del token, se use o no también Microsoft Graph. Durante la tarea programada de sincronización de usuarios no hay ningún token de usuario del que leer, por lo que una reclamación personalizada solo se sincroniza si su nombre coincide también con una propiedad de usuario seleccionable de Microsoft Graph, como un atributo de extensión de directorio (p. ej., <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). Una reclamación personalizada que Microsoft Graph rechace se omite en esa ejecución de la sincronización, con una advertencia en el registro de la tarea, en lugar de hacer fallar toda la sincronización.</li>
+<li data-auth-oidc-idptypes="1,2">Al iniciar sesión, las reclamaciones personalizadas siempre se leen del token, se use o no también Microsoft Graph. Durante la tarea programada de sincronización de usuarios no hay ningún token de usuario del que leer, por lo que una reclamación personalizada solo se sincroniza si su nombre coincide también con una propiedad de usuario seleccionable de Microsoft Graph, como un atributo de extensión de directorio (p. ej., <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). Una reclamación personalizada que Microsoft Graph rechace se omite en esa ejecución de la sincronización, con una advertencia en el registro de la tarea, en lugar de hacer fallar toda la sincronización.</li>
 </ul>';
 $string['secretexpiryrecipients'] = 'Destinatarios de las notificaciones de caducidad del secreto';
 $string['secretexpiryrecipients_help'] = 'Una lista separada por comas de direcciones de correo electrónico a las que enviar las notificaciones de caducidad del secreto.<br/>
@@ -186,22 +189,24 @@ $string['cfg_redirecturi_key'] = 'URI de redireccionamiento';
 $string['cfg_redirecturi_desc'] = 'Esta es la URI que debe registrarse como "URI de redireccionamiento". Su proveedor de identidad de OpenID Connect debería solicitarla al registrar Moodle como cliente. <br /><b>NOTA:</b> Debe introducirla en su IdP de OpenID Connect *exactamente* como aparece aquí. Cualquier diferencia impedirá los inicios de sesión mediante OpenID Connect.';
 $string['tokenendpoint'] = 'Punto de conexión de token';
 $string['tokenendpoint_help'] = 'La URI del punto de conexión de token de su IdP que se va a usar.<br/>
-Tenga en cuenta que, si el sitio se va a configurar para permitir el acceso a usuarios de otros inquilinos, no se puede usar un punto de conexión de token específico del inquilino.';
+<span data-auth-oidc-idptypes="1,2">Tenga en cuenta que, si el sitio se va a configurar para permitir el acceso a usuarios de otros inquilinos, no se puede usar un punto de conexión de token específico del inquilino.</span><span data-auth-oidc-idptypes="4">Para Microsoft Entra External ID, use el «OAuth 2.0 token endpoint (v2)» que aparece en la página Endpoints del registro de la aplicación en su inquilino de External ID. Debe ser un punto de conexión v2.0 específico de su inquilino.</span>';
 $string['cfg_userrestrictions_key'] = 'Restricciones de usuario';
 $string['cfg_userrestrictions_desc'] = 'Permitir iniciar sesión solo a los usuarios que cumplan ciertas restricciones. <br /><b>Cómo usar las restricciones de usuario: </b> <ul><li>Introduzca un patrón de <a href="https://en.wikipedia.org/wiki/Regular_expression">expresión regular</a> que coincida con los nombres de usuario de los usuarios que desea permitir.</li><li>Introduzca un patrón por línea</li><li>Si introduce varios patrones, se permitirá a un usuario si coincide con CUALQUIERA de ellos.</li><li>El carácter "/" debe escaparse con "\\".</li><li>Si no introduce ninguna restricción arriba, Moodle aceptará a todos los usuarios que puedan iniciar sesión en el IdP de OpenID Connect.</li><li>Cualquier usuario que no coincida con ninguno de los patrones introducidos no podrá iniciar sesión mediante OpenID Connect.</li></ul>';
+$string['cfg_userrestrictions_disabled_external_id'] = 'Las restricciones de usuario no están disponibles para Microsoft Entra External ID, por lo que este ajuste está desactivado y las restricciones no se aplican cuando los usuarios inician sesión. Las restricciones se comparan con la notificación de vinculación del nombre de usuario, que para los usuarios de External ID es por defecto el ID de objeto (oid), por lo que los patrones tendrían que coincidir con GUID. Controle en su lugar quién puede acceder al sitio en su inquilino de External ID, por ejemplo con flujos de usuario o asignación de aplicaciones.';
 $string['cfg_userrestrictionscasesensitive_key'] = 'Restricciones de usuario sensibles a mayúsculas y minúsculas';
 $string['cfg_userrestrictionscasesensitive_desc'] = 'Controla si se usa la opción "/i" de las expresiones regulares en la comprobación de las restricciones de usuario.<br/>Si está activado, todas las comprobaciones de restricciones de usuario distinguirán entre mayúsculas y minúsculas. Tenga en cuenta que, si está desactivado, se ignorará cualquier patrón relativo a mayúsculas y minúsculas.';
 $string['heading_dummy_email'] = 'Direcciones de correo electrónico de marcador de posición';
-$string['heading_dummy_email_desc'] = 'Moodle requiere que todas las cuentas de usuario tengan una dirección de correo electrónico, pero las cuentas de Microsoft Entra ID no están obligadas a tenerla. Los ajustes siguientes permiten que Moodle genere una dirección de marcador de posición no entregable para los usuarios que no tengan una dirección de correo electrónico utilizable procedente del IdP, en lugar de dejar su dirección de correo electrónico en blanco.';
+$string['heading_dummy_email_desc'] = 'Moodle requiere que todas las cuentas de usuario tengan una dirección de correo electrónico, pero algunos proveedores de identidad, como Microsoft Entra ID, no obligan a sus cuentas a tenerla. Los ajustes siguientes permiten que Moodle genere una dirección de marcador de posición no entregable para los usuarios que no tengan una dirección de correo electrónico utilizable procedente del IdP, en lugar de dejar su dirección de correo electrónico en blanco.';
 $string['cfg_generatedummyemail_key'] = 'Generar direcciones de correo electrónico de marcador de posición';
-$string['cfg_generatedummyemail_desc'] = 'Si está activado, cuando un usuario no tenga dirección de correo electrónico ni un nombre principal de usuario utilizable con formato de correo electrónico procedente del IdP, Moodle le generará una dirección de correo electrónico de marcador de posición usando su nombre principal de usuario de Microsoft (o el ID de objeto, si no hay nombre principal de usuario disponible) y el dominio configurado a continuación, en lugar de dejar su dirección de correo electrónico en blanco. Esto se aplica tanto cuando el usuario inicia sesión como cuando la tarea de sincronización de usuarios lo crea.';
+$string['cfg_generatedummyemail_desc'] = 'Si está activado, cuando un usuario no tenga dirección de correo electrónico ni un nombre principal de usuario utilizable con formato de correo electrónico procedente del IdP, Moodle le generará una dirección de correo electrónico de marcador de posición usando su nombre principal de usuario (o el ID de objeto, si no hay nombre principal de usuario disponible) y el dominio configurado a continuación, en lugar de dejar su dirección de correo electrónico en blanco. Esto se aplica tanto cuando el usuario inicia sesión como cuando la tarea de sincronización de usuarios lo crea. El nombre principal de usuario y el ID de objeto se leen de las reclamaciones del token del IdP, por lo que no se genera ninguna dirección si el IdP no proporciona ninguno de los dos.';
 $string['cfg_dummyemaildomain_key'] = 'Dominio de correo electrónico de marcador de posición';
 $string['cfg_dummyemaildomain_desc'] = 'El dominio que se usará al generar direcciones de correo electrónico de marcador de posición, por ejemplo "example.test". Use un dominio que no pueda recibir correo, para que las direcciones generadas nunca se confundan con una dirección real y entregable.';
-$string['cfg_signoffintegration_key'] = 'Cierre de sesión único (de Moodle al IdP)';
-$string['cfg_signoffintegration_desc'] = 'Si la opción está activada, cuando un usuario de Moodle conectado al IdP configurado cierre sesión en Moodle, la integración enviará una solicitud al punto de conexión de cierre de sesión indicado a continuación, intentando cerrar también la sesión del usuario en el IdP.<br/>
-Tenga en cuenta que, para la integración con Microsoft Entra ID, la URL del sitio Moodle ({$a}) debe agregarse como URI de redireccionamiento en la aplicación de Microsoft Entra ID creada para la integración de Moodle y Microsoft 365.';
+$string['cfg_singlelogout_key'] = 'Cierre de sesión único (SLO) (de Moodle al IdP)';
+$string['cfg_singlelogout_desc'] = 'Si la opción está activada, cuando un usuario de Moodle conectado al IdP configurado cierre sesión en Moodle, la integración enviará una solicitud al punto de conexión de cierre de sesión indicado a continuación, intentando cerrar también la sesión del usuario en el IdP.<br/>
+Tenga en cuenta que, para la integración con Microsoft Entra ID, la URL del sitio Moodle ({$a}) debe agregarse como URI de redireccionamiento en la aplicación de Microsoft Entra ID creada para la integración de Moodle y Microsoft 365.<br/>El cierre de sesión único solo finaliza la sesión del servicio de inicio de sesión que usó Moodle. Las demás sesiones de la misma cuenta en el navegador, por ejemplo la creada al iniciar sesión en el portal de Azure, no se ven afectadas.';
 $string['cfg_logoutendpoint_key'] = 'Punto de conexión de cierre de sesión del IdP';
 $string['cfg_logoutendpoint_desc'] = 'La URI del punto de conexión de cierre de sesión de su IdP que se va a usar.';
+$string['cfg_logoutendpoint_external_id_note'] = 'En Microsoft Entra External ID, se pide a los usuarios que elijan una cuenta en la página de cierre de sesión de Microsoft, a menos que se agregue la notificación opcional login_hint al token de identificador en el registro de la aplicación (Configuración de token > Agregar notificación opcional > ID > login_hint). Los usuarios deben iniciar sesión de nuevo después de agregar la notificación.';
 $string['cfg_frontchannellogouturl_key'] = 'URL de cierre de sesión de canal frontal';
 $string['cfg_frontchannellogouturl_desc'] = 'Esta es la URL que su IdP debe invocar cuando intente cerrar la sesión de los usuarios en Moodle.<br/>
 En Microsoft Entra ID / Microsoft identity platform, el ajuste se llama "Front-channel logout URL" y se puede configurar en la aplicación de Microsoft Entra ID.';
@@ -217,6 +222,24 @@ Las reclamaciones disponibles en los tokens de ID y de acceso varían según el 
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">Reclamaciones del token de acceso</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">Reclamaciones del token de ID</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">Configuración de reclamaciones opcionales</a>: tenga en cuenta que "Email" es una reclamación opcional en el tipo de IdP Microsoft Entra ID (v1.0).</li>
+</ul>';
+$string['cfg_field_mapping_desc_generic'] = 'Los datos del perfil de usuario se pueden asignar desde el IdP de OpenID Connect a Moodle. Los campos remotos disponibles para asignar dependen del tipo de IdP.<br/>
+<ul>
+<li>Los campos básicos del perfil están disponibles a partir de las reclamaciones del token de ID y del token de acceso que emite su IdP. Por tanto, los campos que se pueden asignar, como el nombre, los apellidos y el correo electrónico, dependen de las reclamaciones que su IdP incluya en estos tokens.</li>
+<li>Se pueden añadir reclamaciones adicionales a la lista de campos disponibles para asignar mediante el ajuste «{$a}».</li>
+</ul>
+La mayoría de los IdP permiten cierto grado de personalización de las reclamaciones que emiten. Consulte la documentación de su IdP para conocer las reclamaciones que admite.';
+$string['cfg_field_mapping_desc_external_id'] = 'Los datos del perfil de usuario se pueden asignar desde Microsoft Entra External ID a Moodle. Los campos remotos disponibles para asignar son las reclamaciones del token de ID y del token de acceso, porque Microsoft Graph no se usa con este tipo de IdP.<br/>
+<ul>
+<li>Los campos básicos del perfil están disponibles a partir de las reclamaciones del token de ID y del token de acceso.</li>
+<li>De forma predeterminada, el token de ID de un inquilino de External ID solo contiene el nombre, el ID de objeto y el nombre de inicio de sesión del usuario. Para asignar el nombre, los apellidos y el correo electrónico, agregue las reclamaciones given_name, family_name y email como reclamaciones opcionales al token de ID en el registro de aplicación de su inquilino de External ID (Configuración de tokens). La reclamación email solo se emite si el usuario tiene una dirección de correo electrónico en el inquilino.</li>
+<li>Se pueden añadir reclamaciones adicionales a la lista de campos disponibles para asignar mediante el ajuste «{$a}».</li>
+</ul>
+A continuación se enlaza documentación sobre las reclamaciones de los tokens de Microsoft:
+<ul>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">Reclamaciones del token de acceso</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">Reclamaciones del token de ID</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">Configuración de reclamaciones opcionales</a></li>
 </ul>';
 
 $string['cfg_cleanupoidctokens_key'] = 'Limpiar tokens de OpenID Connect';
@@ -284,8 +307,16 @@ $string['error_empty_client_private_key_file'] = 'El archivo de la clave privada
 $string['error_empty_client_cert_file'] = 'El archivo de la clave pública del certificado de cliente no puede estar vacío al usar el método de autenticación "certificado"';
 $string['error_endpoint_mismatch_auth_endpoint'] = 'El punto de conexión de autorización configurado no se corresponde con el tipo de IdP configurado. Para "Microsoft Entra ID (v1.0)" use un punto de conexión v1.0 (p. ej. https://login.microsoftonline.com/organizations/oauth2/authorize). Para "Microsoft identity platform (v2.0)" use un punto de conexión v2.0 (p. ej. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize).';
 $string['error_endpoint_mismatch_token_endpoint'] = 'El punto de conexión de token configurado no se corresponde con el tipo de IdP configurado. Para "Microsoft Entra ID (v1.0)" use un punto de conexión v1.0 (p. ej. https://login.microsoftonline.com/organizations/oauth2/token). Para "Microsoft identity platform (v2.0)" use un punto de conexión v2.0 (p. ej. https://login.microsoftonline.com/organizations/oauth2/v2.0/token).';
+$string['error_endpoint_external_id'] = 'El punto de conexión debe ser un punto de conexión v2.0 de Microsoft Entra External ID en el host ciamlogin.com, p. ej. https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/authorize.';
+$string['error_logoutendpoint_external_id'] = 'El punto de conexión de cierre de sesión debe ser un punto de conexión v2.0 de Microsoft Entra External ID en el host ciamlogin.com, p. ej. https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/logout. Deje el campo vacío para usar el punto de conexión derivado del punto de conexión de autorización.';
+$string['error_endpoint_external_id_placeholder'] = 'Sustituya los marcadores [tenant-name] y [tenant-id] por los valores de su inquilino de Microsoft Entra External ID.';
+$string['error_endpoint_external_id_tenant'] = 'Los inquilinos de Microsoft Entra External ID son de un solo inquilino. Use el ID o el nombre del inquilino en el punto de conexión en lugar de common, organizations o consumers.';
+$string['error_endpoint_external_id_v1'] = 'Este es un punto de conexión v1.0. Microsoft Entra External ID requiere el punto de conexión v2.0, con /oauth2/v2.0/ en su ruta.';
+$string['error_endpoint_external_id_kind'] = 'El punto de conexión debe terminar en /{$a}.';
+$string['error_endpoint_external_id_mismatch'] = 'Los puntos de conexión de autorización y de token deben pertenecer al mismo inquilino de Microsoft Entra External ID.';
+$string['error_endpoint_is_external_id'] = 'Este es un punto de conexión de Microsoft Entra External ID. Establezca el tipo de IdP en Microsoft Entra External ID o use un punto de conexión de login.microsoftonline.com para este tipo de IdP.';
 $string['error_tenant_specific_endpoint_required'] = 'Al usar el tipo de IdP "Microsoft identity platform (v2.0)" y el método de autenticación "Certificado", se requiere un punto de conexión específico del inquilino (es decir, no common/organizations/consumers).';
-$string['error_empty_oidcresource'] = 'El recurso no puede estar vacío al usar Microsoft Entra ID (v1.0) u otros tipos de IdP.';
+$string['error_empty_oidcresource'] = 'El recurso no puede estar vacío al usar Microsoft Entra ID (v1.0).';
 $string['error_invalid_custom_claim'] = 'Nombre(s) de reclamación personalizada no válido(s): {$a}. Los nombres de reclamaciones personalizadas solo pueden contener caracteres alfanuméricos, guiones y guiones bajos, y no pueden ser un nombre de reclamación reservado (p. ej. una reclamación estándar de JWT/OpenID Connect, o una específica de Microsoft Entra ID o Keycloak) ni una opción de asignación de campos existente.';
 $string['error_masked_secret_not_changed'] = 'Introduzca un nuevo valor o desmarque la casilla "Cambiar" para conservar el valor actual.';
 $string['auth_settings_validation_error'] = 'Se han detectado ajustes de autenticación no válidos. Deben resolverse los siguientes problemas de configuración para que la autenticación funcione correctamente:';
@@ -431,6 +462,7 @@ $string['cleanup_oidc_tokens_link_desc'] = 'Para limpiar los tokens de OpenID Co
 $string['clear_user_tokens_link_desc'] = 'Para eliminar los tokens almacenados de todos los usuarios, o de los usuarios seleccionados, use la herramienta <a href="{$a}">Borrar tokens de usuario</a>.';
 $string['clear_user_tokens'] = 'Borrar tokens de usuario';
 $string['clear_user_tokens_desc'] = 'Elimina los tokens de OpenID Connect y de Microsoft 365 almacenados para los usuarios. Los usuarios afectados obtendrán tokens nuevos la próxima vez que inicien sesión mediante OpenID Connect o se conecten a Microsoft 365. Se conservan sus vínculos con las cuentas de Microsoft 365. ADVERTENCIA: esto puede interrumpir los inicios de sesión en curso, por lo que es mejor hacerlo durante un período de inactividad.';
+$string['clear_user_tokens_desc_generic'] = 'Elimina los tokens de OpenID Connect almacenados para los usuarios. Los usuarios afectados recibirán nuevos tokens la próxima vez que inicien sesión con OpenID Connect. ADVERTENCIA: Esto puede interrumpir los inicios de sesión en curso, por lo que es mejor hacerlo durante un periodo de inactividad.';
 $string['clear_user_tokens_scope_selected'] = 'Usuarios seleccionados';
 $string['clear_user_tokens_scope_all'] = 'Todos los usuarios';
 $string['clear_user_tokens_users'] = 'Usuarios';
@@ -471,6 +503,16 @@ $string['binding_username_claim_help_non_ms'] = 'Las opciones para los IdP que n
 <li><b>samaccountname</b></li>
 <li><b>custom</b>: reclamación personalizada.</li>
 </ul>';
+$string['binding_username_claim_help_external_id'] = 'Las opciones para Microsoft Entra External ID incluyen:
+<ul>
+<li><b>Elegir automáticamente</b>: Usa <b>oid</b>, luego <b>sub</b>.</li>
+<li><b>oid</b>: ID de objeto único y estable del usuario en el inquilino (recomendado).</li>
+<li><b>sub</b></li>
+<li><b>email</b>: La dirección de correo electrónico del usuario. Puede cambiar, lo que rompe el vínculo con la cuenta de Moodle.</li>
+<li><b>preferred_username</b>: El nombre de inicio de sesión del usuario. Puede cambiar, lo que rompe el vínculo con la cuenta de Moodle.</li>
+<li><b>custom</b>: Notificación personalizada.</li>
+</ul>
+Los tokens de External ID no incluyen notificaciones de personal como upn o samaccountname. Asegúrese de que la notificación elegida sea única y estable.';
 $string['warning_binding_username_claim_custom_unsupported'] = 'El ajuste "Reclamación de nombre de usuario de vinculación" está establecido actualmente en "Personalizado", lo que no se admite para el tipo de IdP configurado con la sincronización de usuarios activada. Revise los ajustes de <a href="{$a}">Reclamación de nombre de usuario de vinculación</a>.';
 $string['examplecsv'] = 'Archivo de ejemplo';
 $string['usernamefile'] = 'Archivo';
@@ -497,7 +539,7 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <ul>
 <li>Nombres de usuario de las cuentas de Moodle,</li>
 <li>Nombres de usuario de vinculación en los tokens de ID de OpenID Connect almacenados,</li>
-<li>Registros de conexión entre cuentas de Moodle y de Microsoft.</li>
+<!--o365-start--><li>Registros de conexión entre cuentas de Moodle y de Microsoft.</li><!--o365-end-->
 </ul>
 <p>Solo debe usarse al cambiar los ajustes de <b>Reclamación de nombre de usuario de vinculación</b>.</p>
 <p>La herramienta acepta un archivo CSV sencillo con dos columnas:</p>
@@ -514,12 +556,12 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <li>Si no se encuentra ningún registro, intentará buscar un registro en la tabla <span class="auth_oidc_code">auth_oidc_token</span> cuya columna <span class="auth_oidc_code">oidcusername</span> coincida con el <span class="auth_oidc_code">username</span> anterior, y lo actualizará a <span class="auth_oidc_code">new_username</span>.</li>
 </ul>
 </li>
-<li>Si el complemento <span class="auth_oidc_code">local_o365</span> está instalado, actualizar el registro de conexión del usuario.
+<!--o365-start--><li>Si el complemento <span class="auth_oidc_code">local_o365</span> está instalado, actualizar el registro de conexión del usuario.
 <ul>
 <li>Si se encuentra un usuario en el paso 1 anterior, buscar el registro de conexión del usuario en la tabla <span class="auth_oidc_code">local_o365_objects</span> y actualizar la columna <span class="auth_oidc_code">o365name</span> con el mismo valor que <span class="auth_oidc_code">new_username</span>.</li>
 <li>Si no se encuentra ningún usuario en el paso 1, intentará buscar un registro de un usuario en la tabla <span class="auth_oidc_code">local_o365_objects</span> cuyo <span class="auth_oidc_code">o365name</span> coincida con el valor de <span class="auth_oidc_code">username</span>, y lo actualizará al valor de <span class="auth_oidc_code">new_username</span>.</li>
 </ul>
-</li>
+</li><!--o365-end-->
 </ol>
 <p>El archivo de ejemplo siguiente cambiaría la reclamación de nombre de usuario de vinculación de <span class="auth_oidc_code">upn</span> o <span class="auth_oidc_code">email</span> a <span class="auth_oidc_code">oid</span>.</p>';
 $string['change_binding_username_claim_tool_result'] = 'Resultados de la actualización';

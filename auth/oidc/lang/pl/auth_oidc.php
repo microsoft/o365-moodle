@@ -47,8 +47,8 @@ $string['heading_stateredirect'] = 'Strona błędu stanu logowania';
 $string['heading_stateredirect_desc'] = 'Domyślnie, jeśli użytkownik zbyt długo kończy logowanie u dostawcy tożsamości (na przykład podczas zatwierdzania monitu uwierzytelniania wieloskładnikowego), a zapisany stan logowania został w międzyczasie wyczyszczony, Moodle wyświetla ogólną stronę błędu. Poniższe ustawienia pozwalają wydłużyć czas przechowywania stanu logowania oraz wyświetlać bardziej przyjazny, konfigurowalny komunikat zamiast ogólnej strony błędu, z automatycznym przekierowaniem użytkownika z powrotem na stronę logowania.';
 $string['heading_user_restrictions'] = 'Ograniczenia użytkowników';
 $string['heading_user_restrictions_desc'] = '';
-$string['heading_sign_out'] = 'Integracja wylogowywania';
-$string['heading_sign_out_desc'] = '';
+$string['heading_logout'] = 'Integracja wylogowywania';
+$string['heading_logout_desc'] = '';
 $string['heading_display'] = 'Wyświetlanie';
 $string['heading_display_desc'] = '';
 $string['heading_debugging'] = 'Debugowanie';
@@ -60,10 +60,11 @@ Wybierz „Microsoft 365 operated by 21Vianet (China)”, jeśli Twoja organizac
 $string['microsoftcloud_global'] = 'Microsoft 365 (globalna)';
 $string['microsoftcloud_china'] = 'Microsoft 365 operated by 21Vianet (China)';
 $string['idptype'] = 'Typ dostawcy tożsamości (IdP)';
-$string['idptype_help'] = 'Obecnie obsługiwane są trzy typy IdP:
+$string['idptype_help'] = 'Obecnie obsługiwane są cztery typy IdP:
 <ul>
 <li><b>Microsoft Entra ID (v1.0)</b>: Microsoft Entra ID z punktami końcowymi oauth2 v1.0, np. https://login.microsoftonline.com/organizations/oauth2/authorize.</li>
 <li><b>Microsoft identity platform (v2.0)</b>: Microsoft Entra ID z punktami końcowymi oauth2 v2.0, np. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize.</li>
+<li><b>Microsoft Entra External ID</b>: dzierżawa Microsoft Entra External ID (klienci) z punktami końcowymi oauth2 v2.0 na hoście ciamlogin.com, np. https://contoso.ciamlogin.com/&lt;tenant-id&gt;/oauth2/v2.0/authorize. Funkcje Microsoft 365 wtyczki local_o365 nie są dostępne dla tego typu IdP.</li>
 <li><b>Inny</b>: dowolny dostawca tożsamości inny niż Microsoft.</li>
 </ul>
 Różnice między opcjami <b>Microsoft Entra ID (v1.0)</b> i <b>Microsoft identity platform (v2.0)</b> opisano pod adresem <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
@@ -73,10 +74,11 @@ $string['idp_type_not_connected'] = 'Niepołączony';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Inny';
+$string['idp_type_microsoft_entra_external_id'] = 'Microsoft Entra External ID';
 $string['settings_application_wizard_desc'] = 'Aby skonfigurować te ustawienia za pomocą formularza z instrukcjami krok po kroku i walidacją danych, użyj <a href="{$a}">Kreatora konfiguracji aplikacji</a>.';
 $string['authendpoint'] = 'Punkt końcowy autoryzacji';
 $string['authendpoint_help'] = 'Identyfikator URI punktu końcowego autoryzacji używanego z Twojego IdP.<br/>
-Pamiętaj, że jeśli witryna ma umożliwiać dostęp użytkownikom z innych dzierżawców, nie można używać punktu końcowego autoryzacji właściwego dla jednego dzierżawcy.';
+<span data-auth-oidc-idptypes="1,2">Pamiętaj, że jeśli witryna ma umożliwiać dostęp użytkownikom z innych dzierżawców, nie można używać punktu końcowego autoryzacji właściwego dla jednego dzierżawcy.</span><span data-auth-oidc-idptypes="4">W przypadku Microsoft Entra External ID użyj „OAuth 2.0 authorization endpoint (v2)” widocznego na stronie Endpoints rejestracji aplikacji w swojej dzierżawie External ID. Musi to być punkt końcowy v2.0 właściwy dla Twojej dzierżawy.</span>';
 $string['clientid'] = 'Identyfikator aplikacji';
 $string['clientid_help'] = 'Zarejestrowany identyfikator aplikacji / klienta w IdP.';
 $string['clientauthmethod'] = 'Metoda uwierzytelniania klienta';
@@ -114,6 +116,7 @@ $string['cfg_usepkce_key'] = 'Używaj PKCE';
 $string['cfg_usepkce_desc'] = 'W przypadku przepływu logowania <b>Kod autoryzacji</b> wysyłaj w żądaniu autoryzacji parametr PKCE (RFC 7636) „code_challenge” z metodą S256, a podczas wymiany kodu autoryzacji odpowiadający mu „code_verifier”. Microsoft Entra ID obsługuje tę funkcję. W przypadku innych dostawców włącz tę opcję tylko wtedy, gdy dostawca obsługuje PKCE, ponieważ niektórzy dostawcy odrzucają żądania autoryzacji z nierozpoznawanymi parametrami.';
 $string['cfg_domainhint_key'] = 'Wskazówka domeny';
 $string['cfg_domainhint_desc'] = 'W przypadku przepływu logowania <b>Kod autoryzacji</b> przekaż tę wartość jako parametr „domain_hint”. Parametr „domain_hint” jest używany przez niektóre IdP OpenID Connect w celu ułatwienia użytkownikom procesu logowania. Sprawdź u dostawcy, czy obsługuje ten parametr.';
+$string['cfg_domainhint_external_id_note'] = 'W przypadku Microsoft Entra External ID ta wartość kieruje użytkowników bezpośrednio do sfederowanego dostawcy tożsamości zamiast wyświetlać stronę logowania. Użyj google, facebook lub apple albo domeny niestandardowego dostawcy OpenID Connect (na przykład contoso.onmicrosoft.com dla dzierżawy Microsoft Entra ID). Nie używaj identyfikatora dzierżawy.';
 $string['cfg_forceselectaccount_key'] = 'Zawsze wyświetlaj wybór konta';
 $string['cfg_forceselectaccount_desc'] = 'Jeśli włączone, użytkownicy są zawsze proszeni o wybranie konta, za pomocą którego się logują, zamiast być logowani automatycznie na konto aktywne w przeglądarce. Przydatne, gdy użytkownicy mają kilka kont, na przykład konto studenta i konto administratora.<br/>
 Tryb logowania w tle ma pierwszeństwo: gdy jest włączony, wybór konta nie jest wymuszany podczas logowania w tle.';
@@ -172,7 +175,7 @@ $string['customclaims_help'] = 'Lista nazw oświadczeń niestandardowych z token
 <li>Nazwa oświadczenia nie może być nazwą zarezerwowaną, taką jak standardowe oświadczenie JWT/OpenID Connect (np. <code>sub</code>, <code>email</code>), oświadczenie specyficzne dla Microsoft Entra ID (np. <code>oid</code>, <code>upn</code>) lub Keycloak (np. <code>realm_access</code>, <code>resource_access</code>) albo istniejąca opcja mapowania pól</li>
 <li>Dozwolone są oświadczenie <code>roles</code> (role aplikacji w tokenach Microsoft Entra ID) i oświadczenie <code>groups</code> (identyfikatory grup). W mapowaniu pól są wymienione jako „roles (token claim)” i „groups (token claim)”, osobno od wbudowanych opcji „Roles” i „Groups”, które mapują role katalogu Microsoft Entra i nazwy grup z Microsoft Graph. Oświadczenia zawierające listę wartości są zapisywane jako lista oddzielona przecinkami</li>
 <li>Przykłady: <code>employee_type badge_number costCenter custom_role</code></li>
-<li>Podczas logowania oświadczenia niestandardowe są zawsze odczytywane z tokenu, niezależnie od tego, czy używany jest także Microsoft Graph. Podczas zaplanowanego zadania synchronizacji użytkowników nie ma tokenu użytkownika, z którego można odczytywać dane, więc oświadczenie niestandardowe jest synchronizowane tylko wtedy, gdy jego nazwa jest jednocześnie wybieralną właściwością użytkownika Microsoft Graph, taką jak atrybut rozszerzenia katalogu (np. <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). Oświadczenie niestandardowe odrzucone przez Microsoft Graph jest pomijane w danym przebiegu synchronizacji, z ostrzeżeniem w dzienniku zadania, zamiast przerywać całą synchronizację.</li>
+<li data-auth-oidc-idptypes="1,2">Podczas logowania oświadczenia niestandardowe są zawsze odczytywane z tokenu, niezależnie od tego, czy używany jest także Microsoft Graph. Podczas zaplanowanego zadania synchronizacji użytkowników nie ma tokenu użytkownika, z którego można odczytywać dane, więc oświadczenie niestandardowe jest synchronizowane tylko wtedy, gdy jego nazwa jest jednocześnie wybieralną właściwością użytkownika Microsoft Graph, taką jak atrybut rozszerzenia katalogu (np. <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). Oświadczenie niestandardowe odrzucone przez Microsoft Graph jest pomijane w danym przebiegu synchronizacji, z ostrzeżeniem w dzienniku zadania, zamiast przerywać całą synchronizację.</li>
 </ul>';
 $string['secretexpiryrecipients'] = 'Odbiorcy powiadomień o wygaśnięciu klucza tajnego';
 $string['secretexpiryrecipients_help'] = 'Lista adresów e-mail oddzielonych przecinkami, na które wysyłane są powiadomienia o wygaśnięciu klucza tajnego.<br/>
@@ -186,22 +189,24 @@ $string['cfg_redirecturi_key'] = 'Adres URI przekierowania';
 $string['cfg_redirecturi_desc'] = 'Jest to identyfikator URI, który należy zarejestrować jako „Adres URI przekierowania”. Dostawca tożsamości wtyczki OpenID Connect powinien zapytać o ten identyfikator podczas rejestracji platformy Moodle jako klienta. <br /><b>UWAGA:</b> Należy go wprowadzić do dostawcy OpenID Connect *dokładnie* w takiej postaci, w jakiej występuje w tym miejscu. Dowolna różnica uniemożliwi logowanie za pomocą OpenID Connect.';
 $string['tokenendpoint'] = 'Punkt końcowy tokenu';
 $string['tokenendpoint_help'] = 'Identyfikator URI punktu końcowego tokenu używanego z Twojego IdP.<br/>
-Pamiętaj, że jeśli witryna ma umożliwiać dostęp użytkownikom z innych dzierżawców, nie można używać punktu końcowego tokenu właściwego dla jednego dzierżawcy.';
+<span data-auth-oidc-idptypes="1,2">Pamiętaj, że jeśli witryna ma umożliwiać dostęp użytkownikom z innych dzierżawców, nie można używać punktu końcowego tokenu właściwego dla jednego dzierżawcy.</span><span data-auth-oidc-idptypes="4">W przypadku Microsoft Entra External ID użyj „OAuth 2.0 token endpoint (v2)” widocznego na stronie Endpoints rejestracji aplikacji w swojej dzierżawie External ID. Musi to być punkt końcowy v2.0 właściwy dla Twojej dzierżawy.</span>';
 $string['cfg_userrestrictions_key'] = 'Ograniczenia użytkowników';
 $string['cfg_userrestrictions_desc'] = 'Zezwalaj na logowanie tylko użytkownikom spełniającym określone ograniczenia. <br /><b>Jak używać ograniczeń użytkowników: </b> <ul><li>Wprowadź wzorzec <a href="https://en.wikipedia.org/wiki/Regular_expression">wyrażenia regularnego</a> pasujący do nazw użytkowników, którym chcesz zezwolić na dostęp.</li><li>Wprowadzaj jeden wzorzec w wierszu</li><li>Jeśli wprowadzisz wiele wzorców, użytkownik będzie dopuszczony, jeśli pasuje do DOWOLNEGO z nich.</li><li>Znak „/” należy poprzedzić znakiem „\\”.</li><li>Jeśli powyżej nie wprowadzisz żadnych ograniczeń, Moodle zaakceptuje wszystkich użytkowników, którzy mogą się zalogować do IdP OpenID Connect.</li><li>Każdy użytkownik, który nie pasuje do żadnego z wprowadzonych wzorców, nie będzie mógł się logować za pomocą OpenID Connect.</li></ul>';
+$string['cfg_userrestrictions_disabled_external_id'] = 'Ograniczenia użytkowników nie są dostępne dla Microsoft Entra External ID, dlatego to ustawienie jest wyłączone, a ograniczenia nie są stosowane podczas logowania użytkowników. Ograniczenia są dopasowywane do oświadczenia wiążącego nazwę użytkownika, którym dla użytkowników External ID jest domyślnie identyfikator obiektu (oid), więc wzorce musiałyby pasować do identyfikatorów GUID. Zamiast tego kontroluj dostęp do witryny w swojej dzierżawie External ID, na przykład za pomocą przepływów użytkownika lub przypisania aplikacji.';
 $string['cfg_userrestrictionscasesensitive_key'] = 'Ograniczenia użytkowników z uwzględnieniem wielkości liter';
 $string['cfg_userrestrictionscasesensitive_desc'] = 'Określa, czy w dopasowaniu ograniczeń użytkowników używana jest opcja „/i” wyrażenia regularnego.<br/>Jeśli włączone, wszystkie kontrole ograniczeń użytkowników uwzględniają wielkość liter. Pamiętaj, że jeśli ta opcja jest wyłączona, wszelkie wzorce dotyczące wielkości liter są ignorowane.';
 $string['heading_dummy_email'] = 'Zastępcze adresy e-mail';
-$string['heading_dummy_email_desc'] = 'Moodle wymaga, aby każde konto użytkownika miało adres e-mail, ale konta Microsoft Entra ID nie muszą go mieć. Poniższe ustawienia pozwalają Moodle generować niedostarczalny zastępczy adres dla użytkowników, którzy nie mają użytecznego adresu e-mail z IdP, zamiast pozostawiać ich adres e-mail pusty.';
+$string['heading_dummy_email_desc'] = 'Moodle wymaga, aby każde konto użytkownika miało adres e-mail, ale niektórzy dostawcy tożsamości, tacy jak Microsoft Entra ID, nie wymagają go dla swoich kont. Poniższe ustawienia pozwalają Moodle generować niedostarczalny zastępczy adres dla użytkowników, którzy nie mają użytecznego adresu e-mail z IdP, zamiast pozostawiać ich adres e-mail pusty.';
 $string['cfg_generatedummyemail_key'] = 'Generuj zastępcze adresy e-mail';
-$string['cfg_generatedummyemail_desc'] = 'Jeśli włączone, gdy użytkownik nie ma adresu e-mail ani użytecznej nazwy głównej użytkownika w formacie adresu e-mail z IdP, Moodle wygeneruje dla niego zastępczy adres e-mail przy użyciu jego nazwy głównej użytkownika Microsoft (lub identyfikatora obiektu, jeśli nazwa główna użytkownika jest niedostępna) oraz domeny skonfigurowanej poniżej, zamiast pozostawiać jego adres e-mail pusty. Dotyczy to zarówno logowania użytkownika, jak i aprowizacji przez zadanie synchronizacji użytkowników.';
+$string['cfg_generatedummyemail_desc'] = 'Jeśli włączone, gdy użytkownik nie ma adresu e-mail ani użytecznej nazwy głównej użytkownika w formacie adresu e-mail z IdP, Moodle wygeneruje dla niego zastępczy adres e-mail przy użyciu jego nazwy głównej użytkownika (lub identyfikatora obiektu, jeśli nazwa główna użytkownika jest niedostępna) oraz domeny skonfigurowanej poniżej, zamiast pozostawiać jego adres e-mail pusty. Dotyczy to zarówno logowania użytkownika, jak i aprowizacji przez zadanie synchronizacji użytkowników. Nazwa główna użytkownika i identyfikator obiektu są odczytywane z oświadczeń tokenu IdP, więc adres nie jest generowany, jeśli IdP nie dostarcza żadnego z nich.';
 $string['cfg_dummyemaildomain_key'] = 'Domena zastępczych adresów e-mail';
 $string['cfg_dummyemaildomain_desc'] = 'Domena używana do generowania zastępczych adresów e-mail, na przykład „example.test”. Użyj domeny, która nie może odbierać poczty, aby wygenerowane adresy nigdy nie zostały pomylone z prawdziwymi, dostarczalnymi adresami.';
-$string['cfg_signoffintegration_key'] = 'Wylogowanie jednokrotne (z Moodle do IdP)';
-$string['cfg_signoffintegration_desc'] = 'Jeśli ta opcja jest włączona, gdy użytkownik Moodle połączony ze skonfigurowanym IdP wylogowuje się z Moodle, integracja wyśle żądanie do poniższego punktu końcowego wylogowania, próbując wylogować użytkownika także z IdP.<br/>
-Pamiętaj, że w przypadku integracji z Microsoft Entra ID adres URL witryny Moodle ({$a}) musi zostać dodany jako identyfikator URI przekierowania w aplikacji Microsoft Entra ID utworzonej na potrzeby integracji Moodle i Microsoft 365.';
+$string['cfg_singlelogout_key'] = 'Wylogowanie jednokrotne (SLO) (z Moodle do IdP)';
+$string['cfg_singlelogout_desc'] = 'Jeśli ta opcja jest włączona, gdy użytkownik Moodle połączony ze skonfigurowanym IdP wylogowuje się z Moodle, integracja wyśle żądanie do poniższego punktu końcowego wylogowania, próbując wylogować użytkownika także z IdP.<br/>
+Pamiętaj, że w przypadku integracji z Microsoft Entra ID adres URL witryny Moodle ({$a}) musi zostać dodany jako identyfikator URI przekierowania w aplikacji Microsoft Entra ID utworzonej na potrzeby integracji Moodle i Microsoft 365.<br/>Wylogowanie jednokrotne kończy tylko sesję usługi logowania, której użył Moodle. Inne sesje tego samego konta w przeglądarce, na przykład utworzone po zalogowaniu do portalu Azure, nie są zmieniane.';
 $string['cfg_logoutendpoint_key'] = 'Punkt końcowy wylogowania IdP';
 $string['cfg_logoutendpoint_desc'] = 'Identyfikator URI punktu końcowego wylogowania używanego z Twojego IdP.';
+$string['cfg_logoutendpoint_external_id_note'] = 'W Microsoft Entra External ID użytkownicy są proszeni o wybranie konta na stronie wylogowania Microsoft, chyba że opcjonalne oświadczenie login_hint zostanie dodane do tokenu ID w rejestracji aplikacji (Konfiguracja tokenu > Dodaj opcjonalne oświadczenie > ID > login_hint). Po dodaniu oświadczenia użytkownicy muszą zalogować się ponownie.';
 $string['cfg_frontchannellogouturl_key'] = 'Adres URL wylogowania kanałem frontowym';
 $string['cfg_frontchannellogouturl_desc'] = 'Jest to adres URL, który Twój IdP musi wywołać, gdy próbuje wylogować użytkowników z Moodle.<br/>
 W przypadku Microsoft Entra ID / Microsoft identity platform to ustawienie nazywa się „Front-channel logout URL” i można je skonfigurować w aplikacji Microsoft Entra ID.';
@@ -217,6 +222,24 @@ Oświadczenia dostępne w tokenach ID i tokenach dostępu różnią się w zale�
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">Oświadczenia tokenu dostępu</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">Oświadczenia tokenu ID</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">Konfiguracja oświadczeń opcjonalnych</a>: pamiętaj, że „Email” jest oświadczeniem opcjonalnym w typie IdP Microsoft Entra ID (v1.0).</li>
+</ul>';
+$string['cfg_field_mapping_desc_generic'] = 'Dane profilu użytkownika można mapować z IdP OpenID Connect do Moodle. Dostępne pola zdalne do mapowania zależą od typu IdP.<br/>
+<ul>
+<li>Podstawowe pola profilu są dostępne z oświadczeń tokenu ID i tokenu dostępu wystawianych przez Twojego dostawcę tożsamości. Pola, które można mapować, takie jak imię, nazwisko i adres e-mail, zależą więc od oświadczeń, które Twój IdP umieszcza w tych tokenach.</li>
+<li>Dodatkowe oświadczenia można dodać do listy pól dostępnych do mapowania za pomocą ustawienia „{$a}”.</li>
+</ul>
+Większość IdP pozwala w pewnym stopniu dostosować wystawiane oświadczenia. Obsługiwane oświadczenia znajdziesz w dokumentacji swojego IdP.';
+$string['cfg_field_mapping_desc_external_id'] = 'Dane profilu użytkownika można mapować z Microsoft Entra External ID do Moodle. Dostępne pola zdalne do mapowania to oświadczenia tokenu ID i tokenu dostępu, ponieważ Microsoft Graph nie jest używany dla tego typu IdP.<br/>
+<ul>
+<li>Podstawowe pola profilu są dostępne z oświadczeń tokenu ID i tokenu dostępu.</li>
+<li>Domyślnie token ID dzierżawy External ID zawiera tylko nazwę, identyfikator obiektu i nazwę logowania użytkownika. Aby mapować imię, nazwisko i adres e-mail, dodaj oświadczenia given_name, family_name i email jako oświadczenia opcjonalne do tokenu ID w rejestracji aplikacji swojej dzierżawy External ID (Konfiguracja tokenu). Oświadczenie email jest wystawiane tylko wtedy, gdy użytkownik ma adres e-mail w dzierżawie.</li>
+<li>Dodatkowe oświadczenia można dodać do listy pól dostępnych do mapowania za pomocą ustawienia „{$a}”.</li>
+</ul>
+Dokumentacja oświadczeń tokenów Microsoft jest podlinkowana poniżej:
+<ul>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">Oświadczenia tokenu dostępu</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">Oświadczenia tokenu ID</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">Konfiguracja oświadczeń opcjonalnych</a></li>
 </ul>';
 
 $string['cfg_cleanupoidctokens_key'] = 'Wyczyść tokeny OpenID Connect';
@@ -284,8 +307,16 @@ $string['error_empty_client_private_key_file'] = 'Plik klucza prywatnego certyfi
 $string['error_empty_client_cert_file'] = 'Plik klucza publicznego certyfikatu klienta nie może być pusty, gdy używana jest metoda uwierzytelniania „certyfikat”';
 $string['error_endpoint_mismatch_auth_endpoint'] = 'Skonfigurowany punkt końcowy autoryzacji nie pasuje do skonfigurowanego typu IdP. Dla „Microsoft Entra ID (v1.0)” użyj punktu końcowego v1.0 (np. https://login.microsoftonline.com/organizations/oauth2/authorize). Dla „Microsoft identity platform (v2.0)” użyj punktu końcowego v2.0 (np. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize).';
 $string['error_endpoint_mismatch_token_endpoint'] = 'Skonfigurowany punkt końcowy tokenu nie pasuje do skonfigurowanego typu IdP. Dla „Microsoft Entra ID (v1.0)” użyj punktu końcowego v1.0 (np. https://login.microsoftonline.com/organizations/oauth2/token). Dla „Microsoft identity platform (v2.0)” użyj punktu końcowego v2.0 (np. https://login.microsoftonline.com/organizations/oauth2/v2.0/token).';
+$string['error_endpoint_external_id'] = 'Punkt końcowy musi być punktem końcowym Microsoft Entra External ID v2.0 na hoście ciamlogin.com, np. https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/authorize.';
+$string['error_logoutendpoint_external_id'] = 'Punkt końcowy wylogowania musi być punktem końcowym Microsoft Entra External ID v2.0 na hoście ciamlogin.com, np. https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/logout. Pozostaw pole puste, aby użyć punktu końcowego wyprowadzonego z punktu końcowego autoryzacji.';
+$string['error_endpoint_external_id_placeholder'] = 'Zastąp symbole zastępcze [tenant-name] i [tenant-id] wartościami swojej dzierżawy Microsoft Entra External ID.';
+$string['error_endpoint_external_id_tenant'] = 'Dzierżawy Microsoft Entra External ID są jednodzierżawowe. W punkcie końcowym użyj identyfikatora lub nazwy dzierżawy zamiast common, organizations lub consumers.';
+$string['error_endpoint_external_id_v1'] = 'To jest punkt końcowy v1.0. Microsoft Entra External ID wymaga punktu końcowego v2.0 z /oauth2/v2.0/ w ścieżce.';
+$string['error_endpoint_external_id_kind'] = 'Punkt końcowy musi kończyć się na /{$a}.';
+$string['error_endpoint_external_id_mismatch'] = 'Punkty końcowe autoryzacji i tokenu muszą należeć do tej samej dzierżawy Microsoft Entra External ID.';
+$string['error_endpoint_is_external_id'] = 'To jest punkt końcowy Microsoft Entra External ID. Ustaw typ IdP na Microsoft Entra External ID lub użyj dla tego typu IdP punktu końcowego login.microsoftonline.com.';
 $string['error_tenant_specific_endpoint_required'] = 'Gdy używany jest typ IdP „Microsoft identity platform (v2.0)” i metoda uwierzytelniania „Certyfikat”, wymagany jest punkt końcowy właściwy dla dzierżawcy (tzn. inny niż common/organizations/consumers).';
-$string['error_empty_oidcresource'] = 'Zasób nie może być pusty, gdy używany jest Microsoft Entra ID (v1.0) lub inne typy IdP.';
+$string['error_empty_oidcresource'] = 'Zasób nie może być pusty podczas korzystania z Microsoft Entra ID (v1.0).';
 $string['error_invalid_custom_claim'] = 'Nieprawidłowe nazwy oświadczeń niestandardowych: {$a}. Nazwy oświadczeń niestandardowych mogą zawierać tylko znaki alfanumeryczne, myślniki i podkreślenia oraz nie mogą być nazwą zarezerwowaną (np. standardowe oświadczenie JWT/OpenID Connect lub oświadczenie specyficzne dla Microsoft Entra ID albo Keycloak) ani istniejącą opcją mapowania pól.';
 $string['error_masked_secret_not_changed'] = 'Wprowadź nową wartość lub odznacz pole „Zmień”, aby zachować bieżącą wartość.';
 $string['auth_settings_validation_error'] = 'Wykryto nieprawidłowe ustawienia uwierzytelniania. Aby uwierzytelnianie działało poprawnie, należy rozwiązać następujące problemy z konfiguracją:';
@@ -431,6 +462,7 @@ $string['cleanup_oidc_tokens_link_desc'] = 'Aby wyczyścić nieaktualne tokeny O
 $string['clear_user_tokens_link_desc'] = 'Aby usunąć zapisane tokeny wszystkich użytkowników lub wybranych użytkowników, użyj narzędzia <a href="{$a}">Wyczyść tokeny użytkowników</a>.';
 $string['clear_user_tokens'] = 'Wyczyść tokeny użytkowników';
 $string['clear_user_tokens_desc'] = 'Usuwa tokeny OpenID Connect i Microsoft 365 zapisane dla użytkowników. Użytkownicy, których to dotyczy, otrzymają nowe tokeny przy następnym logowaniu za pomocą OpenID Connect lub połączeniu z Microsoft 365. Ich powiązania z kontami Microsoft 365 zostaną zachowane. OSTRZEŻENIE: może to przerwać trwające logowania, więc najlepiej wykonać tę czynność w czasie przestoju.';
+$string['clear_user_tokens_desc_generic'] = 'Usuwa tokeny OpenID Connect zapisane dla użytkowników. Użytkownicy, których to dotyczy, otrzymają nowe tokeny podczas następnego logowania przez OpenID Connect. OSTRZEŻENIE: Może to przerwać trwające logowania, dlatego najlepiej zrobić to w czasie przestoju.';
 $string['clear_user_tokens_scope_selected'] = 'Wybrani użytkownicy';
 $string['clear_user_tokens_scope_all'] = 'Wszyscy użytkownicy';
 $string['clear_user_tokens_users'] = 'Użytkownicy';
@@ -471,6 +503,16 @@ $string['binding_username_claim_help_non_ms'] = 'Opcje dla IdP innych niż Micro
 <li><b>samaccountname</b></li>
 <li><b>custom</b>: oświadczenie niestandardowe.</li>
 </ul>';
+$string['binding_username_claim_help_external_id'] = 'Opcje dla Microsoft Entra External ID obejmują:
+<ul>
+<li><b>Wybierz automatycznie</b>: Używa <b>oid</b>, a następnie <b>sub</b>.</li>
+<li><b>oid</b>: Unikalny i stabilny identyfikator obiektu użytkownika w dzierżawie (zalecane).</li>
+<li><b>sub</b></li>
+<li><b>email</b>: Adres e-mail użytkownika. Może się zmienić, co zrywa powiązanie z kontem Moodle.</li>
+<li><b>preferred_username</b>: Nazwa logowania użytkownika. Może się zmienić, co zrywa powiązanie z kontem Moodle.</li>
+<li><b>custom</b>: Niestandardowe oświadczenie.</li>
+</ul>
+Tokeny External ID nie zawierają oświadczeń pracowniczych, takich jak upn lub samaccountname. Upewnij się, że wybrane oświadczenie jest unikalne i stabilne.';
 $string['warning_binding_username_claim_custom_unsupported'] = 'Ustawienie „Powiązanie z oświadczeniem nazwy użytkownika” ma obecnie wartość „Niestandardowe”, która nie jest obsługiwana dla skonfigurowanego typu IdP z włączoną synchronizacją użytkowników. Sprawdź ustawienia <a href="{$a}">Powiązania z oświadczeniem nazwy użytkownika</a>.';
 $string['examplecsv'] = 'Przykładowy plik do przesłania';
 $string['usernamefile'] = 'Plik';
@@ -497,7 +539,7 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <ul>
 <li>nazw użytkowników kont Moodle,</li>
 <li>powiązanych nazw użytkowników w zapisanych tokenach ID OpenID Connect,</li>
-<li>rekordów połączeń kont Moodle i Microsoft.</li>
+<!--o365-start--><li>rekordów połączeń kont Moodle i Microsoft.</li><!--o365-end-->
 </ul>
 <p>Należy go używać tylko podczas zmiany ustawień <b>Powiązania z oświadczeniem nazwy użytkownika</b>.</p>
 <p>Narzędzie przyjmuje prosty plik CSV z dwiema kolumnami:</p>
@@ -514,12 +556,12 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <li>Jeśli powyżej nie znaleziono rekordu, spróbuje znaleźć rekord w tabeli <span class="auth_oidc_code">auth_oidc_token</span>, w którym kolumna <span class="auth_oidc_code">oidcusername</span> odpowiada starej wartości <span class="auth_oidc_code">username</span>, i zaktualizuje go na <span class="auth_oidc_code">new_username</span>.</li>
 </ul>
 </li>
-<li>Jeśli zainstalowana jest wtyczka <span class="auth_oidc_code">local_o365</span>, zaktualizuje rekord połączenia użytkownika.
+<!--o365-start--><li>Jeśli zainstalowana jest wtyczka <span class="auth_oidc_code">local_o365</span>, zaktualizuje rekord połączenia użytkownika.
 <ul>
 <li>Jeśli w kroku 1 powyżej znaleziono użytkownika, znajdzie rekord połączenia tego użytkownika w tabeli <span class="auth_oidc_code">local_o365_objects</span> i zaktualizuje kolumnę <span class="auth_oidc_code">o365name</span> na wartość identyczną z <span class="auth_oidc_code">new_username</span>.</li>
 <li>Jeśli w kroku 1 nie znaleziono użytkownika, spróbuje znaleźć rekord użytkownika w tabeli <span class="auth_oidc_code">local_o365_objects</span>, w którym kolumna <span class="auth_oidc_code">o365name</span> odpowiada wartości <span class="auth_oidc_code">username</span>, i zaktualizuje go na wartość <span class="auth_oidc_code">new_username</span>.</li>
 </ul>
-</li>
+</li><!--o365-end-->
 </ol>
 <p>Poniższy przykładowy plik zmieniłby powiązane oświadczenie nazwy użytkownika z <span class="auth_oidc_code">upn</span> lub <span class="auth_oidc_code">email</span> na <span class="auth_oidc_code">oid</span>.</p>';
 $string['change_binding_username_claim_tool_result'] = 'Wyniki aktualizacji';
