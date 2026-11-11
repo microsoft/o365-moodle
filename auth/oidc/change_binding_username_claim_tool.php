@@ -76,7 +76,7 @@ if (empty($iid)) {
             get_string('settings_page_change_binding_username_claim_tool', 'auth_oidc')
         );
 
-        echo get_string('change_binding_username_claim_tool_description', 'auth_oidc');
+        echo auth_oidc_get_change_binding_username_claim_tool_description();
 
         $form1->display();
 

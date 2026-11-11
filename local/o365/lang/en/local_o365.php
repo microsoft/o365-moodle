@@ -52,6 +52,8 @@ $string['settings_setup_step1_desc'] = 'Register a new Microsoft Entra ID App fo
 $string['settings_setup_step1clientcreds'] = '<br />Once the script is successfully executed, copy the Application ID and Secret returned by the script into the <a href="{$a}">OpenID Connect authentication plugin configuration page</a>.';
 $string['settings_setup_step1_credentials_end'] = 'If you are unable to set up Microsoft Entra ID app via PowerShell, <a href="{$a}" target="_blank">click here</a> for manual setup instructions.';
 $string['settings_setup_step1_continue'] = '<b>Once you have entered your Application ID and Secret, click "Save changes" at the bottom of the page to continue.</b><br /><br /><br /><br /><br />';
+$string['features_disabled_external_id'] = 'Microsoft 365 features are not available when the Identity Provider (IdP) Type of the OpenID Connect authentication plugin is set to Microsoft Entra External ID. Microsoft Entra External ID tenants are customer tenants without Microsoft 365 services (Exchange Online, Microsoft Teams, SharePoint/OneDrive or School Data Sync), so all features of this plugin are disabled.';
+$string['task_skipped_external_id'] = 'The task was skipped: the Microsoft 365 features of this plugin are disabled because the IdP type of the OpenID Connect authentication plugin is Microsoft Entra External ID.';
 $string['settings_setup_step1_existing_settings'] = '<h5>Existing settings</h5>';
 $string['settings_setup_step2'] = 'Step 2/2: Admin consent &amp; additional information';
 $string['settings_setup_step2_desc'] = 'This last step allows you to give administrator consent to use some Microsoft Entra ID permissions, and gathers some additional information about your Microsoft 365 environment.<br /><br />';

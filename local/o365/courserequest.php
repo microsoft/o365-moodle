@@ -29,6 +29,8 @@ use local_o365\feature\courserequest\main;
 use local_o365\form\courserequestform;
 
 require_once(__DIR__ . '/../../config.php');
+
+\local_o365\utils::require_features_enabled();
 require_once($CFG->dirroot . '/course/lib.php');
 
 // Where we came from. Used in a number of redirects.

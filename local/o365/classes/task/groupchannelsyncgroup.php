@@ -54,6 +54,9 @@ class groupchannelsyncgroup extends adhoc_task {
      * @return void
      */
     public function execute(): void {
+        if (\local_o365\utils::skip_task_for_idp_type()) {
+            return;
+        }
         $data = $this->get_custom_data();
         if (empty($data->groupid)) {
             utils::mtrace('Missing group ID, skipping.', 1);
