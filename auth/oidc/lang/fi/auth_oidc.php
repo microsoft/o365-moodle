@@ -47,8 +47,8 @@ $string['heading_stateredirect'] = 'Kirjautumistilan virhesivu';
 $string['heading_stateredirect_desc'] = 'Oletuksena, jos käyttäjältä kestää liian kauan suorittaa kirjautuminen loppuun identiteetintarjoajan palvelussa (esimerkiksi monivaiheisen tunnistautumisen kehotetta hyväksyttäessä) ja tallennettu kirjautumistila on sillä välin siivottu pois, Moodle näyttää yleisen virhesivunsa. Alla olevilla asetuksilla voit pidentää kirjautumistilan säilytysaikaa ja näyttää yleisen virhesivun sijaan ystävällisemmän, muokattavan viestin, jonka jälkeen käyttäjä ohjataan automaattisesti takaisin kirjautumissivulle.';
 $string['heading_user_restrictions'] = 'Käyttäjärajoitukset';
 $string['heading_user_restrictions_desc'] = '';
-$string['heading_sign_out'] = 'Uloskirjautumisen integrointi';
-$string['heading_sign_out_desc'] = '';
+$string['heading_logout'] = 'Uloskirjautumisen integrointi';
+$string['heading_logout_desc'] = '';
 $string['heading_display'] = 'Näyttö';
 $string['heading_display_desc'] = '';
 $string['heading_debugging'] = 'Virheenkorjaus';
@@ -60,10 +60,11 @@ Valitse "Microsoft 365, jota operoi 21Vianet (Kiina)", jos organisaatiosi käytt
 $string['microsoftcloud_global'] = 'Microsoft 365 (globaali)';
 $string['microsoftcloud_china'] = 'Microsoft 365, jota operoi 21Vianet (Kiina)';
 $string['idptype'] = 'Identiteetintarjoajan (IdP) tyyppi';
-$string['idptype_help'] = 'Tällä hetkellä tuetaan kolmea IdP-tyyppiä:
+$string['idptype_help'] = 'Tällä hetkellä tuetaan neljää IdP-tyyppiä:
 <ul>
 <li><b>Microsoft Entra ID (v1.0)</b>: Microsoft Entra ID oauth2 v1.0 -päätepisteillä, esim. https://login.microsoftonline.com/organizations/oauth2/authorize.</li>
 <li><b>Microsoft identity platform (v2.0)</b>: Microsoft Entra ID oauth2 v2.0 -päätepisteillä, esim. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize.</li>
+<li><b>Microsoft Entra External ID</b>: Microsoft Entra External ID -vuokraaja (asiakkaat), jossa on oauth2 v2.0 -päätepisteet ciamlogin.com-isännässä, esim. https://contoso.ciamlogin.com/&lt;tenant-id&gt;/oauth2/v2.0/authorize. Local_o365-liitännäisen Microsoft 365 -toiminnot eivät ole käytettävissä tälle IdP-tyypille.</li>
 <li><b>Muu</b>: mikä tahansa muu kuin Microsoftin IdP.</li>
 </ul>
 Vaihtoehtojen <b>Microsoft Entra ID (v1.0)</b> ja <b>Microsoft identity platform (v2.0)</b> erot löytyvät osoitteesta <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
@@ -73,10 +74,11 @@ $string['idp_type_not_connected'] = 'Ei yhdistetty';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Muu';
+$string['idp_type_microsoft_entra_external_id'] = 'Microsoft Entra External ID';
 $string['settings_application_wizard_desc'] = 'Jos haluat määrittää nämä asetukset ohjatulla lomakkeella, jossa on vaiheittaiset ohjeet ja syötteiden tarkistus, käytä <a href="{$a}">sovelluksen määritysohjattua toimintoa</a>.';
 $string['authendpoint'] = 'Valtuutuksen päätepiste';
 $string['authendpoint_help'] = 'IdP:n valtuutuspäätepisteen URI, jota käytetään.<br/>
-Huomaa, että jos sivusto määritetään sallimaan pääsy myös muiden vuokraajien käyttäjille, vuokraajakohtaista valtuutuspäätepistettä ei voi käyttää.';
+<span data-auth-oidc-idptypes="1,2">Huomaa, että jos sivusto määritetään sallimaan pääsy myös muiden vuokraajien käyttäjille, vuokraajakohtaista valtuutuspäätepistettä ei voi käyttää.</span><span data-auth-oidc-idptypes="4">Käytä Microsoft Entra External ID:lle "OAuth 2.0 authorization endpoint (v2)" -päätepistettä, joka näkyy External ID -vuokraajasi sovelluksen rekisteröinnin Endpoints-sivulla. Sen on oltava vuokraajakohtainen v2.0-päätepiste.</span>';
 $string['clientid'] = 'Sovellustunnus';
 $string['clientid_help'] = 'IdP:ssä rekisteröity sovellus- / asiakastunnus (Application / Client ID).';
 $string['clientauthmethod'] = 'Asiakkaan tunnistautumistapa';
@@ -114,6 +116,7 @@ $string['cfg_usepkce_key'] = 'Käytä PKCE:tä';
 $string['cfg_usepkce_desc'] = 'Kun käytetään <b>Authorization Code</b> -kirjautumiskulkua, valtuutuspyynnössä lähetetään PKCE (RFC 7636) -"code_challenge" S256-menetelmällä ja valtuutuskoodia vaihdettaessa vastaava "code_verifier". Microsoft Entra ID tukee tätä. Muiden palveluntarjoajien kohdalla ota tämä käyttöön vain, jos palveluntarjoajasi tukee PKCE:tä, sillä jotkin palveluntarjoajat hylkäävät valtuutuspyynnöt, joissa on niille tuntemattomia parametreja.';
 $string['cfg_domainhint_key'] = 'Toimialuevihje';
 $string['cfg_domainhint_desc'] = 'Kun käytetään <b>Authorization Code</b> -kirjautumiskulkua, tämä arvo välitetään "domain_hint"-parametrina. Jotkin OpenID Connect -IdP:t käyttävät "domain_hint"-parametria helpottamaan käyttäjien kirjautumista. Tarkista palveluntarjoajaltasi, tukeeko se tätä parametria.';
+$string['cfg_domainhint_external_id_note'] = 'Microsoft Entra External ID -tyypillä tämä arvo ohjaa käyttäjät suoraan federoidulle identiteetintarjoajalle kirjautumissivun näyttämisen sijaan. Käytä arvoa google, facebook tai apple tai mukautetun OpenID Connect -tarjoajan verkkotunnusta (esimerkiksi contoso.onmicrosoft.com Microsoft Entra ID -vuokraajalle). Älä käytä vuokraajan tunnusta.';
 $string['cfg_forceselectaccount_key'] = 'Näytä aina tilin valinta';
 $string['cfg_forceselectaccount_desc'] = 'Jos tämä on käytössä, käyttäjiltä kysytään aina, millä tilillä he kirjautuvat, sen sijaan että heidät kirjattaisiin automaattisesti sisään selaimessa aktiivisena olevalla tilillä. Hyödyllinen, kun käyttäjillä on useita tilejä, esimerkiksi opiskelija- ja ylläpitäjätili.<br/>
 Hiljainen kirjautumistila on etusijalla: kun se on käytössä, tilin valintaa ei pakoteta hiljaisessa kirjautumisessa.';
@@ -172,7 +175,7 @@ $string['customclaims_help'] = 'Välilyönnein eroteltu luettelo identiteetintar
 <li>Väitteen nimi ei voi olla varattu nimi, kuten JWT:n/OpenID Connectin vakioväite (esim. <code>sub</code>, <code>email</code>), Microsoft Entra ID:lle (esim. <code>oid</code>, <code>upn</code>) tai Keycloakille (esim. <code>realm_access</code>, <code>resource_access</code>) ominainen väite tai olemassa oleva kenttävastaavuuden vaihtoehto</li>
 <li>Väite <code>roles</code> (sovellusroolit Microsoft Entra ID -tunnuksissa) ja väite <code>groups</code> (ryhmätunnisteet) ovat sallittuja. Ne näkyvät kenttien vastaavuuksissa nimillä "roles (token claim)" ja "groups (token claim)" erillään sisäänrakennetuista "Roolit"- ja "Ryhmät"-vaihtoehdoista, jotka vastaavat Microsoft Graphista haettuja Microsoft Entran hakemistorooleja ja ryhmien nimiä. Useita arvoja sisältävät väitteet tallennetaan pilkuin eroteltuna luettelona</li>
 <li>Esimerkkejä: <code>employee_type badge_number costCenter custom_role</code></li>
-<li>Kirjautumisen yhteydessä mukautetut väitteet luetaan aina tunnuksesta riippumatta siitä, käytetäänkö myös Microsoft Graphia. Ajastetun käyttäjien synkronointitehtävän aikana luettavaa käyttäjätunnusta ei ole, joten mukautettu väite synkronoidaan vain, jos sen nimi sattuu olemaan myös valittavissa oleva Microsoft Graphin käyttäjäominaisuus, kuten hakemiston laajennusmäärite (esim. <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). Mukautettu väite, jonka Microsoft Graph hylkää, ohitetaan kyseisellä synkronointikerralla ja tehtävän lokiin kirjataan varoitus sen sijaan, että koko synkronointi epäonnistuisi.</li>
+<li data-auth-oidc-idptypes="1,2">Kirjautumisen yhteydessä mukautetut väitteet luetaan aina tunnuksesta riippumatta siitä, käytetäänkö myös Microsoft Graphia. Ajastetun käyttäjien synkronointitehtävän aikana luettavaa käyttäjätunnusta ei ole, joten mukautettu väite synkronoidaan vain, jos sen nimi sattuu olemaan myös valittavissa oleva Microsoft Graphin käyttäjäominaisuus, kuten hakemiston laajennusmäärite (esim. <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). Mukautettu väite, jonka Microsoft Graph hylkää, ohitetaan kyseisellä synkronointikerralla ja tehtävän lokiin kirjataan varoitus sen sijaan, että koko synkronointi epäonnistuisi.</li>
 </ul>';
 $string['secretexpiryrecipients'] = 'Salaisuuden vanhenemisilmoitusten vastaanottajat';
 $string['secretexpiryrecipients_help'] = 'Pilkuin eroteltu luettelo sähköpostiosoitteista, joihin salaisuuden vanhenemisilmoitukset lähetetään.<br/>
@@ -186,22 +189,24 @@ $string['cfg_redirecturi_key'] = 'Uudelleenohjauksen URI';
 $string['cfg_redirecturi_desc'] = 'Tämä on rekisteröitävä uudelleenohjauksen URI. OpenID Connect -identiteetintarjoaja pyytää tätä tietoa, kun rekisteröit Moodlen asiakkaaksi. <br /><b>HUOMAUTUS:</b> Anna URI OpenID Connect -palveluntarjoajan palveluun *täsmälleen* tässä näkyvässä muodossa. Muussa tapauksessa kirjautuminen OpenID Connect -palvelun avulla ei onnistu.';
 $string['tokenendpoint'] = 'Tunnuspäätepiste';
 $string['tokenendpoint_help'] = 'IdP:n tunnuspäätepisteen (token endpoint) URI, jota käytetään.<br/>
-Huomaa, että jos sivusto määritetään sallimaan pääsy myös muiden vuokraajien käyttäjille, vuokraajakohtaista tunnuspäätepistettä ei voi käyttää.';
+<span data-auth-oidc-idptypes="1,2">Huomaa, että jos sivusto määritetään sallimaan pääsy myös muiden vuokraajien käyttäjille, vuokraajakohtaista tunnuspäätepistettä ei voi käyttää.</span><span data-auth-oidc-idptypes="4">Käytä Microsoft Entra External ID:lle "OAuth 2.0 token endpoint (v2)" -päätepistettä, joka näkyy External ID -vuokraajasi sovelluksen rekisteröinnin Endpoints-sivulla. Sen on oltava vuokraajakohtainen v2.0-päätepiste.</span>';
 $string['cfg_userrestrictions_key'] = 'Käyttäjärajoitukset';
 $string['cfg_userrestrictions_desc'] = 'Salli kirjautuminen vain käyttäjille, jotka täyttävät tietyt rajoitukset. <br /><b>Käyttäjärajoitusten käyttö: </b> <ul><li>Anna <a href="https://en.wikipedia.org/wiki/Regular_expression">säännöllisen lausekkeen</a> malli, joka vastaa sallittavien käyttäjien käyttäjätunnuksia.</li><li>Anna yksi malli riviä kohden</li><li>Jos annat useita malleja, käyttäjä sallitaan, jos hän vastaa MITÄ TAHANSA malleista.</li><li>Merkki "/" on suojattava merkillä "\\".</li><li>Jos et anna yllä mitään rajoituksia, Moodle hyväksyy kaikki käyttäjät, jotka voivat kirjautua OpenID Connect -IdP:hen.</li><li>Käyttäjä, joka ei vastaa mitään annetuista malleista, ei voi kirjautua OpenID Connectin avulla.</li></ul>';
+$string['cfg_userrestrictions_disabled_external_id'] = 'Käyttäjärajoitukset eivät ole käytettävissä Microsoft Entra External ID -tyypille, joten tämä asetus on poistettu käytöstä eikä rajoituksia sovelleta käyttäjien kirjautuessa. Rajoituksia verrataan käyttäjätunnuksen sidontaväitteeseen, joka on External ID -käyttäjillä oletuksena objektitunnus (oid), joten kuvioiden pitäisi vastata GUID-tunnuksia. Hallitse sivuston käyttöä mieluummin External ID -vuokraajassasi, esimerkiksi käyttäjävirroilla tai sovellusmäärityksellä.';
 $string['cfg_userrestrictionscasesensitive_key'] = 'Käyttäjärajoitusten kirjainkoon huomiointi';
 $string['cfg_userrestrictionscasesensitive_desc'] = 'Tällä määritetään, käytetäänkö säännöllisen lausekkeen "/i"-valitsinta käyttäjärajoitusten vertailussa.<br/>Jos tämä on käytössä, kaikissa käyttäjärajoitusten tarkistuksissa kirjainkoolla on merkitystä. Huomaa, että jos tämä ei ole käytössä, mallien kirjainkokoa ei huomioida.';
 $string['heading_dummy_email'] = 'Paikkamerkkisähköpostiosoitteet';
-$string['heading_dummy_email_desc'] = 'Moodle edellyttää, että jokaisella käyttäjätilillä on sähköpostiosoite, mutta Microsoft Entra ID -tileillä sitä ei tarvitse olla. Alla olevilla asetuksilla Moodle voi luoda toimimattoman paikkamerkkiosoitteen käyttäjille, joilla ei ole IdP:ltä saatua käyttökelpoista sähköpostiosoitetta, sen sijaan että heidän sähköpostiosoitteensa jätettäisiin tyhjäksi.';
+$string['heading_dummy_email_desc'] = 'Moodle edellyttää, että jokaisella käyttäjätilillä on sähköpostiosoite, mutta jotkin identiteetintarjoajat, kuten Microsoft Entra ID, eivät vaadi tileiltään sitä. Alla olevilla asetuksilla Moodle voi luoda toimimattoman paikkamerkkiosoitteen käyttäjille, joilla ei ole IdP:ltä saatua käyttökelpoista sähköpostiosoitetta, sen sijaan että heidän sähköpostiosoitteensa jätettäisiin tyhjäksi.';
 $string['cfg_generatedummyemail_key'] = 'Luo paikkamerkkisähköpostiosoitteet';
-$string['cfg_generatedummyemail_desc'] = 'Jos tämä on käytössä ja käyttäjällä ei ole IdP:ltä saatua sähköpostiosoitetta eikä käyttökelpoista sähköpostiosoitteen muotoista käyttäjän päätunnusta (UPN), Moodle luo hänelle paikkamerkkisähköpostiosoitteen hänen Microsoft-käyttäjän päätunnuksestaan (tai objektitunnuksesta, jos päätunnusta ei ole saatavilla) ja alla määritetystä toimialueesta sen sijaan, että sähköpostiosoite jätettäisiin tyhjäksi. Tämä koskee sekä käyttäjän kirjautumista että käyttäjän luomista käyttäjien synkronointitehtävässä.';
+$string['cfg_generatedummyemail_desc'] = 'Jos tämä on käytössä ja käyttäjällä ei ole IdP:ltä saatua sähköpostiosoitetta eikä käyttökelpoista sähköpostiosoitteen muotoista käyttäjän päätunnusta (UPN), Moodle luo hänelle paikkamerkkisähköpostiosoitteen hänen käyttäjän päätunnuksestaan (tai objektitunnuksesta, jos päätunnusta ei ole saatavilla) ja alla määritetystä toimialueesta sen sijaan, että sähköpostiosoite jätettäisiin tyhjäksi. Tämä koskee sekä käyttäjän kirjautumista että käyttäjän luomista käyttäjien synkronointitehtävässä. Käyttäjän päätunnus ja objektitunnus luetaan IdP:n tunnuksen väitteistä, joten osoitetta ei luoda, jos IdP ei anna kumpaakaan.';
 $string['cfg_dummyemaildomain_key'] = 'Paikkamerkkisähköpostin toimialue';
 $string['cfg_dummyemaildomain_desc'] = 'Paikkamerkkisähköpostiosoitteiden luonnissa käytettävä toimialue, esimerkiksi "example.test". Käytä toimialuetta, joka ei voi vastaanottaa postia, jotta luotuja osoitteita ei koskaan voi sekoittaa todellisiin, toimiviin osoitteisiin.';
-$string['cfg_signoffintegration_key'] = 'Kertauloskirjautuminen (Moodlesta IdP:hen)';
-$string['cfg_signoffintegration_desc'] = 'Jos asetus on käytössä ja määritettyyn IdP:hen yhdistetty Moodle-käyttäjä kirjautuu ulos Moodlesta, integraatio lähettää pyynnön alla olevaan uloskirjautumisen päätepisteeseen ja yrittää kirjata käyttäjän ulos myös IdP:stä.<br/>
-Huomaa, että Microsoft Entra ID -integraatiossa Moodle-sivuston URL-osoite ({$a}) on lisättävä uudelleenohjauksen URI:ksi Moodle- ja Microsoft 365 -integraatiota varten luotuun Microsoft Entra ID -sovellukseen.';
+$string['cfg_singlelogout_key'] = 'Kertauloskirjautuminen (SLO) (Moodlesta IdP:hen)';
+$string['cfg_singlelogout_desc'] = 'Jos asetus on käytössä ja määritettyyn IdP:hen yhdistetty Moodle-käyttäjä kirjautuu ulos Moodlesta, integraatio lähettää pyynnön alla olevaan uloskirjautumisen päätepisteeseen ja yrittää kirjata käyttäjän ulos myös IdP:stä.<br/>
+Huomaa, että Microsoft Entra ID -integraatiossa Moodle-sivuston URL-osoite ({$a}) on lisättävä uudelleenohjauksen URI:ksi Moodle- ja Microsoft 365 -integraatiota varten luotuun Microsoft Entra ID -sovellukseen.<br/>Kertauloskirjautuminen päättää vain sen kirjautumispalvelun istunnon, jota Moodle käytti. Saman tilin muut istunnot selaimessa, esimerkiksi Azure-portaaliin kirjautumalla luotu istunto, eivät vaikuta.';
 $string['cfg_logoutendpoint_key'] = 'IdP:n uloskirjautumisen päätepiste';
 $string['cfg_logoutendpoint_desc'] = 'IdP:n uloskirjautumispäätepisteen URI, jota käytetään.';
+$string['cfg_logoutendpoint_external_id_note'] = 'Microsoft Entra External ID:ssä käyttäjiä pyydetään valitsemaan tili Microsoftin uloskirjautumissivulla, ellei valinnaista login_hint-väitettä lisätä ID-tunnukseen sovelluksen rekisteröinnissä (Tunnuksen määritys > Lisää valinnainen väite > ID > login_hint). Käyttäjien on kirjauduttava uudelleen sisään väitteen lisäämisen jälkeen.';
 $string['cfg_frontchannellogouturl_key'] = 'Front-channel-uloskirjautumisen URL-osoite';
 $string['cfg_frontchannellogouturl_desc'] = 'Tämä on URL-osoite, jota IdP:n on kutsuttava, kun se yrittää kirjata käyttäjiä ulos Moodlesta.<br/>
 Microsoft Entra ID:ssä / Microsoft identity platformissa asetuksen nimi on "Front-channel logout URL", ja sen voi määrittää Microsoft Entra ID -sovelluksessa.';
@@ -217,6 +222,24 @@ ID- ja käyttöoikeustunnuksista saatavat väitteet vaihtelevat IdP-tyypin mukaa
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">Käyttöoikeustunnuksen väitteet</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">ID-tunnuksen väitteet</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">Valinnaisten väitteiden määritys</a>: Huomaa, että "Email" on valinnainen väite Microsoft Entra ID (v1.0) -IdP-tyypissä.</li>
+</ul>';
+$string['cfg_field_mapping_desc_generic'] = 'Käyttäjäprofiilitietoja voidaan yhdistää OpenID Connect -IdP:ltä Moodleen. Yhdistettävissä olevat etäkentät riippuvat IdP-tyypistä.<br/>
+<ul>
+<li>Perusprofiilikentät ovat saatavilla IdP:si myöntämien ID-tunnuksen ja käyttöoikeustunnuksen väitteistä. Yhdistettävissä olevat kentät, kuten etunimi, sukunimi ja sähköpostiosoite, riippuvat siksi väitteistä, jotka IdP sisällyttää näihin tunnuksiin.</li>
+<li>Lisäväitteitä voi lisätä yhdistettävissä olevien kenttien luetteloon asetuksella "{$a}".</li>
+</ul>
+Useimmat IdP:t sallivat myöntämiensä väitteiden jonkinasteisen mukauttamisen. Tuetut väitteet löytyvät IdP:si dokumentaatiosta.';
+$string['cfg_field_mapping_desc_external_id'] = 'Käyttäjäprofiilitietoja voidaan yhdistää Microsoft Entra External ID:stä Moodleen. Yhdistettävissä olevat etäkentät ovat ID-tunnuksen ja käyttöoikeustunnuksen väitteet, koska Microsoft Graphia ei käytetä tälle IdP-tyypille.<br/>
+<ul>
+<li>Perusprofiilikentät ovat saatavilla ID-tunnuksen ja käyttöoikeustunnuksen väitteistä.</li>
+<li>Oletuksena External ID -vuokraajan ID-tunnus sisältää vain käyttäjän nimen, objektitunnuksen ja kirjautumisnimen. Jos haluat yhdistää etunimen, sukunimen ja sähköpostiosoitteen, lisää väitteet given_name, family_name ja email valinnaisina väitteinä ID-tunnukseen External ID -vuokraajasi sovelluksen rekisteröinnissä (Tunnuksen määritys). Email-väite myönnetään vain, jos käyttäjällä on sähköpostiosoite vuokraajassa.</li>
+<li>Lisäväitteitä voi lisätä yhdistettävissä olevien kenttien luetteloon asetuksella "{$a}".</li>
+</ul>
+Microsoft-tunnusten väitteiden dokumentaatio on linkitetty alla:
+<ul>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">Käyttöoikeustunnuksen väitteet</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">ID-tunnuksen väitteet</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">Valinnaisten väitteiden määritys</a></li>
 </ul>';
 
 $string['cfg_cleanupoidctokens_key'] = 'Siivoa OpenID Connect -tunnukset';
@@ -284,8 +307,16 @@ $string['error_empty_client_private_key_file'] = 'Asiakasvarmenteen yksityisen a
 $string['error_empty_client_cert_file'] = 'Asiakasvarmenteen julkisen avaimen tiedosto ei voi olla tyhjä, kun käytetään "varmenne"-tunnistautumistapaa';
 $string['error_endpoint_mismatch_auth_endpoint'] = 'Määritetty valtuutuksen päätepiste ei vastaa määritettyä IdP-tyyppiä. Käytä tyypille "Microsoft Entra ID (v1.0)" v1.0-päätepistettä (esim. https://login.microsoftonline.com/organizations/oauth2/authorize). Käytä tyypille "Microsoft identity platform (v2.0)" v2.0-päätepistettä (esim. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize).';
 $string['error_endpoint_mismatch_token_endpoint'] = 'Määritetty tunnuspäätepiste ei vastaa määritettyä IdP-tyyppiä. Käytä tyypille "Microsoft Entra ID (v1.0)" v1.0-päätepistettä (esim. https://login.microsoftonline.com/organizations/oauth2/token). Käytä tyypille "Microsoft identity platform (v2.0)" v2.0-päätepistettä (esim. https://login.microsoftonline.com/organizations/oauth2/v2.0/token).';
+$string['error_endpoint_external_id'] = 'Päätepisteen on oltava Microsoft Entra External ID v2.0 -päätepiste ciamlogin.com-isännässä, esim. https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/authorize.';
+$string['error_logoutendpoint_external_id'] = 'Uloskirjautumisen päätepisteen on oltava Microsoft Entra External ID v2.0 -päätepiste ciamlogin.com-isännässä, esim. https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/logout. Jätä kenttä tyhjäksi, jos haluat käyttää valtuutuksen päätepisteestä johdettua päätepistettä.';
+$string['error_endpoint_external_id_placeholder'] = 'Korvaa paikkamerkit [tenant-name] ja [tenant-id] Microsoft Entra External ID -vuokraajasi arvoilla.';
+$string['error_endpoint_external_id_tenant'] = 'Microsoft Entra External ID -vuokraajat ovat yhden vuokraajan vuokraajia. Käytä päätepisteessä vuokraajan tunnusta tai nimeä sanojen common, organizations tai consumers sijaan.';
+$string['error_endpoint_external_id_v1'] = 'Tämä on v1.0-päätepiste. Microsoft Entra External ID vaatii v2.0-päätepisteen, jonka polussa on /oauth2/v2.0/.';
+$string['error_endpoint_external_id_kind'] = 'Päätepisteen on päätyttävä merkkijonoon /{$a}.';
+$string['error_endpoint_external_id_mismatch'] = 'Valtuutus- ja tunnuspäätepisteiden on kuuluttava samalle Microsoft Entra External ID -vuokraajalle.';
+$string['error_endpoint_is_external_id'] = 'Tämä on Microsoft Entra External ID -päätepiste. Aseta IdP-tyypiksi Microsoft Entra External ID tai käytä tälle IdP-tyypille login.microsoftonline.com-päätepistettä.';
 $string['error_tenant_specific_endpoint_required'] = 'Kun käytetään IdP-tyyppiä "Microsoft identity platform (v2.0)" ja tunnistautumistapaa "Varmenne", vuokraajakohtainen päätepiste (eli ei common/organizations/consumers) on pakollinen.';
-$string['error_empty_oidcresource'] = 'Resurssi ei voi olla tyhjä, kun käytetään Microsoft Entra ID (v1.0) -tyyppistä tai muun tyyppistä IdP:tä.';
+$string['error_empty_oidcresource'] = 'Resurssi ei voi olla tyhjä käytettäessä Microsoft Entra ID:tä (v1.0).';
 $string['error_invalid_custom_claim'] = 'Virheelliset mukautettujen väitteiden nimet: {$a}. Mukautettujen väitteiden nimet voivat sisältää vain kirjaimia, numeroita, yhdysmerkkejä ja alaviivoja, eivätkä ne voi olla varattuja väitteiden nimiä (esim. JWT:n/OpenID Connectin vakioväite tai Microsoft Entra ID:lle tai Keycloakille ominainen väite) tai olemassa oleva kenttävastaavuuden vaihtoehto.';
 $string['error_masked_secret_not_changed'] = 'Anna uusi arvo tai poista valinta "Vaihda"-valintaruudusta säilyttääksesi nykyisen arvon.';
 $string['error_secretexpiryrecipients_invalid'] = 'Seuraavat salaisuuden vanhenemisilmoitusten vastaanottajat eivät ole kelvollisia sähköpostiosoitteita: {$a}';
@@ -431,6 +462,7 @@ $string['cleanup_oidc_tokens_link_desc'] = 'Voit siivota vanhentuneet OpenID Con
 $string['clear_user_tokens_link_desc'] = 'Voit poistaa kaikkien käyttäjien tai valittujen käyttäjien tallennetut tunnukset <a href="{$a}">Tyhjennä käyttäjän tunnukset</a> -työkalulla.';
 $string['clear_user_tokens'] = 'Tyhjennä käyttäjän tunnukset';
 $string['clear_user_tokens_desc'] = 'Poistaa käyttäjille tallennetut OpenID Connect- ja Microsoft 365 -tunnukset. Käyttäjät saavat uudet tunnukset, kun he seuraavan kerran kirjautuvat OpenID Connectin avulla tai muodostavat yhteyden Microsoft 365:een. Heidän linkkinsä Microsoft 365 -tileihin säilytetään. VAROITUS: Tämä voi keskeyttää käynnissä olevat kirjautumiset, joten se kannattaa tehdä huoltokatkon aikana.';
+$string['clear_user_tokens_desc_generic'] = 'Poistaa käyttäjille tallennetut OpenID Connect -tunnisteet. Asianomaiset käyttäjät saavat uudet tunnisteet seuraavalla kirjautumiskerralla OpenID Connectilla. VAROITUS: Tämä voi keskeyttää käynnissä olevat kirjautumiset, joten se kannattaa tehdä huoltokatkon aikana.';
 $string['clear_user_tokens_scope_selected'] = 'Valitut käyttäjät';
 $string['clear_user_tokens_scope_all'] = 'Kaikki käyttäjät';
 $string['clear_user_tokens_users'] = 'Käyttäjät';
@@ -471,6 +503,16 @@ $string['binding_username_claim_help_non_ms'] = 'Muiden kuin Microsoftin IdP:ide
 <li><b>samaccountname</b></li>
 <li><b>custom</b>: Mukautettu väite.</li>
 </ul>';
+$string['binding_username_claim_help_external_id'] = 'Microsoft Entra External ID -tyypin vaihtoehdot:
+<ul>
+<li><b>Valitse automaattisesti</b>: Käyttää <b>oid</b>-arvoa, sitten <b>sub</b>-arvoa.</li>
+<li><b>oid</b>: Käyttäjän yksilöllinen ja pysyvä objektitunnus vuokraajassa (suositus).</li>
+<li><b>sub</b></li>
+<li><b>email</b>: Käyttäjän sähköpostiosoite. Se voi muuttua, mikä katkaisee yhteyden Moodle-tiliin.</li>
+<li><b>preferred_username</b>: Käyttäjän kirjautumisnimi. Se voi muuttua, mikä katkaisee yhteyden Moodle-tiliin.</li>
+<li><b>custom</b>: Mukautettu väite.</li>
+</ul>
+External ID -tunnisteet eivät sisällä työntekijöiden väitteitä, kuten upn tai samaccountname. Varmista, että valittu väite on yksilöllinen ja pysyvä.';
 $string['warning_binding_username_claim_custom_unsupported'] = '"Sidonnan käyttäjätunnusväite" -asetuksen arvo on tällä hetkellä "Mukautettu", jota ei tueta määritetyllä IdP-tyypillä, kun käyttäjien synkronointi on käytössä. Tarkista <a href="{$a}">sidonnan käyttäjätunnusväitteen</a> asetukset.';
 $string['examplecsv'] = 'Esimerkki ladattavasta tiedostosta';
 $string['usernamefile'] = 'Tiedosto';
@@ -497,7 +539,7 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <ul>
 <li>Moodle-tilien käyttäjätunnukset,</li>
 <li>tallennettujen OpenID Connect -ID-tunnusten sidonnan käyttäjätunnukset,</li>
-<li>Moodle- ja Microsoft-tilien yhteystietueet.</li>
+<!--o365-start--><li>Moodle- ja Microsoft-tilien yhteystietueet.</li><!--o365-end-->
 </ul>
 <p>Työkalua tulee käyttää vain, kun <b>sidonnan käyttäjätunnusväite</b> -asetuksia muutetaan.</p>
 <p>Työkalu hyväksyy yksinkertaisen CSV-tiedoston, jossa on kaksi saraketta:</p>
@@ -514,12 +556,12 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <li>Jos tietuetta ei löytynyt yllä, yrittää etsiä taulusta <span class="auth_oidc_code">auth_oidc_token</span> tietueen, jonka sarake <span class="auth_oidc_code">oidcusername</span> vastaa vanhaa arvoa <span class="auth_oidc_code">username</span>, ja päivittää sen arvoksi <span class="auth_oidc_code">new_username</span>.</li>
 </ul>
 </li>
-<li>Jos <span class="auth_oidc_code">local_o365</span>-lisäosa on asennettu, päivittää käyttäjän yhteystietueen.
+<!--o365-start--><li>Jos <span class="auth_oidc_code">local_o365</span>-lisäosa on asennettu, päivittää käyttäjän yhteystietueen.
 <ul>
 <li>Jos käyttäjä löytyi yllä olevassa vaiheessa 1, etsii käyttäjän yhteystietueen taulusta <span class="auth_oidc_code">local_o365_objects</span> ja päivittää sarakkeen <span class="auth_oidc_code">o365name</span> arvoksi <span class="auth_oidc_code">new_username</span>.</li>
 <li>Jos käyttäjää ei löytynyt vaiheessa 1, yrittää etsiä taulusta <span class="auth_oidc_code">local_o365_objects</span> käyttäjän tietueen, jonka <span class="auth_oidc_code">o365name</span> vastaa arvoa <span class="auth_oidc_code">username</span>, ja päivittää sen arvoksi <span class="auth_oidc_code">new_username</span>.</li>
 </ul>
-</li>
+</li><!--o365-end-->
 </ol>
 <p>Alla oleva esimerkkitiedosto muuttaisi sidonnan käyttäjätunnusväitteen arvosta <span class="auth_oidc_code">upn</span> tai <span class="auth_oidc_code">email</span> arvoon <span class="auth_oidc_code">oid</span>.</p>';
 $string['change_binding_username_claim_tool_result'] = 'Päivityksen tulokset';

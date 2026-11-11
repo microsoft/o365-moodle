@@ -29,10 +29,14 @@ defined('MOODLE_INTERNAL') || die();
 use auth_oidc\adminsetting\auth_oidc_admin_setting_customclaims;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_endpoint;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_iconselect;
+use auth_oidc\adminsetting\auth_oidc_admin_setting_idptype;
+use auth_oidc\adminsetting\auth_oidc_admin_setting_logoutendpoint;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_redirecturi;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_secretexpiryrecipients;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_section_heading;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_stateexpiry;
+use auth_oidc\adminsetting\auth_oidc_admin_setting_userrestrictions;
+use auth_oidc\adminsetting\auth_oidc_admin_setting_userrestrictionscasesensitive;
 use auth_oidc\utils;
 use core\url;
 
@@ -97,9 +101,10 @@ if ($hassiteconfig) {
         AUTH_OIDC_IDP_TYPE_NOT_CONNECTED => get_string('idp_type_not_connected', 'auth_oidc'),
         AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID => get_string('idp_type_microsoft_entra_id', 'auth_oidc'),
         AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM => get_string('idp_type_microsoft_identity_platform', 'auth_oidc'),
+        AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID => get_string('idp_type_microsoft_entra_external_id', 'auth_oidc'),
         AUTH_OIDC_IDP_TYPE_OTHER => get_string('idp_type_other', 'auth_oidc'),
     ];
-    $idptypesetting = new admin_setting_configselect(
+    $idptypesetting = new auth_oidc_admin_setting_idptype(
         'auth_oidc/idptype',
         get_string('idptype', 'auth_oidc'),
         get_string('idptype_help', 'auth_oidc'),
@@ -124,8 +129,10 @@ if ($hassiteconfig) {
     $microsoftcloudsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $applicationsettings->add($microsoftcloudsetting);
 
-    // Settings that only apply to the Microsoft IdP types are hidden when no IdP is configured yet, or for another IdP.
-    $nonmicrosoftidptypes = AUTH_OIDC_IDP_TYPE_NOT_CONNECTED . '|' . AUTH_OIDC_IDP_TYPE_OTHER;
+    // Settings that only apply to the Microsoft cloud based IdP types are hidden when no IdP is configured yet, for another
+    // IdP, or for Microsoft Entra External ID, which has no Microsoft cloud choice and no Microsoft Graph application.
+    $nonmicrosoftidptypes = AUTH_OIDC_IDP_TYPE_NOT_CONNECTED . '|' . AUTH_OIDC_IDP_TYPE_OTHER . '|' .
+        AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID;
     $applicationsettings->hide_if('auth_oidc/microsoftcloud', 'auth_oidc/idptype', 'in', $nonmicrosoftidptypes);
 
     // Client ID.
@@ -504,6 +511,19 @@ if ($hassiteconfig) {
                 'custom' => get_string('binding_username_custom', 'auth_oidc'),
             ];
             break;
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID:
+            // External ID tokens do not carry workforce claims such as upn or samaccountname, and the user sync of
+            // local_o365 is not available for External ID tenants.
+            $bindingclaimdesc = 'binding_username_claim_help_external_id';
+            $bindingusernameoptions = [
+                'auto' => get_string('binding_username_auto', 'auth_oidc'),
+                'oid' => 'oid',
+                'sub' => 'sub',
+                'email' => 'email',
+                'preferred_username' => 'preferred_username',
+                'custom' => get_string('binding_username_custom', 'auth_oidc'),
+            ];
+            break;
         case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
         case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
             if (auth_oidc_is_local_365_installed() && auth_oidc_is_user_sync_enabled()) {
@@ -653,7 +673,8 @@ if ($hassiteconfig) {
         new admin_setting_configtext(
             'auth_oidc/domainhint',
             get_string('cfg_domainhint_key', 'auth_oidc'),
-            get_string('cfg_domainhint_desc', 'auth_oidc'),
+            get_string('cfg_domainhint_desc', 'auth_oidc') . '<br/>' .
+                get_string('cfg_domainhint_external_id_note', 'auth_oidc'),
             '',
             PARAM_TEXT
         )
@@ -722,12 +743,15 @@ if ($hassiteconfig) {
         )
     );
 
-    // User restrictions.
+    // User restrictions. They are matched against the binding username claim, which is not a meaningful value for
+    // Microsoft Entra External ID, so they are disabled for it.
+    $userrestrictionsnote = auth_oidc_is_entra_external_id() ?
+        html_writer::div(get_string('cfg_userrestrictions_disabled_external_id', 'auth_oidc'), 'alert alert-info') : '';
     $settings->add(
-        new admin_setting_configtextarea(
+        new auth_oidc_admin_setting_userrestrictions(
             'auth_oidc/userrestrictions',
             get_string('cfg_userrestrictions_key', 'auth_oidc'),
-            get_string('cfg_userrestrictions_desc', 'auth_oidc'),
+            $userrestrictionsnote . get_string('cfg_userrestrictions_desc', 'auth_oidc'),
             '',
             PARAM_TEXT
         )
@@ -735,7 +759,7 @@ if ($hassiteconfig) {
 
     // User restrictions case sensitivity.
     $settings->add(
-        new admin_setting_configcheckbox(
+        new auth_oidc_admin_setting_userrestrictionscasesensitive(
             'auth_oidc/userrestrictionscasesensitive',
             get_string('cfg_userrestrictionscasesensitive_key', 'auth_oidc'),
             get_string('cfg_userrestrictionscasesensitive_desc', 'auth_oidc'),
@@ -775,37 +799,37 @@ if ($hassiteconfig) {
 
     $settings->hide_if('auth_oidc/dummyemaildomain', 'auth_oidc/generatedummyemail', 'notchecked');
 
-    // Sign out integration heading.
+    // Logout integration heading.
     $settings->add(
         new admin_setting_heading(
             'auth_oidc/sign_out_heading',
-            get_string('heading_sign_out', 'auth_oidc'),
-            get_string('heading_sign_out_desc', 'auth_oidc')
+            get_string('heading_logout', 'auth_oidc'),
+            get_string('heading_logout_desc', 'auth_oidc')
         )
     );
 
-    // Single sign out from Moodle to IdP.
+    // Single logout (SLO) from Moodle to IdP.
     $settings->add(
         new admin_setting_configcheckbox(
-            'auth_oidc/single_sign_off',
-            get_string('cfg_signoffintegration_key', 'auth_oidc'),
-            get_string('cfg_signoffintegration_desc', 'auth_oidc', $CFG->wwwroot),
+            'auth_oidc/single_logout',
+            get_string('cfg_singlelogout_key', 'auth_oidc'),
+            get_string('cfg_singlelogout_desc', 'auth_oidc', $CFG->wwwroot),
             '0'
         )
     );
 
     // IdP logout endpoint.
     $settings->add(
-        new admin_setting_configtext(
+        new auth_oidc_admin_setting_logoutendpoint(
             'auth_oidc/logouturi',
             get_string('cfg_logoutendpoint_key', 'auth_oidc'),
-            get_string('cfg_logoutendpoint_desc', 'auth_oidc'),
-            auth_oidc_get_login_baseurl() . '/organizations/oauth2/logout',
-            PARAM_URL
+            get_string('cfg_logoutendpoint_desc', 'auth_oidc') . '<br/>' .
+                get_string('cfg_logoutendpoint_external_id_note', 'auth_oidc'),
+            auth_oidc_get_login_baseurl() . '/organizations/oauth2/logout'
         )
     );
 
-    $settings->hide_if('auth_oidc/logouturi', 'auth_oidc/single_sign_off', 'notchecked');
+    $settings->hide_if('auth_oidc/logouturi', 'auth_oidc/single_logout', 'notchecked');
 
     // Front channel logout URL.
     $settings->add(
@@ -994,7 +1018,7 @@ if ($hassiteconfig) {
         $fieldmappingspage,
         $authplugin->authtype,
         $authplugin->userfields,
-        get_string('cfg_field_mapping_desc', 'auth_oidc'),
+        auth_oidc_get_field_mapping_description(),
         true,
         false,
         $authplugin->get_custom_user_profile_fields()

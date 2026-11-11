@@ -83,6 +83,7 @@ final class oidcclient_test extends \advanced_testcase {
         return [
             'Microsoft Entra ID (v1.0)' => [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, true],
             'Microsoft identity platform (v2.0)' => [AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, false],
+            'Microsoft Entra External ID' => [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID, false],
             'Other' => [AUTH_OIDC_IDP_TYPE_OTHER, false],
         ];
     }
