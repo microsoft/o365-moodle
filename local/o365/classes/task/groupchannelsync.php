@@ -54,6 +54,9 @@ class groupchannelsync extends scheduled_task {
      * @return bool
      */
     public function execute() {
+        if (\local_o365\utils::skip_task_for_idp_type()) {
+            return true;
+        }
         if (!groupchannels::is_enabled()) {
             utils::mtrace('Channels for Moodle groups are not enabled, nothing to do.', 1);
             return true;

@@ -47,6 +47,9 @@ class updatecourserequeststatus extends scheduled_task {
      * @return void
      */
     public function execute() {
+        if (\local_o365\utils::skip_task_for_idp_type()) {
+            return true;
+        }
         global $DB;
 
         $customcourserequests = $DB->get_records(

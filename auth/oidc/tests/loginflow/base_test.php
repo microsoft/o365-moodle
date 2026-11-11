@@ -274,4 +274,246 @@ final class base_test extends advanced_testcase {
         $this->assertIsArray($userinfo);
         $this->assertSame('Jane', $userinfo['firstname']);
     }
+
+    /**
+     * Call a protected method of the login flow.
+     *
+     * @param base $loginflow
+     * @param string $method
+     * @param mixed ...$args
+     * @return mixed
+     */
+    private function call_protected(base $loginflow, string $method, ...$args) {
+        $reflection = new \ReflectionMethod($loginflow, $method);
+
+        return $reflection->invoke($loginflow, ...$args);
+    }
+
+    /**
+     * Data provider for test_get_oidc_username_from_token_claim_auto.
+     *
+     * @return array
+     */
+    public static function auto_binding_claim_provider(): array {
+        require_once(__DIR__ . '/../../lib.php');
+
+        $claims = [
+            'upn' => 'jane@contoso.com',
+            'preferred_username' => 'jane.preferred@contoso.com',
+            'oid' => 'object-id',
+            'sub' => 'subject',
+        ];
+
+        return [
+            'External ID uses oid' => [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID, $claims, 'object-id'],
+            'External ID falls back to sub' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID,
+                ['preferred_username' => 'jane.preferred@contoso.com', 'sub' => 'subject'],
+                'subject',
+            ],
+            'External ID does not use the sign-in name' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID,
+                ['preferred_username' => 'jane.preferred@contoso.com', 'email' => 'jane@contoso.com', 'oid' => 'object-id'],
+                'object-id',
+            ],
+            'identity platform uses preferred_username' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, $claims, 'jane.preferred@contoso.com',
+            ],
+            'Entra ID uses upn' => [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, $claims, 'jane@contoso.com'],
+        ];
+    }
+
+    /**
+     * The automatic binding username claim depends on the IdP type, and uses stable identifiers for External ID.
+     *
+     * @dataProvider auto_binding_claim_provider
+     * @param int $idptype
+     * @param array $claims
+     * @param string $expected
+     * @return void
+     * @covers ::get_oidc_username_from_token_claim
+     */
+    public function test_get_oidc_username_from_token_claim_auto(int $idptype, array $claims, string $expected): void {
+        set_config('idptype', $idptype, 'auth_oidc');
+        $idtoken = jwt::instance_from_encoded($this->encode_jwt($claims));
+
+        $this->assertSame(
+            $expected,
+            $this->call_protected(new base(), 'get_oidc_username_from_token_claim', $idtoken, 'auto')
+        );
+    }
+
+    /**
+     * An explicitly selected binding username claim is used for External ID, instead of the automatic choice.
+     *
+     * @return void
+     * @covers ::get_oidc_username_from_token_claim
+     */
+    public function test_get_oidc_username_from_token_claim_explicit_claim_with_external_id(): void {
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID, 'auth_oidc');
+        $idtoken = jwt::instance_from_encoded($this->encode_jwt([
+            'preferred_username' => 'jane@contoso.com',
+            'oid' => 'object-id',
+        ]));
+
+        $this->assertSame(
+            'jane@contoso.com',
+            $this->call_protected(new base(), 'get_oidc_username_from_token_claim', $idtoken, 'preferred_username')
+        );
+    }
+
+    /**
+     * Data provider for test_get_oidc_username_from_token_claim_missing_explicit_claim().
+     *
+     * @return array
+     */
+    public static function missing_explicit_claim_provider(): array {
+        return [
+            'External ID falls back to oid' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID,
+                ['oid' => 'object-id', 'sub' => 'subject', 'preferred_username' => 'jane@contoso.com'],
+                'object-id',
+            ],
+            'External ID falls back to sub without oid' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID,
+                ['sub' => 'subject', 'preferred_username' => 'jane@contoso.com'],
+                'subject',
+            ],
+            'identity platform has no fallback' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM,
+                ['oid' => 'object-id', 'sub' => 'subject', 'preferred_username' => 'jane@contoso.com'],
+                '',
+            ],
+        ];
+    }
+
+    /**
+     * When the explicitly selected binding username claim is missing from the token, External ID uses the object ID,
+     * or the subject, while the other IdP types are unchanged.
+     *
+     * @dataProvider missing_explicit_claim_provider
+     * @param int $idptype
+     * @param array $claims The claims of the token, which has no email claim.
+     * @param string $expected
+     * @return void
+     * @covers ::get_oidc_username_from_token_claim
+     */
+    public function test_get_oidc_username_from_token_claim_missing_explicit_claim(
+        int $idptype,
+        array $claims,
+        string $expected
+    ): void {
+        set_config('idptype', $idptype, 'auth_oidc');
+        $idtoken = jwt::instance_from_encoded($this->encode_jwt($claims));
+
+        $this->assertEmpty($idtoken->claim('email'));
+        $this->assertEquals(
+            $expected,
+            $this->call_protected(new base(), 'get_oidc_username_from_token_claim', $idtoken, 'email')
+        );
+    }
+
+    /**
+     * A token can be created for an External ID user whose explicitly selected binding claim is missing from the ID token,
+     * using the object ID, as the creation of the token of a first-time login requires a user identifier.
+     *
+     * The login itself cannot be completed in a unit test, as there is no session to regenerate.
+     *
+     * @return void
+     * @covers ::createtoken
+     * @covers ::get_oidc_username_from_token_claim
+     */
+    public function test_createtoken_for_external_id_with_missing_explicit_claim_uses_object_id(): void {
+        global $DB;
+
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID, 'auth_oidc');
+        set_config('bindingusernameclaim', 'email', 'auth_oidc');
+        $idtoken = jwt::instance_from_encoded($this->encode_jwt([
+            'oid' => 'a1b2c3d4-0000-4000-8000-000000000001',
+            'sub' => 'subject',
+            'preferred_username' => 'jdoe@contoso.onmicrosoft.com',
+        ]));
+        $tokenparams = [
+            'access_token' => 'access-token',
+            'id_token' => 'id-token',
+            'expires_in' => 3600,
+            'resource' => 'resource',
+            'scope' => 'scope',
+        ];
+
+        $tokenrec = $this->call_protected(
+            new base(),
+            'createtoken',
+            'a1b2c3d4-0000-4000-8000-000000000001',
+            'a1b2c3d4-0000-4000-8000-000000000001',
+            ['code' => 'authcode'],
+            $tokenparams,
+            $idtoken
+        );
+
+        $this->assertNotEmpty($tokenrec->id);
+        $saved = $DB->get_record('auth_oidc_token', ['id' => $tokenrec->id], '*', MUST_EXIST);
+        $this->assertSame('a1b2c3d4-0000-4000-8000-000000000001', $saved->useridentifier);
+        $this->assertSame('a1b2c3d4-0000-4000-8000-000000000001', $saved->oidcusername);
+    }
+
+    /**
+     * User restrictions are applied for the Microsoft IdP types, but not for External ID.
+     *
+     * @return void
+     * @covers ::checkrestrictions
+     */
+    public function test_checkrestrictions_is_skipped_for_external_id(): void {
+        set_config('bindingusernameclaim', 'preferred_username', 'auth_oidc');
+        set_config('userrestrictions', '^nobody@', 'auth_oidc');
+        $idtoken = jwt::instance_from_encoded($this->encode_jwt([
+            'preferred_username' => 'jane@contoso.com',
+            'oid' => 'object-id',
+        ]));
+
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_oidc');
+        $this->assertFalse($this->call_protected(new base(), 'checkrestrictions', $idtoken));
+
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID, 'auth_oidc');
+        $this->assertTrue($this->call_protected(new base(), 'checkrestrictions', $idtoken));
+    }
+
+    /**
+     * User restrictions that the user meets are still passed for the Microsoft IdP types.
+     *
+     * @return void
+     * @covers ::checkrestrictions
+     */
+    public function test_checkrestrictions_passes_matching_restriction(): void {
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_oidc');
+        set_config('bindingusernameclaim', 'preferred_username', 'auth_oidc');
+        set_config('userrestrictions', '^jane@', 'auth_oidc');
+        $idtoken = jwt::instance_from_encoded($this->encode_jwt(['preferred_username' => 'jane@contoso.com']));
+
+        $this->assertTrue($this->call_protected(new base(), 'checkrestrictions', $idtoken));
+    }
+
+    /**
+     * The field mapping of External ID users uses the information from the tokens.
+     *
+     * @return void
+     * @covers ::get_userinfo
+     */
+    public function test_get_userinfo_for_external_id_uses_token_claims(): void {
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID, 'auth_oidc');
+        set_config('field_map_firstname', 'givenName', 'auth_oidc');
+        set_config('field_map_lastname', 'surname', 'auth_oidc');
+
+        $userinfo = $this->get_userinfo_for_token('jdoe', [
+            'oid' => 'oid-jdoe',
+            'preferred_username' => 'jdoe@contoso.onmicrosoft.com',
+            'email' => 'john.doe@contoso.com',
+            'given_name' => 'John',
+            'family_name' => 'Doe',
+        ]);
+
+        $this->assertSame('John', $userinfo['firstname']);
+        $this->assertSame('Doe', $userinfo['lastname']);
+        $this->assertSame('john.doe@contoso.com', $userinfo['email']);
+    }
 }

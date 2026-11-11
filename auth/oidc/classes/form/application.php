@@ -69,6 +69,7 @@ class application extends moodleform {
             AUTH_OIDC_IDP_TYPE_NOT_CONNECTED => get_string('idp_type_not_connected', 'auth_oidc'),
             AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID => get_string('idp_type_microsoft_entra_id', 'auth_oidc'),
             AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM => get_string('idp_type_microsoft_identity_platform', 'auth_oidc'),
+            AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID => get_string('idp_type_microsoft_entra_external_id', 'auth_oidc'),
             AUTH_OIDC_IDP_TYPE_OTHER => get_string('idp_type_other', 'auth_oidc'),
         ];
         $mform->addElement('select', 'idptype', auth_oidc_config_name_in_form('idptype'), $idptypeoptions);
@@ -87,8 +88,13 @@ class application extends moodleform {
         );
         $mform->setDefault('microsoftcloud', AUTH_OIDC_MICROSOFT_CLOUD_GLOBAL);
         $mform->addElement('static', 'microsoftcloud_help', '', get_string('microsoftcloud_help', 'auth_oidc'));
-        // The Microsoft cloud only applies to the Microsoft IdP types.
-        foreach ([AUTH_OIDC_IDP_TYPE_NOT_CONNECTED, AUTH_OIDC_IDP_TYPE_OTHER] as $nonmicrosofttype) {
+        // The Microsoft cloud only applies to the Microsoft cloud based IdP types.
+        $nonmicrosofttypes = [
+            AUTH_OIDC_IDP_TYPE_NOT_CONNECTED,
+            AUTH_OIDC_IDP_TYPE_OTHER,
+            AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID,
+        ];
+        foreach ($nonmicrosofttypes as $nonmicrosofttype) {
             $mform->hideIf('microsoftcloud', 'idptype', 'eq', $nonmicrosofttype);
             $mform->hideIf('microsoftcloud_help', 'idptype', 'eq', $nonmicrosofttype);
         }
@@ -242,7 +248,7 @@ class application extends moodleform {
         $mform->setExpanded('endpoints');
 
         // Authorization endpoint.
-        $mform->addElement('text', 'authendpoint', auth_oidc_config_name_in_form('authendpoint'), ['size' => 60]);
+        $mform->addElement('text', 'authendpoint', auth_oidc_config_name_in_form('authendpoint'), ['size' => 100]);
         $mform->setType('authendpoint', PARAM_URL);
         $mform->setDefault('authendpoint', auth_oidc_get_login_baseurl() . '/organizations/oauth2/authorize');
         $mform->addElement('static', 'authendpoint_help', '', get_string('authendpoint_help', 'auth_oidc'));
@@ -251,7 +257,7 @@ class application extends moodleform {
         }
 
         // Token endpoint.
-        $mform->addElement('text', 'tokenendpoint', auth_oidc_config_name_in_form('tokenendpoint'), ['size' => 60]);
+        $mform->addElement('text', 'tokenendpoint', auth_oidc_config_name_in_form('tokenendpoint'), ['size' => 100]);
         $mform->setType('tokenendpoint', PARAM_URL);
         $mform->setDefault('tokenendpoint', auth_oidc_get_login_baseurl() . '/organizations/oauth2/token');
         $mform->addElement('static', 'tokenendpoint_help', '', get_string('tokenendpoint_help', 'auth_oidc'));
@@ -268,6 +274,9 @@ class application extends moodleform {
         $mform->setType('oidcresource', PARAM_TEXT);
         $mform->setDefault('oidcresource', auth_oidc_get_graph_resource());
         $mform->addElement('static', 'oidcresource_help', '', get_string('oidcresource_help', 'auth_oidc'));
+        // The resource is only used by Microsoft Entra ID (v1.0), like on the IdP and authentication settings page.
+        $mform->hideIf('oidcresource', 'idptype', 'neq', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID);
+        $mform->hideIf('oidcresource_help', 'idptype', 'neq', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID);
 
         // Scope.
         $mform->addElement('text', 'oidcscope', auth_oidc_config_name_in_form('oidcscope'), ['size' => 60]);
@@ -298,6 +307,7 @@ class application extends moodleform {
             $mform->setType('secretexpiryrecipients', PARAM_TEXT);
             $mform->disabledIf('secretexpiryrecipients', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_SECRET);
             $mform->disabledIf('secretexpiryrecipients', 'idptype', 'eq', AUTH_OIDC_IDP_TYPE_OTHER);
+            $mform->disabledIf('secretexpiryrecipients', 'idptype', 'eq', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID);
 
             $mform->addElement('static', 'secretexpiryrecipients_help', '', get_string('secretexpiryrecipients_help', 'auth_oidc'));
         }
@@ -336,6 +346,7 @@ class application extends moodleform {
         // Validate "clientauthmethod" according to "idptype".
         switch ($data['idptype']) {
             case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID:
             case AUTH_OIDC_IDP_TYPE_OTHER:
                 if ($data['clientauthmethod'] != AUTH_OIDC_AUTH_METHOD_SECRET) {
                     $errors['clientauthmethod'] = get_string('error_invalid_client_authentication_method', 'auth_oidc');
@@ -405,13 +416,17 @@ class application extends moodleform {
         if (in_array($data['idptype'], [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM])) {
             // Ensure authendpoint version matches IdP type.
             $authendpointidptype = auth_oidc_determine_endpoint_version($data['authendpoint']);
-            if ($authendpointidptype != $data['idptype']) {
+            if (auth_oidc_is_external_id_host($data['authendpoint'])) {
+                $errors['authendpoint'] = get_string('error_endpoint_is_external_id', 'auth_oidc');
+            } else if ($authendpointidptype != $data['idptype']) {
                 $errors['authendpoint'] = get_string('error_endpoint_mismatch_auth_endpoint', 'auth_oidc');
             }
 
             // Ensure tokenendpoint version matches IdP type.
             $tokenendpointtype = auth_oidc_determine_endpoint_version($data['tokenendpoint']);
-            if ($tokenendpointtype != $data['idptype']) {
+            if (auth_oidc_is_external_id_host($data['tokenendpoint'])) {
+                $errors['tokenendpoint'] = get_string('error_endpoint_is_external_id', 'auth_oidc');
+            } else if ($tokenendpointtype != $data['idptype']) {
                 $errors['tokenendpoint'] = get_string('error_endpoint_mismatch_token_endpoint', 'auth_oidc');
             }
 
@@ -437,9 +452,27 @@ class application extends moodleform {
             }
         }
 
+        // External ID endpoints must use the ciamlogin.com authority host and the v2.0 endpoint style, and both of them
+        // have to belong to the same tenant.
+        if ($data['idptype'] == AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID) {
+            $autherror = auth_oidc_validate_external_id_endpoint($data['authendpoint'], 'authorize');
+            if ($autherror !== null) {
+                $errors['authendpoint'] = $autherror;
+            }
+            $tokenerror = auth_oidc_validate_external_id_endpoint($data['tokenendpoint'], 'token');
+            if ($tokenerror !== null) {
+                $errors['tokenendpoint'] = $tokenerror;
+            } else if (
+                $autherror === null &&
+                !auth_oidc_is_same_external_id_tenant($data['authendpoint'], $data['tokenendpoint'])
+            ) {
+                $errors['tokenendpoint'] = get_string('error_endpoint_external_id_mismatch', 'auth_oidc');
+            }
+        }
+
         // Validate oidcresource.
-        if (in_array($data['idptype'], [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_OTHER])) {
-            if (empty(trim($data['oidcresource']))) {
+        if ($data['idptype'] == AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID) {
+            if (empty(trim($data['oidcresource'] ?? ''))) {
                 $errors['oidcresource'] = get_string('error_empty_oidcresource', 'auth_oidc');
             }
         }

@@ -51,6 +51,9 @@ class cohortsync extends scheduled_task {
      * @return bool
      */
     public function execute(): bool {
+        if (\local_o365\utils::skip_task_for_idp_type()) {
+            return true;
+        }
         // Raise memory and time limits to handle large numbers of groups/cohorts.
         raise_memory_limit(MEMORY_HUGE);
         @set_time_limit(0);
