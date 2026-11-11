@@ -759,5 +759,20 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024100740.07, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2024100745.01) {
+        // Rename the single sign out setting to single logout (SLO).
+        $oldvalue = get_config('auth_oidc', 'single_sign_off');
+        if ($oldvalue !== false) {
+            if (get_config('auth_oidc', 'single_logout') === false) {
+                set_config('single_logout', $oldvalue, 'auth_oidc');
+                add_to_config_log('single_logout', null, $oldvalue, 'auth_oidc');
+            }
+            unset_config('single_sign_off', 'auth_oidc');
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2024100745.01, 'auth', 'oidc');
+    }
+
     return true;
 }

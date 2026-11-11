@@ -815,6 +815,10 @@ class syncoldevents extends \core\task\adhoc_task {
      * Do the job.
      */
     public function execute() {
+        if (\local_o365\utils::skip_task_for_idp_type()) {
+            return true;
+        }
+
         $opdata = $this->get_custom_data();
         $timecreated = (isset($opdata->timecreated)) ? $opdata->timecreated : time();
 

@@ -47,8 +47,8 @@ $string['heading_stateredirect'] = 'ログイン状態エラーページ';
 $string['heading_stateredirect_desc'] = 'デフォルトでは、ユーザがIDプロバイダでのログイン完了に時間がかかりすぎ (例えば、多要素認証のプロンプトを承認している間など)、保存されたログイン状態がその間にクリーンアップされた場合、Moodleは汎用のエラーページを表示します。以下の設定により、ログイン状態を保持する期間を延長したり、汎用のエラーページの代わりにわかりやすいカスタマイズ可能なメッセージを表示して、ユーザを自動的にログインページへリダイレクトしたりできます。';
 $string['heading_user_restrictions'] = 'ユーザ制限';
 $string['heading_user_restrictions_desc'] = '';
-$string['heading_sign_out'] = 'サインアウト統合';
-$string['heading_sign_out_desc'] = '';
+$string['heading_logout'] = 'ログアウト統合';
+$string['heading_logout_desc'] = '';
 $string['heading_display'] = '表示';
 $string['heading_display_desc'] = '';
 $string['heading_debugging'] = 'デバッグ';
@@ -60,10 +60,11 @@ $string['microsoftcloud_help'] = 'あなたのMicrosoft Entraテナントが属�
 $string['microsoftcloud_global'] = 'Microsoft 365 (グローバル)';
 $string['microsoftcloud_china'] = 'Microsoft 365 operated by 21Vianet (China)';
 $string['idptype'] = 'IDプロバイダ (IdP) タイプ';
-$string['idptype_help'] = '現在、3種類のIdPがサポートされています:
+$string['idptype_help'] = '現在、4種類のIdPがサポートされています:
 <ul>
 <li><b>Microsoft Entra ID (v1.0)</b>: oauth2 v1.0エンドポイントを使用するMicrosoft Entra ID。例: https://login.microsoftonline.com/organizations/oauth2/authorize.</li>
 <li><b>Microsoft identity platform (v2.0)</b>: oauth2 v2.0エンドポイントを使用するMicrosoft Entra ID。例: https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize.</li>
+<li><b>Microsoft Entra External ID</b>: ciamlogin.comホスト上のoauth2 v2.0エンドポイントを使用するMicrosoft Entra External ID（顧客）テナント。例: https://contoso.ciamlogin.com/&lt;tenant-id&gt;/oauth2/v2.0/authorize。このIdPタイプでは、local_o365プラグインのMicrosoft 365機能は利用できません。</li>
 <li><b>その他</b>: Microsoft以外の任意のIdP。</li>
 </ul>
 <b>Microsoft Entra ID (v1.0)</b>オプションと<b>Microsoft identity platform (v2.0)</b>オプションの違いについては、<a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a> をご覧ください。<br/>
@@ -73,10 +74,11 @@ $string['idp_type_not_connected'] = '未接続';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'その他';
+$string['idp_type_microsoft_entra_external_id'] = 'Microsoft Entra External ID';
 $string['settings_application_wizard_desc'] = 'ステップバイステップの説明と入力検証付きのガイド付きフォームを使用してこれらを設定するには、<a href="{$a}">アプリケーション設定ウィザード</a>を使用してください。';
 $string['authendpoint'] = '認可エンドポイント';
 $string['authendpoint_help'] = '使用するIdPの認可エンドポイントのURIです。<br/>
-他のテナントのユーザによるアクセスを許可するようサイトを設定する場合、テナント固有の認可エンドポイントは使用できないことに留意してください。';
+<span data-auth-oidc-idptypes="1,2">他のテナントのユーザによるアクセスを許可するようサイトを設定する場合、テナント固有の認可エンドポイントは使用できないことに留意してください。</span><span data-auth-oidc-idptypes="4">Microsoft Entra External IDでは、External IDテナントのアプリケーション登録の「Endpoints」ページに表示される「OAuth 2.0 authorization endpoint (v2)」を使用してください。テナント固有のv2.0エンドポイントである必要があります。</span>';
 $string['clientid'] = 'アプリケーションID';
 $string['clientid_help'] = 'IdPに登録されたアプリケーション / クライアントIDです。';
 $string['clientauthmethod'] = 'クライアント認証方法';
@@ -114,6 +116,7 @@ $string['cfg_usepkce_key'] = 'PKCEを使用する';
 $string['cfg_usepkce_desc'] = '<b>認可コード</b>ログインフローを使用する場合、認可リクエストでS256メソッドによるPKCE (RFC 7636) の「code_challenge」を送信し、認可コードの交換時に対応する「code_verifier」を送信します。Microsoft Entra IDはこれをサポートしています。その他のプロバイダの場合、一部のプロバイダは認識できないパラメータを含む認可リクエストを拒否するため、プロバイダがPKCEをサポートしている場合にのみ有効にしてください。';
 $string['cfg_domainhint_key'] = 'ドメインヒント';
 $string['cfg_domainhint_desc'] = '<b>認可コード</b>ログインフローを使用する場合、この値を「domain_hint」パラメータとして渡します。「domain_hint」は、一部のOpenID Connect IdPでユーザのログインプロセスを容易にするために使用されます。このパラメータがサポートされているかどうか、プロバイダに確認してください。';
+$string['cfg_domainhint_external_id_note'] = 'Microsoft Entra External IDでは、この値を指定すると、サインインページを表示せずにユーザーをフェデレーションIDプロバイダーに直接誘導します。google、facebook、apple、またはカスタムOpenID Connectプロバイダーのドメイン（例: Microsoft Entra IDテナントの場合はcontoso.onmicrosoft.com）を使用してください。テナントIDは使用しないでください。';
 $string['cfg_forceselectaccount_key'] = '常にアカウント選択を表示する';
 $string['cfg_forceselectaccount_desc'] = '有効にした場合、ユーザはブラウザでアクティブなアカウントで自動的にサインインされるのではなく、どのアカウントでサインインするか常に選択を求められます。ユーザが複数のアカウント (例えば学生用アカウントと管理者用アカウント) を持っている場合に便利です。<br/>
 サイレントログインモードが優先されます: サイレントログインモードが有効な間、サイレントにサインインする際にはアカウント選択は強制されません。';
@@ -172,7 +175,7 @@ $string['customclaims_help'] = 'IDプロバイダのトークンに含まれる�
 <li>クレーム名には、標準のJWT/OpenID Connectクレーム (例: <code>sub</code>、<code>email</code>)、Microsoft Entra ID固有のクレーム (例: <code>oid</code>、<code>upn</code>)、Keycloak固有のクレーム (例: <code>realm_access</code>、<code>resource_access</code>)、または既存のフィールドマッピングオプションなどの予約名を使用できません</li>
 <li><code>roles</code>クレーム (Microsoft Entra IDトークン内のアプリロール) および<code>groups</code>クレーム (グループID) は使用できます。これらはフィールドマッピングで「roles (トークンクレーム)」および「groups (トークンクレーム)」として表示され、Microsoft GraphからMicrosoft Entraのディレクトリロールおよびグループ名をマッピングする組み込みの「ロール」および「グループ」オプションとは区別されます。複数の値のリストを含むクレームは、カンマ区切りのリストとして保存されます</li>
 <li>例: <code>employee_type badge_number costCenter custom_role</code></li>
-<li>ログイン時、Microsoft Graphも使用されているかどうかにかかわらず、カスタムクレームは常にトークンから読み取られます。スケジュールされたユーザ同期タスクの実行中は読み取るユーザトークンが存在しないため、カスタムクレームは、その名前がたまたま選択可能なMicrosoft Graphのユーザプロパティ (ディレクトリ拡張属性など。例: <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>) でもある場合にのみ同期されます。Microsoft Graphによって拒否されたカスタムクレームは、同期全体を失敗させるのではなく、その同期実行ではスキップされ、タスクログに警告が記録されます。</li>
+<li data-auth-oidc-idptypes="1,2">ログイン時、Microsoft Graphも使用されているかどうかにかかわらず、カスタムクレームは常にトークンから読み取られます。スケジュールされたユーザ同期タスクの実行中は読み取るユーザトークンが存在しないため、カスタムクレームは、その名前がたまたま選択可能なMicrosoft Graphのユーザプロパティ (ディレクトリ拡張属性など。例: <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>) でもある場合にのみ同期されます。Microsoft Graphによって拒否されたカスタムクレームは、同期全体を失敗させるのではなく、その同期実行ではスキップされ、タスクログに警告が記録されます。</li>
 </ul>';
 $string['secretexpiryrecipients'] = 'シークレット有効期限通知の受信者';
 $string['secretexpiryrecipients_help'] = 'シークレット有効期限通知の送信先となるメールアドレスのカンマ区切りリストです。<br/>
@@ -186,22 +189,24 @@ $string['cfg_redirecturi_key'] = 'リダイレクトURI';
 $string['cfg_redirecturi_desc'] = 'これは「リダイレクトURI」として登録するURIです。OpenID Connectアイデンティティプロバイダは、クライアントとしてMoodleを登録するときにこれを要求します。<br /><b>注意:</b> これは、ここに表示されているとおり「正確」にOpenID Connectプロバイダに入力する必要があります。違いがあると、OpenID Connectを使用してログインできません。';
 $string['tokenendpoint'] = 'トークンエンドポイント';
 $string['tokenendpoint_help'] = '使用するIdPのトークンエンドポイントのURIです。<br/>
-他のテナントのユーザによるアクセスを許可するようサイトを設定する場合、テナント固有のトークンエンドポイントは使用できないことに留意してください。';
+<span data-auth-oidc-idptypes="1,2">他のテナントのユーザによるアクセスを許可するようサイトを設定する場合、テナント固有のトークンエンドポイントは使用できないことに留意してください。</span><span data-auth-oidc-idptypes="4">Microsoft Entra External IDでは、External IDテナントのアプリケーション登録の「Endpoints」ページに表示される「OAuth 2.0 token endpoint (v2)」を使用してください。テナント固有のv2.0エンドポイントである必要があります。</span>';
 $string['cfg_userrestrictions_key'] = 'ユーザ制限';
 $string['cfg_userrestrictions_desc'] = '特定の制限を満たすユーザのみログインを許可します。<br /><b>ユーザ制限の使用方法: </b> <ul><li>許可するユーザのユーザ名に一致する<a href="https://en.wikipedia.org/wiki/Regular_expression">正規表現</a>パターンを入力してください。</li><li>1行に1つのパターンを入力してください。</li><li>複数のパターンを入力した場合、いずれかのパターンに一致するユーザが許可されます。</li><li>文字「/」は「\\」でエスケープする必要があります。</li><li>上記に制限を入力しない場合、OpenID Connect IdPにログインできるすべてのユーザがMoodleに受け入れられます。</li><li>入力されたパターンのいずれにも一致しないユーザは、OpenID Connectを使用してログインできなくなります。</li></ul>';
+$string['cfg_userrestrictions_disabled_external_id'] = 'Microsoft Entra External IDではユーザー制限は利用できないため、この設定は無効になっており、ユーザーのログイン時に制限は適用されません。制限はバインド用ユーザー名クレームと照合されますが、External IDユーザーでは既定でオブジェクトID（oid）であるため、パターンはGUIDに一致する必要があります。代わりに、ユーザーフローやアプリケーションの割り当てなどにより、External IDテナントでサイトへのアクセスを制御してください。';
 $string['cfg_userrestrictionscasesensitive_key'] = 'ユーザ制限で大文字と小文字を区別する';
 $string['cfg_userrestrictionscasesensitive_desc'] = 'ユーザ制限の照合において、正規表現の「/i」オプションを使用するかどうかを制御します。<br/>有効にした場合、すべてのユーザ制限チェックで大文字と小文字が区別されます。無効にした場合、パターン内の大文字と小文字の違いは無視されることに留意してください。';
 $string['heading_dummy_email'] = 'プレースホルダメールアドレス';
-$string['heading_dummy_email_desc'] = 'Moodleではすべてのユーザアカウントにメールアドレスが必要ですが、Microsoft Entra IDのアカウントにはメールアドレスは必須ではありません。以下の設定により、IdPから使用可能なメールアドレスを取得できないユーザに対して、メールアドレスを空のままにする代わりに、配信不可能なプレースホルダアドレスをMoodleで生成できます。';
+$string['heading_dummy_email_desc'] = 'Moodleではすべてのユーザアカウントにメールアドレスが必要ですが、Microsoft Entra IDなど、アカウントにメールアドレスを必須としないIDプロバイダもあります。以下の設定により、IdPから使用可能なメールアドレスを取得できないユーザに対して、メールアドレスを空のままにする代わりに、配信不可能なプレースホルダアドレスをMoodleで生成できます。';
 $string['cfg_generatedummyemail_key'] = 'プレースホルダメールアドレスを生成する';
-$string['cfg_generatedummyemail_desc'] = '有効にした場合、ユーザがIdPからメールアドレスもメール形式の使用可能なユーザプリンシパル名も取得できないとき、Moodleはメールアドレスを空のままにする代わりに、ユーザのMicrosoftユーザプリンシパル名 (ユーザプリンシパル名が利用できない場合はオブジェクトID) と以下で設定したドメインを使用してプレースホルダメールアドレスを生成します。これは、ユーザがログインしたときと、ユーザ同期タスクによってユーザがプロビジョニングされたときの両方に適用されます。';
+$string['cfg_generatedummyemail_desc'] = '有効にした場合、ユーザがIdPからメールアドレスもメール形式の使用可能なユーザプリンシパル名も取得できないとき、Moodleはメールアドレスを空のままにする代わりに、ユーザのユーザプリンシパル名 (ユーザプリンシパル名が利用できない場合はオブジェクトID) と以下で設定したドメインを使用してプレースホルダメールアドレスを生成します。これは、ユーザがログインしたときと、ユーザ同期タスクによってユーザがプロビジョニングされたときの両方に適用されます。ユーザプリンシパル名とオブジェクトIDはIdPのトークンのクレームから読み取られるため、IdPがどちらも提供しない場合、アドレスは生成されません。';
 $string['cfg_dummyemaildomain_key'] = 'プレースホルダメールドメイン';
 $string['cfg_dummyemaildomain_desc'] = 'プレースホルダメールアドレスを生成する際に使用するドメインです (例: 「example.test」)。生成されたアドレスが実在する配信可能なアドレスと誤認されることがないよう、メールを受信できないドメインを使用してください。';
-$string['cfg_signoffintegration_key'] = 'シングルサインアウト (MoodleからIdPへ)';
-$string['cfg_signoffintegration_desc'] = 'このオプションを有効にした場合、設定されたIdPに接続されたMoodleユーザがMoodleからログアウトすると、統合機能により以下のログアウトエンドポイントへのリクエストがトリガーされ、ユーザをIdPからもログオフさせようとします。<br/>
-Microsoft Entra IDとの統合の場合、MoodleとMicrosoft 365の統合用に作成されたMicrosoft Entra IDアプリに、MoodleサイトのURL ({$a}) をリダイレクトURIとして追加する必要があることに留意してください。';
+$string['cfg_singlelogout_key'] = 'シングルログアウト (SLO) (MoodleからIdPへ)';
+$string['cfg_singlelogout_desc'] = 'このオプションを有効にした場合、設定されたIdPに接続されたMoodleユーザがMoodleからログアウトすると、統合機能により以下のログアウトエンドポイントへのリクエストがトリガーされ、ユーザをIdPからもログオフさせようとします。<br/>
+Microsoft Entra IDとの統合の場合、MoodleとMicrosoft 365の統合用に作成されたMicrosoft Entra IDアプリに、MoodleサイトのURL ({$a}) をリダイレクトURIとして追加する必要があることに留意してください。<br/>シングルログアウトで終了するのは、Moodle が使用したサインイン サービスのセッションのみです。ブラウザー内の同じアカウントの他のセッション (たとえば、Azure portal にサインインして作成されたセッション) は影響を受けません。';
 $string['cfg_logoutendpoint_key'] = 'IdPログアウトエンドポイント';
 $string['cfg_logoutendpoint_desc'] = '使用するIdPのログアウトエンドポイントのURIです。';
+$string['cfg_logoutendpoint_external_id_note'] = 'Microsoft Entra External ID では、アプリの登録で ID トークンに login_hint オプション クレームを追加しない限り (トークン構成 > オプションの要求を追加 > ID > login_hint)、Microsoft のログアウト ページでアカウントの選択を求められます。クレームを追加した後は、ユーザーが再度ログインする必要があります。';
 $string['cfg_frontchannellogouturl_key'] = 'フロントチャネルログアウトURL';
 $string['cfg_frontchannellogouturl_desc'] = 'これは、IdPがユーザをMoodleからログアウトさせようとする際にトリガーする必要があるURLです。<br/>
 Microsoft Entra ID / Microsoft identity platformの場合、この設定は「Front-channel logout URL」と呼ばれ、Microsoft Entra IDアプリで設定できます。';
@@ -217,6 +222,24 @@ IDトークンおよびアクセストークンから利用できるクレーム
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">アクセストークンのクレーム</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">IDトークンのクレーム</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">オプションクレームの設定</a>: Microsoft Entra ID (v1.0) IdPタイプでは「Email」はオプションクレームであることに留意してください。</li>
+</ul>';
+$string['cfg_field_mapping_desc_generic'] = 'ユーザープロファイルデータは、OpenID Connect IdPからMoodleにマッピングできます。マッピングに使用できるリモートフィールドは、IdPタイプによって異なります。<br/>
+<ul>
+<li>基本的なプロファイルフィールドは、IdPが発行するIDトークンとアクセストークンのクレームから利用できます。そのため、名、姓、メールアドレスなどマッピングできるフィールドは、IdPがこれらのトークンに含めるクレームによって異なります。</li>
+<li>「{$a}」設定を使用して、マッピングに使用できるフィールドの一覧に追加のクレームを追加できます。</li>
+</ul>
+ほとんどのIdPでは、発行されるクレームをある程度カスタマイズできます。サポートされているクレームについては、お使いのIdPのドキュメントを確認してください。';
+$string['cfg_field_mapping_desc_external_id'] = 'ユーザープロファイルデータは、Microsoft Entra External IDからMoodleにマッピングできます。このIdPタイプではMicrosoft Graphは使用されないため、マッピングに使用できるリモートフィールドはIDトークンとアクセストークンのクレームです。<br/>
+<ul>
+<li>基本的なプロファイルフィールドは、IDトークンとアクセストークンのクレームから利用できます。</li>
+<li>既定では、External IDテナントのIDトークンには、ユーザーの名前、オブジェクトID、サインイン名のみが含まれます。名、姓、メールアドレスをマッピングするには、External IDテナントのアプリケーション登録（トークン構成）で、given_name、family_name、emailクレームをIDトークンのオプションクレームとして追加します。emailクレームは、ユーザーがテナントにメールアドレスを持っている場合にのみ発行されます。</li>
+<li>「{$a}」設定を使用して、マッピングに使用できるフィールドの一覧に追加のクレームを追加できます。</li>
+</ul>
+Microsoftトークンのクレームに関するドキュメントを以下にリンクします:
+<ul>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">アクセストークンのクレーム</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">IDトークンのクレーム</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">オプションクレームの設定</a></li>
 </ul>';
 
 $string['cfg_cleanupoidctokens_key'] = 'OpenID Connectトークンをクリーンアップする';
@@ -284,8 +307,16 @@ $string['error_empty_client_private_key_file'] = '「証明書」認証方法を
 $string['error_empty_client_cert_file'] = '「証明書」認証方法を使用する場合、クライアント証明書の公開鍵ファイルを空にすることはできません';
 $string['error_endpoint_mismatch_auth_endpoint'] = '設定された認可エンドポイントが、設定されたIdPタイプと一致しません。「Microsoft Entra ID (v1.0)」の場合はv1.0エンドポイントを使用してください (例: https://login.microsoftonline.com/organizations/oauth2/authorize). 「Microsoft identity platform (v2.0)」の場合はv2.0エンドポイントを使用してください (例: https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize).';
 $string['error_endpoint_mismatch_token_endpoint'] = '設定されたトークンエンドポイントが、設定されたIdPタイプと一致しません。「Microsoft Entra ID (v1.0)」の場合はv1.0エンドポイントを使用してください (例: https://login.microsoftonline.com/organizations/oauth2/token). 「Microsoft identity platform (v2.0)」の場合はv2.0エンドポイントを使用してください (例: https://login.microsoftonline.com/organizations/oauth2/v2.0/token).';
+$string['error_endpoint_external_id'] = 'エンドポイントは、ciamlogin.comホスト上のMicrosoft Entra External ID v2.0エンドポイントである必要があります。例: https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/authorize。';
+$string['error_logoutendpoint_external_id'] = 'ログアウトエンドポイントは、ciamlogin.com ホスト上の Microsoft Entra External ID v2.0 エンドポイントである必要があります (例: https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/logout)。承認エンドポイントから導出されるエンドポイントを使用する場合は、空のままにしてください。';
+$string['error_endpoint_external_id_placeholder'] = 'プレースホルダー [tenant-name] と [tenant-id] を、Microsoft Entra External IDテナントの値に置き換えてください。';
+$string['error_endpoint_external_id_tenant'] = 'Microsoft Entra External IDテナントはシングルテナントです。エンドポイントには、common、organizations、consumersの代わりにテナントIDまたは名前を使用してください。';
+$string['error_endpoint_external_id_v1'] = 'これはv1.0エンドポイントです。Microsoft Entra External IDでは、パスに /oauth2/v2.0/ を含むv2.0エンドポイントが必要です。';
+$string['error_endpoint_external_id_kind'] = 'エンドポイントは /{$a} で終わる必要があります。';
+$string['error_endpoint_external_id_mismatch'] = '認可エンドポイントとトークンエンドポイントは、同じMicrosoft Entra External IDテナントに属している必要があります。';
+$string['error_endpoint_is_external_id'] = 'これはMicrosoft Entra External IDエンドポイントです。IdPタイプをMicrosoft Entra External IDに設定するか、このIdPタイプにはlogin.microsoftonline.comエンドポイントを使用してください。';
 $string['error_tenant_specific_endpoint_required'] = '「Microsoft identity platform (v2.0)」IdPタイプおよび「証明書」認証方法を使用する場合、テナント固有のエンドポイント (すなわち、common/organizations/consumers以外) が必要です。';
-$string['error_empty_oidcresource'] = 'Microsoft Entra ID (v1.0) またはその他のタイプのIdPを使用する場合、リソースを空にすることはできません。';
+$string['error_empty_oidcresource'] = 'Microsoft Entra ID (v1.0) を使用する場合、リソースを空にすることはできません。';
 $string['error_invalid_custom_claim'] = '無効なカスタムクレーム名: {$a}。カスタムクレーム名には英数字、ハイフンおよびアンダースコアのみを使用でき、予約されたクレーム名 (例: 標準のJWT/OpenID Connectクレーム、またはMicrosoft Entra IDやKeycloak固有のクレーム) や既存のフィールドマッピングオプションは使用できません。';
 $string['error_masked_secret_not_changed'] = '新しい値を入力するか、現在の値を保持する場合は「変更」チェックボックスのチェックを外してください。';
 $string['auth_settings_validation_error'] = '無効な認証設定が検出されました。認証を正常に行うために、以下の設定の問題を解決する必要があります:';
@@ -431,6 +462,7 @@ $string['cleanup_oidc_tokens_link_desc'] = '不要になったOpenID Connectト�
 $string['clear_user_tokens_link_desc'] = 'すべてのユーザまたは選択したユーザの保存済みトークンを削除するには、<a href="{$a}">ユーザトークンをクリアする</a>ツールを使用してください。';
 $string['clear_user_tokens'] = 'ユーザトークンをクリアする';
 $string['clear_user_tokens_desc'] = 'ユーザのために保存されているOpenID ConnectおよびMicrosoft 365のトークンを削除します。対象のユーザは、次回OpenID Connectを使用してログインするか、Microsoft 365に接続したときに新しいトークンを取得します。Microsoft 365アカウントとのリンクは保持されます。警告: 進行中のログインが中断される可能性があるため、ダウンタイム中に実行することをお勧めします。';
+$string['clear_user_tokens_desc_generic'] = 'ユーザーに保存されているOpenID Connectトークンを削除します。対象のユーザーは、次回OpenID Connectでログインするときに新しいトークンを取得します。警告: 進行中のログインが中断される可能性があるため、ダウンタイム中に実行することをお勧めします。';
 $string['clear_user_tokens_scope_selected'] = '選択したユーザ';
 $string['clear_user_tokens_scope_all'] = 'すべてのユーザ';
 $string['clear_user_tokens_users'] = 'ユーザ';
@@ -471,6 +503,16 @@ $string['binding_username_claim_help_non_ms'] = 'Microsoft以外のIdPのオプ�
 <li><b>samaccountname</b></li>
 <li><b>custom</b>: カスタムクレームです。</li>
 </ul>';
+$string['binding_username_claim_help_external_id'] = 'Microsoft Entra External IDのオプションは以下のとおりです:
+<ul>
+<li><b>自動的に選択</b>: <b>oid</b>、<b>sub</b>の順に使用します。</li>
+<li><b>oid</b>: テナント内のユーザーの一意で安定したオブジェクトID（推奨）。</li>
+<li><b>sub</b></li>
+<li><b>email</b>: ユーザーのメールアドレス。変更される可能性があり、変更されるとMoodleアカウントとのリンクが切れます。</li>
+<li><b>preferred_username</b>: ユーザーのサインイン名。変更される可能性があり、変更されるとMoodleアカウントとのリンクが切れます。</li>
+<li><b>custom</b>: カスタムクレーム。</li>
+</ul>
+External IDのトークンには、upnやsamaccountnameなどの職場向けクレームは含まれません。選択するクレームが一意で安定していることを確認してください。';
 $string['warning_binding_username_claim_custom_unsupported'] = '「バインディングユーザ名クレーム」設定が現在「カスタム」に設定されていますが、これはユーザ同期が有効な状態の設定済みIdPタイプではサポートされていません。<a href="{$a}">バインディングユーザ名クレーム</a>の設定を確認してください。';
 $string['examplecsv'] = 'アップロードファイル例';
 $string['usernamefile'] = 'ファイル';
@@ -497,7 +539,7 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <ul>
 <li>Moodleアカウントのユーザ名</li>
 <li>保存されたOpenID Connect IDトークン内のバインディングユーザ名</li>
-<li>MoodleアカウントとMicrosoftアカウントの接続レコード</li>
+<!--o365-start--><li>MoodleアカウントとMicrosoftアカウントの接続レコード</li><!--o365-end-->
 </ul>
 <p>このツールは、<b>バインディングユーザ名クレーム</b>設定を変更する場合にのみ使用してください。</p>
 <p>このツールは、2つのカラムを持つシンプルなCSVファイルを受け付けます:</p>
@@ -514,12 +556,12 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <li>上記でレコードが見つからない場合、<span class="auth_oidc_code">auth_oidc_token</span>テーブルで<span class="auth_oidc_code">oidcusername</span>カラムが古い<span class="auth_oidc_code">username</span>と一致するレコードを検索し、<span class="auth_oidc_code">new_username</span>に更新します。</li>
 </ul>
 </li>
-<li><span class="auth_oidc_code">local_o365</span>プラグインがインストールされている場合、ユーザ接続レコードを更新します。
+<!--o365-start--><li><span class="auth_oidc_code">local_o365</span>プラグインがインストールされている場合、ユーザ接続レコードを更新します。
 <ul>
 <li>上記のステップ1でユーザが見つかった場合、<span class="auth_oidc_code">local_o365_objects</span>テーブルでそのユーザの接続レコードを検索し、<span class="auth_oidc_code">o365name</span>カラムを<span class="auth_oidc_code">new_username</span>と同じ値に更新します。</li>
 <li>ステップ1でユーザが見つからない場合、<span class="auth_oidc_code">local_o365_objects</span>テーブルで<span class="auth_oidc_code">o365name</span>が<span class="auth_oidc_code">username</span>の値と一致するユーザのレコードを検索し、<span class="auth_oidc_code">new_username</span>の値に更新します。</li>
 </ul>
-</li>
+</li><!--o365-end-->
 </ol>
 <p>以下のファイル例では、バインディングユーザ名クレームを<span class="auth_oidc_code">upn</span>または<span class="auth_oidc_code">email</span>から<span class="auth_oidc_code">oid</span>に変更します。</p>';
 $string['change_binding_username_claim_tool_result'] = '更新結果';

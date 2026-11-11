@@ -2308,7 +2308,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 'debugmode',
                 'userrestrictions',
                 'userrestrictionscasesensitive',
-                'single_sign_off',
+                'single_logout',
                 'logouturi',
             ],
             'block_microsoft' => [

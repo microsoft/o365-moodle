@@ -47,8 +47,8 @@ $string['heading_stateredirect'] = 'Chybová stránka stavu přihlášení';
 $string['heading_stateredirect_desc'] = 'Pokud uživateli trvá dokončení přihlášení u poskytovatele identity příliš dlouho (například při schvalování výzvy vícefaktorového ověřování) a uložený stav přihlášení byl mezitím vyčištěn, Moodle ve výchozím nastavení zobrazí svou obecnou chybovou stránku. Níže uvedená nastavení umožňují prodloužit dobu, po kterou se stav přihlášení uchovává, a místo obecné chybové stránky zobrazit vstřícnější, přizpůsobitelnou zprávu, která uživatele automaticky přesměruje zpět na přihlašovací stránku.';
 $string['heading_user_restrictions'] = 'Omezení uživatelů';
 $string['heading_user_restrictions_desc'] = '';
-$string['heading_sign_out'] = 'Integrace odhlášení';
-$string['heading_sign_out_desc'] = '';
+$string['heading_logout'] = 'Integrace odhlášení';
+$string['heading_logout_desc'] = '';
 $string['heading_display'] = 'Zobrazení';
 $string['heading_display_desc'] = '';
 $string['heading_debugging'] = 'Ladění';
@@ -60,10 +60,11 @@ Pokud vaše organizace používá Microsoft 365 poskytovaný společností 21Via
 $string['microsoftcloud_global'] = 'Microsoft 365 (globální)';
 $string['microsoftcloud_china'] = 'Microsoft 365 provozovaný společností 21Vianet (Čína)';
 $string['idptype'] = 'Typ poskytovatele identity (IdP)';
-$string['idptype_help'] = 'V současné době jsou podporovány tři typy IdP:
+$string['idptype_help'] = 'V současné době jsou podporovány čtyři typy IdP:
 <ul>
 <li><b>Microsoft Entra ID (v1.0)</b>: Microsoft Entra ID s koncovými body oauth2 v1.0, např. https://login.microsoftonline.com/organizations/oauth2/authorize.</li>
 <li><b>Microsoft identity platform (v2.0)</b>: Microsoft Entra ID s koncovými body oauth2 v2.0, např. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize.</li>
+<li><b>Microsoft Entra External ID</b>: tenant Microsoft Entra External ID (zákaznický) s koncovými body oauth2 v2.0 na hostiteli ciamlogin.com, např. https://contoso.ciamlogin.com/&lt;tenant-id&gt;/oauth2/v2.0/authorize. Funkce Microsoft 365 pluginu local_o365 nejsou pro tento typ IdP dostupné.</li>
 <li><b>Jiný</b>: jakýkoli IdP jiný než od Microsoftu.</li>
 </ul>
 Rozdíly mezi možnostmi <b>Microsoft Entra ID (v1.0)</b> a <b>Microsoft identity platform (v2.0)</b> najdete na <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
@@ -73,10 +74,11 @@ $string['idp_type_not_connected'] = 'Nepřipojeno';
 $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Jiný';
+$string['idp_type_microsoft_entra_external_id'] = 'Microsoft Entra External ID';
 $string['settings_application_wizard_desc'] = 'Chcete-li tato nastavení nakonfigurovat pomocí řízeného formuláře s podrobnými pokyny a ověřováním zadaných hodnot, použijte <a href="{$a}">Průvodce konfigurací aplikace</a>.';
 $string['authendpoint'] = 'Koncový bod autorizace';
 $string['authendpoint_help'] = 'URI koncového bodu autorizace vašeho IdP, který se má použít.<br/>
-Pozor: pokud má být web nakonfigurován tak, aby k němu měli přístup uživatelé z jiných tenantů, nelze použít koncový bod autorizace specifický pro tenanta.';
+<span data-auth-oidc-idptypes="1,2">Pozor: pokud má být web nakonfigurován tak, aby k němu měli přístup uživatelé z jiných tenantů, nelze použít koncový bod autorizace specifický pro tenanta.</span><span data-auth-oidc-idptypes="4">U Microsoft Entra External ID použijte „OAuth 2.0 authorization endpoint (v2)“ zobrazený na stránce Endpoints registrace aplikace ve vašem tenantovi External ID. Musí jít o koncový bod v2.0 specifický pro váš tenant.</span>';
 $string['clientid'] = 'ID aplikace';
 $string['clientid_help'] = 'Registrované ID aplikace / klienta u IdP.';
 $string['clientauthmethod'] = 'Metoda ověřování klienta';
@@ -114,6 +116,7 @@ $string['cfg_usepkce_key'] = 'Použít PKCE';
 $string['cfg_usepkce_desc'] = 'Při použití přihlašovacího toku <b>Authorization Code</b> odesílat v autorizačním požadavku PKCE (RFC 7636) „code_challenge“ s metodou S256 a při výměně autorizačního kódu odpovídající „code_verifier“. Microsoft Entra ID to podporuje. U jiných poskytovatelů tuto volbu povolte pouze tehdy, pokud váš poskytovatel PKCE podporuje, protože někteří poskytovatelé odmítají autorizační požadavky s parametry, které nerozpoznají.';
 $string['cfg_domainhint_key'] = 'Nápověda domény (Domain Hint)';
 $string['cfg_domainhint_desc'] = 'Při použití přihlašovacího toku <b>Authorization Code</b> předávat tuto hodnotu jako parametr „domain_hint“. „domain_hint“ používají někteří poskytovatelé identity OpenID Connect ke zjednodušení přihlašování uživatelů. Ověřte si u svého poskytovatele, zda tento parametr podporuje.';
+$string['cfg_domainhint_external_id_note'] = 'U Microsoft Entra External ID tato hodnota odešle uživatele přímo k federovanému poskytovateli identity místo zobrazení přihlašovací stránky. Použijte google, facebook nebo apple, případně doménu vlastního poskytovatele OpenID Connect (například contoso.onmicrosoft.com pro tenanta Microsoft Entra ID). Nepoužívejte ID tenanta.';
 $string['cfg_forceselectaccount_key'] = 'Vždy zobrazit výběr účtu';
 $string['cfg_forceselectaccount_desc'] = 'Je-li povoleno, uživatelé jsou vždy vyzváni, aby vybrali účet, kterým se chtějí přihlásit, místo aby byli automaticky přihlášeni účtem aktivním v jejich prohlížeči. Užitečné, pokud mají uživatelé více účtů, například studentský a administrátorský účet.<br/>
 Přednost má režim tichého přihlášení: je-li povolen, výběr účtu se při tichém přihlášení nevynucuje.';
@@ -172,7 +175,7 @@ $string['customclaims_help'] = 'Mezerami oddělený seznam názvů vlastních de
 <li>Název deklarace nesmí být rezervovaný název, například standardní deklarace JWT/OpenID Connect (např. <code>sub</code>, <code>email</code>), deklarace specifická pro Microsoft Entra ID (např. <code>oid</code>, <code>upn</code>) nebo Keycloak (např. <code>realm_access</code>, <code>resource_access</code>), ani existující možnost mapování polí</li>
 <li>Deklarace <code>roles</code> (role aplikace v tokenech Microsoft Entra ID) a deklarace <code>groups</code> (ID skupin) jsou povoleny. V mapování polí jsou uvedeny jako „roles (deklarace tokenu)“ a „groups (deklarace tokenu)“, odděleně od vestavěných možností „Role“ a „Skupiny“, které mapují role adresáře Microsoft Entra a názvy skupin z Microsoft Graph. Deklarace obsahující seznam hodnot se ukládají jako seznam oddělený čárkami</li>
 <li>Příklady: <code>employee_type badge_number costCenter custom_role</code></li>
-<li>Při přihlášení se vlastní deklarace vždy čtou z tokenu bez ohledu na to, zda se používá také Microsoft Graph. Během naplánované úlohy synchronizace uživatelů není k dispozici žádný uživatelský token, ze kterého by bylo možné číst, proto se vlastní deklarace synchronizuje pouze tehdy, pokud je její název zároveň vybratelnou vlastností uživatele v Microsoft Graph, například atributem rozšíření adresáře (např. <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). Vlastní deklarace, kterou Microsoft Graph odmítne, se v daném běhu synchronizace přeskočí s varováním v protokolu úlohy, místo aby selhala celá synchronizace.</li>
+<li data-auth-oidc-idptypes="1,2">Při přihlášení se vlastní deklarace vždy čtou z tokenu bez ohledu na to, zda se používá také Microsoft Graph. Během naplánované úlohy synchronizace uživatelů není k dispozici žádný uživatelský token, ze kterého by bylo možné číst, proto se vlastní deklarace synchronizuje pouze tehdy, pokud je její název zároveň vybratelnou vlastností uživatele v Microsoft Graph, například atributem rozšíření adresáře (např. <code>extension_d7b7d16e4a70ac2c5fa01ddc3d4ab596_jobCode</code>). Vlastní deklarace, kterou Microsoft Graph odmítne, se v daném běhu synchronizace přeskočí s varováním v protokolu úlohy, místo aby selhala celá synchronizace.</li>
 </ul>';
 $string['secretexpiryrecipients'] = 'Příjemci upozornění na vypršení tajného klíče';
 $string['secretexpiryrecipients_help'] = 'Čárkami oddělený seznam e-mailových adres, na které se mají odesílat upozornění na vypršení platnosti tajného klíče.<br/>
@@ -186,22 +189,24 @@ $string['cfg_redirecturi_key'] = 'URI pro přesměrování';
 $string['cfg_redirecturi_desc'] = 'Toto je identifikátor URI, který se registruje jako „URI pro přesměrování“. Váš poskytovatel identity OpenID Connect by vás měl o tento identifikátor požádat při registraci Moodlu jako klienta.<br /><b>Poznámka:</b> Tento identifikátor musíte ve svém poskytovateli identity OpenID Connect zadat *přesně* tak, jak je zde uveden. Jakákoli odchylka znemožní přihlášení s použitím OpenID Connect.';
 $string['tokenendpoint'] = 'Koncový bod tokenů';
 $string['tokenendpoint_help'] = 'URI koncového bodu tokenů vašeho IdP, který se má použít.<br/>
-Pozor: pokud má být web nakonfigurován tak, aby k němu měli přístup uživatelé z jiných tenantů, nelze použít koncový bod tokenů specifický pro tenanta.';
+<span data-auth-oidc-idptypes="1,2">Pozor: pokud má být web nakonfigurován tak, aby k němu měli přístup uživatelé z jiných tenantů, nelze použít koncový bod tokenů specifický pro tenanta.</span><span data-auth-oidc-idptypes="4">U Microsoft Entra External ID použijte „OAuth 2.0 token endpoint (v2)“ zobrazený na stránce Endpoints registrace aplikace ve vašem tenantovi External ID. Musí jít o koncový bod v2.0 specifický pro váš tenant.</span>';
 $string['cfg_userrestrictions_key'] = 'Omezení uživatelů';
 $string['cfg_userrestrictions_desc'] = 'Povolit přihlášení pouze uživatelům, kteří splňují určitá omezení. <br /><b>Jak používat omezení uživatelů: </b> <ul><li>Zadejte vzor <a href="https://en.wikipedia.org/wiki/Regular_expression">regulárního výrazu</a>, který odpovídá uživatelským jménům uživatelů, které chcete povolit.</li><li>Zadejte jeden vzor na řádek.</li><li>Pokud zadáte více vzorů, uživatel bude povolen, pokud odpovídá KTERÉMUKOLI z nich.</li><li>Znak "/" je třeba escapovat pomocí "\\".</li><li>Pokud výše nezadáte žádná omezení, Moodle přijme všechny uživatele, kteří se mohou přihlásit k poskytovateli identity OpenID Connect.</li><li>Uživateli, který neodpovídá žádnému zadanému vzoru, bude přihlášení pomocí OpenID Connect znemožněno.</li></ul>';
+$string['cfg_userrestrictions_disabled_external_id'] = 'Omezení uživatelů nejsou pro Microsoft Entra External ID dostupná, proto je toto nastavení zakázáno a omezení se při přihlášení uživatelů neuplatňují. Omezení se porovnávají s deklarací pro vazbu uživatelského jména, kterou je u uživatelů External ID ve výchozím nastavení ID objektu (oid), takže by vzory musely odpovídat GUID. Přístup na web raději řiďte ve svém tenantovi External ID, například pomocí uživatelských toků nebo přiřazení aplikace.';
 $string['cfg_userrestrictionscasesensitive_key'] = 'Omezení uživatelů rozlišují velká a malá písmena';
 $string['cfg_userrestrictionscasesensitive_desc'] = 'Určuje, zda se při porovnávání omezení uživatelů použije volba "/i" regulárního výrazu.<br/>Je-li povoleno, všechny kontroly omezení uživatelů budou rozlišovat velká a malá písmena. Pozor: je-li zakázáno, budou se ve vzorech ignorovat jakékoli rozdíly ve velikosti písmen.';
 $string['heading_dummy_email'] = 'Zástupné e-mailové adresy';
-$string['heading_dummy_email_desc'] = 'Moodle vyžaduje, aby každý uživatelský účet měl e-mailovou adresu, ale účty Microsoft Entra ID ji mít nemusí. Níže uvedená nastavení umožňují Moodlu vygenerovat nedoručitelnou zástupnou adresu pro uživatele, kteří od IdP nemají použitelnou e-mailovou adresu, místo aby jejich e-mailová adresa zůstala prázdná.';
+$string['heading_dummy_email_desc'] = 'Moodle vyžaduje, aby každý uživatelský účet měl e-mailovou adresu, ale někteří poskytovatelé identity, například Microsoft Entra ID, ji u svých účtů nevyžadují. Níže uvedená nastavení umožňují Moodlu vygenerovat nedoručitelnou zástupnou adresu pro uživatele, kteří od IdP nemají použitelnou e-mailovou adresu, místo aby jejich e-mailová adresa zůstala prázdná.';
 $string['cfg_generatedummyemail_key'] = 'Generovat zástupné e-mailové adresy';
-$string['cfg_generatedummyemail_desc'] = 'Je-li povoleno a uživatel nemá od IdP e-mailovou adresu ani použitelný hlavní název uživatele (UPN) ve formátu e-mailu, Moodle mu vygeneruje zástupnou e-mailovou adresu z jeho hlavního názvu uživatele Microsoft (nebo ID objektu, pokud hlavní název uživatele není k dispozici) a níže nastavené domény, místo aby jeho e-mailová adresa zůstala prázdná. To platí jak při přihlášení uživatele, tak při jeho zřízení úlohou synchronizace uživatelů.';
+$string['cfg_generatedummyemail_desc'] = 'Je-li povoleno a uživatel nemá od IdP e-mailovou adresu ani použitelný hlavní název uživatele (UPN) ve formátu e-mailu, Moodle mu vygeneruje zástupnou e-mailovou adresu z jeho hlavního názvu uživatele (nebo ID objektu, pokud hlavní název uživatele není k dispozici) a níže nastavené domény, místo aby jeho e-mailová adresa zůstala prázdná. To platí jak při přihlášení uživatele, tak při jeho zřízení úlohou synchronizace uživatelů. Hlavní název uživatele a ID objektu se čtou z deklarací tokenu od IdP, takže pokud IdP neposkytne ani jedno, adresa se nevygeneruje.';
 $string['cfg_dummyemaildomain_key'] = 'Doména zástupných e-mailů';
 $string['cfg_dummyemaildomain_desc'] = 'Doména, která se použije při generování zástupných e-mailových adres, například „example.test“. Použijte doménu, která nemůže přijímat poštu, aby vygenerované adresy nemohly být nikdy zaměněny za skutečné, doručitelné adresy.';
-$string['cfg_signoffintegration_key'] = 'Jednotné odhlášení (z Moodlu k IdP)';
-$string['cfg_signoffintegration_desc'] = 'Je-li tato možnost povolena a uživatel Moodlu připojený k nakonfigurovanému IdP se z Moodlu odhlásí, integrace odešle požadavek na níže uvedený koncový bod odhlášení a pokusí se uživatele odhlásit také od IdP.<br/>
-Pozor: pro integraci s Microsoft Entra ID je třeba přidat URL webu Moodle ({$a}) jako URI pro přesměrování v aplikaci Microsoft Entra ID vytvořené pro integraci Moodlu a Microsoft 365.';
+$string['cfg_singlelogout_key'] = 'Jednotné odhlášení (SLO) (z Moodlu k IdP)';
+$string['cfg_singlelogout_desc'] = 'Je-li tato možnost povolena a uživatel Moodlu připojený k nakonfigurovanému IdP se z Moodlu odhlásí, integrace odešle požadavek na níže uvedený koncový bod odhlášení a pokusí se uživatele odhlásit také od IdP.<br/>
+Pozor: pro integraci s Microsoft Entra ID je třeba přidat URL webu Moodle ({$a}) jako URI pro přesměrování v aplikaci Microsoft Entra ID vytvořené pro integraci Moodlu a Microsoft 365.<br/>Jednotné odhlášení ukončí pouze relaci přihlašovací služby, kterou použil Moodle. Ostatní relace stejného účtu v prohlížeči, například ta vytvořená přihlášením k portálu Azure, tím nejsou dotčeny.';
 $string['cfg_logoutendpoint_key'] = 'Koncový bod odhlášení IdP';
 $string['cfg_logoutendpoint_desc'] = 'URI koncového bodu odhlášení vašeho IdP, který se má použít.';
+$string['cfg_logoutendpoint_external_id_note'] = 'U Microsoft Entra External ID jsou uživatelé na odhlašovací stránce Microsoftu vyzváni k výběru účtu, pokud se do tokenu ID v registraci aplikace nepřidá volitelná deklarace login_hint (Konfigurace tokenu > Přidat volitelnou deklaraci > ID > login_hint). Po přidání deklarace se uživatelé musí znovu přihlásit.';
 $string['cfg_frontchannellogouturl_key'] = 'URL odhlášení front-channel';
 $string['cfg_frontchannellogouturl_desc'] = 'Toto je URL, kterou musí váš IdP zavolat, když se pokouší odhlásit uživatele z Moodlu.<br/>
 U Microsoft Entra ID / Microsoft identity platform se toto nastavení nazývá "Front-channel logout URL" a lze jej nakonfigurovat v aplikaci Microsoft Entra ID.';
@@ -217,6 +222,24 @@ Deklarace dostupné z tokenu ID a přístupového tokenu se liší podle typu Id
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">Deklarace přístupového tokenu</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">Deklarace tokenu ID</a></li>
 <li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">Konfigurace volitelných deklarací</a>: Pozor, „Email“ je u typu IdP Microsoft Entra ID (v1.0) volitelná deklarace.</li>
+</ul>';
+$string['cfg_field_mapping_desc_generic'] = 'Data uživatelského profilu lze mapovat z IdP OpenID Connect do Moodle. Vzdálená pole dostupná pro mapování závisejí na typu IdP.<br/>
+<ul>
+<li>Základní pole profilu jsou dostupná z deklarací ID tokenu a přístupového tokenu, které váš IdP vydává. Pole, která lze mapovat, například jméno, příjmení a e-mailová adresa, proto závisejí na deklaracích, které váš IdP do těchto tokenů zahrnuje.</li>
+<li>Další deklarace lze přidat do seznamu polí dostupných pro mapování pomocí nastavení „{$a}“.</li>
+</ul>
+Většina IdP umožňuje určitou úpravu vydávaných deklarací. Podporované deklarace najdete v dokumentaci svého IdP.';
+$string['cfg_field_mapping_desc_external_id'] = 'Data uživatelského profilu lze mapovat z Microsoft Entra External ID do Moodle. Vzdálená pole dostupná pro mapování jsou deklarace ID tokenu a přístupového tokenu, protože pro tento typ IdP se Microsoft Graph nepoužívá.<br/>
+<ul>
+<li>Základní pole profilu jsou dostupná z deklarací ID tokenu a přístupového tokenu.</li>
+<li>Ve výchozím nastavení obsahuje ID token tenanta External ID pouze jméno, ID objektu a přihlašovací jméno uživatele. Chcete-li mapovat jméno, příjmení a e-mailovou adresu, přidejte deklarace given_name, family_name a email jako volitelné deklarace do ID tokenu v registraci aplikace ve svém tenantovi External ID (Konfigurace tokenu). Deklarace email se vydává, pouze pokud má uživatel v tenantovi e-mailovou adresu.</li>
+<li>Další deklarace lze přidat do seznamu polí dostupných pro mapování pomocí nastavení „{$a}“.</li>
+</ul>
+Dokumentace k deklaracím tokenů Microsoft je odkazována níže:
+<ul>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">Deklarace přístupového tokenu</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">Deklarace tokenu ID</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">Konfigurace volitelných deklarací</a></li>
 </ul>';
 
 $string['cfg_cleanupoidctokens_key'] = 'Vyčistit tokeny OpenID Connect';
@@ -284,8 +307,16 @@ $string['error_empty_client_private_key_file'] = 'Při použití metody ověřov
 $string['error_empty_client_cert_file'] = 'Při použití metody ověřování „certifikátem“ nemůže být soubor veřejného klíče certifikátu klienta prázdný';
 $string['error_endpoint_mismatch_auth_endpoint'] = 'Nakonfigurovaný koncový bod autorizace neodpovídá nastavenému typu IdP. Pro „Microsoft Entra ID (v1.0)“ použijte koncový bod v1.0 (např. https://login.microsoftonline.com/organizations/oauth2/authorize). Pro „Microsoft identity platform (v2.0)“ použijte koncový bod v2.0 (např. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize).';
 $string['error_endpoint_mismatch_token_endpoint'] = 'Nakonfigurovaný koncový bod tokenů neodpovídá nastavenému typu IdP. Pro „Microsoft Entra ID (v1.0)“ použijte koncový bod v1.0 (např. https://login.microsoftonline.com/organizations/oauth2/token). Pro „Microsoft identity platform (v2.0)“ použijte koncový bod v2.0 (např. https://login.microsoftonline.com/organizations/oauth2/v2.0/token).';
+$string['error_endpoint_external_id'] = 'Koncový bod musí být koncový bod Microsoft Entra External ID v2.0 na hostiteli ciamlogin.com, např. https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/authorize.';
+$string['error_logoutendpoint_external_id'] = 'Koncový bod odhlášení musí být koncový bod Microsoft Entra External ID v2.0 na hostiteli ciamlogin.com, např. https://contoso.ciamlogin.com/[tenant-id]/oauth2/v2.0/logout. Ponecháte-li pole prázdné, použije se koncový bod odvozený z koncového bodu autorizace.';
+$string['error_endpoint_external_id_placeholder'] = 'Nahraďte zástupné symboly [tenant-name] a [tenant-id] hodnotami svého tenanta Microsoft Entra External ID.';
+$string['error_endpoint_external_id_tenant'] = 'Tenanti Microsoft Entra External ID jsou jednotenantové. V koncovém bodě použijte ID nebo název tenanta místo common, organizations nebo consumers.';
+$string['error_endpoint_external_id_v1'] = 'Toto je koncový bod v1.0. Microsoft Entra External ID vyžaduje koncový bod v2.0 s /oauth2/v2.0/ v cestě.';
+$string['error_endpoint_external_id_kind'] = 'Koncový bod musí končit na /{$a}.';
+$string['error_endpoint_external_id_mismatch'] = 'Koncové body autorizace a tokenu musí patřit ke stejnému tenantovi Microsoft Entra External ID.';
+$string['error_endpoint_is_external_id'] = 'Toto je koncový bod Microsoft Entra External ID. Nastavte typ IdP na Microsoft Entra External ID, nebo pro tento typ IdP použijte koncový bod login.microsoftonline.com.';
 $string['error_tenant_specific_endpoint_required'] = 'Při použití typu IdP „Microsoft identity platform (v2.0)“ a metody ověřování „Certifikát“ je vyžadován koncový bod specifický pro tenanta (tj. ne common/organizations/consumers).';
-$string['error_empty_oidcresource'] = 'Při použití Microsoft Entra ID (v1.0) nebo jiných typů IdP nemůže být prostředek prázdný.';
+$string['error_empty_oidcresource'] = 'Zdroj nesmí být prázdný při použití Microsoft Entra ID (v1.0).';
 $string['error_invalid_custom_claim'] = 'Neplatné názvy vlastních deklarací: {$a}. Názvy vlastních deklarací mohou obsahovat pouze alfanumerické znaky, pomlčky a podtržítka a nesmí to být rezervovaný název deklarace (např. standardní deklarace JWT/OpenID Connect nebo deklarace specifická pro Microsoft Entra ID či Keycloak) ani existující možnost mapování polí.';
 $string['error_masked_secret_not_changed'] = 'Zadejte novou hodnotu, nebo zrušte zaškrtnutí políčka „Změnit“, chcete-li zachovat aktuální hodnotu.';
 $string['auth_settings_validation_error'] = 'Byla zjištěna neplatná nastavení ověřování. Pro úspěšné ověřování je třeba vyřešit následující problémy s konfigurací:';
@@ -431,6 +462,7 @@ $string['cleanup_oidc_tokens_link_desc'] = 'Chcete-li vyčistit zastaralé token
 $string['clear_user_tokens_link_desc'] = 'Chcete-li odstranit uložené tokeny všech uživatelů nebo vybraných uživatelů, použijte nástroj <a href="{$a}">Vymazat tokeny uživatelů</a>.';
 $string['clear_user_tokens'] = 'Vymazat tokeny uživatelů';
 $string['clear_user_tokens_desc'] = 'Odstraní tokeny OpenID Connect a Microsoft 365 uložené pro uživatele. Dotčení uživatelé získají nové tokeny při příštím přihlášení pomocí OpenID Connect nebo při připojení k Microsoft 365. Jejich propojení s účty Microsoft 365 zůstanou zachována. UPOZORNĚNÍ: Může to přerušit probíhající přihlášení, proto je nejlepší to provést v době odstávky.';
+$string['clear_user_tokens_desc_generic'] = 'Odstraní tokeny OpenID Connect uložené pro uživatele. Dotčení uživatelé získají nové tokeny při dalším přihlášení pomocí OpenID Connect. UPOZORNĚNÍ: Může to přerušit probíhající přihlášení, proto je nejlepší to provést během odstávky.';
 $string['clear_user_tokens_scope_selected'] = 'Vybraní uživatelé';
 $string['clear_user_tokens_scope_all'] = 'Všichni uživatelé';
 $string['clear_user_tokens_users'] = 'Uživatelé';
@@ -471,6 +503,16 @@ $string['binding_username_claim_help_non_ms'] = 'Možnosti pro IdP jiné než od
 <li><b>samaccountname</b></li>
 <li><b>custom</b>: Vlastní deklarace.</li>
 </ul>';
+$string['binding_username_claim_help_external_id'] = 'Možnosti pro Microsoft Entra External ID zahrnují:
+<ul>
+<li><b>Vybrat automaticky</b>: Použije <b>oid</b>, poté <b>sub</b>.</li>
+<li><b>oid</b>: Jedinečné a stabilní ID objektu uživatele v tenantovi (doporučeno).</li>
+<li><b>sub</b></li>
+<li><b>email</b>: E-mailová adresa uživatele. Může se změnit, čímž se přeruší propojení s účtem Moodle.</li>
+<li><b>preferred_username</b>: Přihlašovací jméno uživatele. Může se změnit, čímž se přeruší propojení s účtem Moodle.</li>
+<li><b>vlastní</b>: Vlastní deklarace.</li>
+</ul>
+Tokeny External ID neobsahují deklarace pro zaměstnance, například upn nebo samaccountname. Zajistěte, aby zvolená deklarace byla jedinečná a stabilní.';
 $string['warning_binding_username_claim_custom_unsupported'] = 'Nastavení „Deklarace pro vazbu uživatelského jména“ je aktuálně nastaveno na „Vlastní“, což u nakonfigurovaného typu IdP s povolenou synchronizací uživatelů není podporováno. Zkontrolujte nastavení <a href="{$a}">Deklarace pro vazbu uživatelského jména</a>.';
 $string['examplecsv'] = 'Příklad souboru pro nahrání';
 $string['usernamefile'] = 'Soubor';
@@ -497,7 +539,7 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <ul>
 <li>uživatelská jména účtů Moodle,</li>
 <li>vazební uživatelská jména v uložených tokenech ID OpenID Connect,</li>
-<li>záznamy o propojení účtů Moodle a Microsoft.</li>
+<!--o365-start--><li>záznamy o propojení účtů Moodle a Microsoft.</li><!--o365-end-->
 </ul>
 <p>Měl by se používat pouze při změně nastavení <b>Deklarace pro vazbu uživatelského jména</b>.</p>
 <p>Nástroj přijímá jednoduchý soubor CSV se dvěma sloupci:</p>
@@ -514,12 +556,12 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <li>Pokud výše nebyl nalezen žádný záznam, pokusí se v tabulce <span class="auth_oidc_code">auth_oidc_token</span> najít záznam, jehož sloupec <span class="auth_oidc_code">oidcusername</span> odpovídá starému <span class="auth_oidc_code">username</span>, a změní jej na <span class="auth_oidc_code">new_username</span>.</li>
 </ul>
 </li>
-<li>Je-li nainstalován modul <span class="auth_oidc_code">local_o365</span>, aktualizuje záznam o připojení uživatele.
+<!--o365-start--><li>Je-li nainstalován modul <span class="auth_oidc_code">local_o365</span>, aktualizuje záznam o připojení uživatele.
 <ul>
 <li>Pokud byl v kroku 1 nalezen uživatel, vyhledá záznam o připojení tohoto uživatele v tabulce <span class="auth_oidc_code">local_o365_objects</span> a nastaví sloupec <span class="auth_oidc_code">o365name</span> na hodnotu <span class="auth_oidc_code">new_username</span>.</li>
 <li>Pokud v kroku 1 nebyl nalezen žádný uživatel, pokusí se v tabulce <span class="auth_oidc_code">local_o365_objects</span> najít záznam uživatele, jehož <span class="auth_oidc_code">o365name</span> odpovídá hodnotě <span class="auth_oidc_code">username</span>, a změní jej na hodnotu <span class="auth_oidc_code">new_username</span>.</li>
 </ul>
-</li>
+</li><!--o365-end-->
 </ol>
 <p>Níže uvedený vzorový soubor by změnil deklaraci pro vazbu uživatelského jména z <span class="auth_oidc_code">upn</span> nebo <span class="auth_oidc_code">email</span> na <span class="auth_oidc_code">oid</span>.</p>';
 $string['change_binding_username_claim_tool_result'] = 'Výsledky aktualizace';

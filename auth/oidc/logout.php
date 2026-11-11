@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Single Sign Out end point.
+ * Single Logout end point.
  *
  * @package auth_oidc
  * @author Lai Wei <lai.wei@enovation.ie>
