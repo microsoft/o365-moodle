@@ -24,6 +24,8 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
+
+\local_o365\utils::require_features_enabled();
 require_once($CFG->libdir . '/filestorage/zip_archive.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 

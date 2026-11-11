@@ -29,6 +29,8 @@ use core\url;
 // phpcs:ignore moodle.Files.RequireLogin.Missing -- This file is called from Microsoft Teams tab.
 require_once(__DIR__ . '/../../config.php');
 
+\local_o365\utils::require_features_enabled();
+
 $url = new url('/local/o365/teams_tab_configuration.php');
 
 $PAGE->set_context(system::instance());
