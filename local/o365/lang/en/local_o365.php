@@ -151,8 +151,6 @@ $string['settings_usersync_emailsync'] = 'Match Microsoft Entra ID usernames to 
 $string['settings_addsync_tzsync'] = 'Sync Outlook timezone to Moodle in cronjob';
 $string['settings_addsync_tzsynconlogin'] = 'Sync Outlook timezone to Moodle on login';
 $string['settings_usersync_guestsync'] = 'Sync guest users';
-$string['settings_suspend_delete_running_time'] = 'User suspension/deletion running time';
-$string['settings_suspend_delete_running_time_desc'] = 'If the option is enabled, suspension/delete feature of user sync function will run once a day, at the time configured in the Moodle instance default time zone.';
 $string['settings_usersync_delete_delay'] = 'Delay before deleting suspended users';
 $string['settings_usersync_delete_delay_desc'] = 'The minimum time a user must stay suspended in Moodle before the user sync deletes the account. This applies on top of Microsoft Entra ID\'s soft-delete retention period, so deletion never happens earlier than that. Set to 0 to delete as soon as the Microsoft Entra ID retention period has ended. Users who were already suspended before this setting was introduced are counted from the first user sync run that finds them.';
 $string['settings_support_user_identifier_change'] = 'Support Microsoft account binding username claim value change';
@@ -454,17 +452,19 @@ $string['settings_teamconnections_details'] = 'Review and manage connections bet
 $string['settings_usermatch'] = 'User Matching';
 $string['settings_usermatch_details'] = 'This tool allows you to match Moodle users with Microsoft 365 users based on a custom uploaded data file.';
 $string['settings_usersyncgroupfilter'] = 'User sync group filter';
-$string['settings_usersyncgroupfilter_details'] = 'When a group object ID (GUID) is entered here, full user syncs will be restricted to members and owners of that Microsoft 365 group. Leave blank to sync all licensed users in your tenant.<br><br>
+$string['settings_usersyncgroupfilter_details'] = 'When one or more group object IDs (GUIDs) are entered here, full user syncs will be restricted to members and owners of those Microsoft 365 groups, including members of nested groups. Leave blank to sync all licensed users in your tenant.<br><br>
 <strong>CAUTION: This is an advanced setting. Misconfiguration can cause significant data synchronisation issues.</strong><br><br>
 <strong>When configured, the following apply:</strong><br>
 (1) Profile updates, timezone updates, and photo updates will only be applied to users who are members or owners of the group<br>
 (2) New Moodle accounts will only be created for users who are members or owners of the group<br>
 (3) Moodle accounts for non-member users will no longer receive updates and may become out-of-sync with Microsoft 365<br>
 (4) Users disabled in Microsoft 365 will still be suspended in Moodle by the enabled-status sync, which runs independently of group filtering<br>
-(5) Removing a user from the group stops future syncs for that account. Their Moodle account is not deleted, and is only suspended if the "Suspend accounts in Moodle when not in the configured user sync group" option is enabled, which suspends every synced user who is not in the group, whether or not they were ever in it<br><br>
+(5) Removing a user from the group stops future syncs for that account. Their Moodle account is not deleted, and is only suspended if the "Suspend accounts in Moodle when not in the configured user sync group" option is enabled, which suspends every synced user who is not in the group, whether or not they were ever in it. This option only applies to accounts that have been synced at least once and so have a stored Microsoft link; other accounts are not suspended<br><br>
 <strong>Incremental (delta) sync limitation:</strong> Microsoft Graph does not support delta queries on group membership endpoints. When this setting is configured, delta syncs will perform a full group-member sync instead of an incremental update. This is correct behaviour but may be slower than a normal delta sync.<br><br>
-Validate the group object ID before saving. Enter the group object ID (GUID).';
-$string['settings_usersyncgroupfilter_validation_error'] = 'Invalid group ID format. The group ID must be a valid GUID (e.g., 550e8400-e29b-41d4-a716-446655440000).';
+Validate the group object IDs before saving. Enter one group object ID (GUID) per line, or separate several IDs with commas.';
+$string['settings_usersyncgroupfilter_notfound'] = 'Not found in Microsoft Entra ID: {$a}. Check the group object IDs.';
+$string['settings_usersyncgroupfilter_notverified'] = 'The group object IDs could not be checked against Microsoft Entra ID and were saved unverified. Make sure the IDs are correct.';
+$string['settings_usersyncgroupfilter_validation_error'] = 'Invalid group ID format: {$a}. Each group ID must be a valid GUID (e.g., 550e8400-e29b-41d4-a716-446655440000).';
 $string['settings_usersynccreationrestriction'] = 'User creation restriction';
 $string['settings_usersynccreationrestriction_details'] = 'If enabled, only Microsoft Entra ID users matching the condition will be created during user sync. For Microsoft 365 Group Membership (group object ID), enter one group object ID or multiple group object IDs separated by commas.';
 $string['settings_usersynccreationrestriction_fieldval'] = 'Field value';
@@ -1064,7 +1064,7 @@ $string['help_user_suspendnolink_help'] = 'Normally the suspend/disable options 
 
 Matched accounts that are missing from Entra ID, or disabled there, are <strong>suspended only</strong>: they are never deleted (without a stored object ID, the Entra ID soft-delete retention period cannot be checked) and are never automatically re-enabled. Guest accounts are skipped.
 
-This option only works when the OpenID Connect binding username claim is set to a specific field that can be looked up in Entra ID - "upn", "oid", "email" or "samaccountname". With "auto" (where the effective claim is chosen per login and can differ between users) or any other claim, the Moodle username cannot be reliably matched to a single account, and this option does nothing.
+This option works when the OpenID Connect binding username claim is "auto" or a specific field that can be looked up in Entra ID - "upn", "oid", "email" or "samaccountname". With "auto", the Moodle username is matched against the Entra ID user principal name, and an account is also treated as present in Entra ID when its username or email address equals an Entra ID mail address, so that it is not suspended by mistake. With any other claim, the Moodle username cannot be reliably matched to a single account, and this option does nothing.
 
 Review your suspended users after the first run: an account manually switched to this authentication method that was never a real Entra ID user will be suspended by this option.';
 $string['help_user_match'] = 'Match Accounts Help';

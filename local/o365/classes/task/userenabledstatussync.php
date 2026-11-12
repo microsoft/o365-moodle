@@ -111,55 +111,6 @@ class userenabledstatussync extends scheduled_task {
         // Do not time out.
         @set_time_limit(0);
 
-        // Check if this should run today based on configured time.
-        $lastrundate = get_config('local_o365', 'task_usersync_lastdelete');
-        $runtoday = true;
-        $alreadyruntoday = false;
-
-        if (strlen($lastrundate) == 10) {
-            $lastrundate = false;
-        }
-
-        if ($lastrundate && $lastrundate >= date('Ymd')) {
-            $alreadyruntoday = true;
-            $runtoday = false;
-            $this->mtrace('Skipped - already ran today (less than 1 day ago).');
-        }
-
-        if (!$alreadyruntoday) {
-            $suspensiontaskhour = get_config('local_o365', 'usersync_suspension_h');
-            $suspensiontaskminute = get_config('local_o365', 'usersync_suspension_m');
-            if (!$suspensiontaskhour) {
-                $suspensiontaskhour = 0;
-            }
-
-            if (!$suspensiontaskminute) {
-                $suspensiontaskminute = 0;
-            }
-
-            $currenthour = date('H');
-            $currentminute = date('i');
-            if ($currenthour > $suspensiontaskhour) {
-                set_config('task_usersync_lastdelete', date('Ymd'), 'local_o365');
-            } else if (($currenthour == $suspensiontaskhour) && ($currentminute >= $suspensiontaskminute)) {
-                set_config('task_usersync_lastdelete', date('Ymd'), 'local_o365');
-            } else {
-                $runtoday = false;
-                $this->mtrace(sprintf(
-                    'Skipped - this run is before the configured time (%02d:%02d). This task only runs on its own ' .
-                    'scheduled task cron pattern, so it will keep skipping until a run occurs at or after the ' .
-                    'configured time. If runs are always skipped, align the task\'s scheduled time (Site ' .
-                    'administration > Server > Scheduled tasks) with the configured time.',
-                    $suspensiontaskhour,
-                    $suspensiontaskminute
-                ));
-            }
-        }
-
-        if (!$runtoday) {
-            return true;
-        }
-
         $this->mtrace('Checking for users to suspend/reenable...');
 
         $usersync = new main();
