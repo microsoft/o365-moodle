@@ -854,19 +854,6 @@ function xmldb_local_o365_upgrade($oldversion) {
     }
 
     if ($oldversion < 2021051713) {
-        // Update "task_usersync_lastdelete" setting from timestamp to YYYYMMDD.
-        $existingtaskusersynclastdeletesetting = get_config('local_o365', 'task_usersync_lastdelete');
-        if ($existingtaskusersynclastdeletesetting != date('Ymd', strtotime('yesterday'))) {
-            add_to_config_log(
-                'task_usersync_lastdelete',
-                $existingtaskusersynclastdeletesetting,
-                date('Ymd', strtotime('yesterday')),
-                'local_o365'
-            );
-        }
-
-        set_config('task_usersync_lastdelete', date('Ymd', strtotime('yesterday')), 'local_o365');
-
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2021051713, 'local', 'o365');
     }
@@ -1007,9 +994,6 @@ function xmldb_local_o365_upgrade($oldversion) {
     }
 
     if ($oldversion < 2022041901) {
-        // Set default user sync suspension feature schedule.
-        local_o365_set_default_user_sync_suspension_feature_schedule();
-
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2022041901, 'local', 'o365');
     }
@@ -1757,6 +1741,17 @@ function xmldb_local_o365_upgrade($oldversion) {
 
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2026042001.07, 'local', 'o365');
+    }
+
+    if ($oldversion < 2026100500.02) {
+        // The user suspension/re-enable/delete task no longer limits itself to once a day or to an earliest time of day, so
+        // the settings that supported this are no longer used. Delete them.
+        unset_config('usersync_suspension_h', 'local_o365');
+        unset_config('usersync_suspension_m', 'local_o365');
+        unset_config('task_usersync_lastdelete', 'local_o365');
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2026100500.02, 'local', 'o365');
     }
 
     return true;

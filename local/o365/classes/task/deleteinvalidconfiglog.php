@@ -53,7 +53,6 @@ class deleteinvalidconfiglog extends adhoc_task {
         'teamscacheupdated',
         'calsyncinlastrun',
         'task_usersync_lastdeltatoken',
-        'task_usersync_lastdelete',
         'cal_site_lastsync',
         'cal_course_lastsync',
         'cal_user_lastsync',

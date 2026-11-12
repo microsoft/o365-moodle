@@ -151,8 +151,6 @@ $string['settings_usersync_emailsync'] = 'Podczas synchronizacji dopasowuj nazwy
 $string['settings_addsync_tzsync'] = 'Synchronizuj strefę czasową programu Outlook z platformą Moodle w zadaniu cron';
 $string['settings_addsync_tzsynconlogin'] = 'Synchronizuj strefę czasową programu Outlook z platformą Moodle przy logowaniu';
 $string['settings_usersync_guestsync'] = 'Synchronizuj użytkowników-gości';
-$string['settings_suspend_delete_running_time'] = 'Godzina uruchamiania zawieszania/usuwania użytkowników';
-$string['settings_suspend_delete_running_time_desc'] = 'Jeśli ta opcja jest włączona, funkcja zawieszania/usuwania w ramach synchronizacji użytkowników będzie uruchamiana raz dziennie o godzinie skonfigurowanej w domyślnej strefie czasowej instancji Moodle.';
 $string['settings_usersync_delete_delay'] = 'Opóźnienie przed usunięciem zawieszonych użytkowników';
 $string['settings_usersync_delete_delay_desc'] = 'Minimalny czas, przez jaki użytkownik musi pozostać zawieszony w Moodle, zanim synchronizacja użytkowników usunie konto. Dotyczy to dodatkowo okresu przechowywania usuniętych elementów w usłudze Microsoft Entra ID, więc usunięcie nigdy nie nastąpi wcześniej. Ustaw 0, aby usuwać konta zaraz po zakończeniu okresu przechowywania w usłudze Microsoft Entra ID. Użytkownicy, którzy byli już zawieszeni przed wprowadzeniem tego ustawienia, są liczeni od pierwszego uruchomienia synchronizacji użytkowników, które ich znajdzie.';
 $string['settings_support_user_identifier_change'] = 'Obsługa zmiany wartości oświadczenia nazwy użytkownika powiązania konta Microsoft';
@@ -454,17 +452,19 @@ $string['settings_teamconnections_details'] = 'Przeglądaj połączenia między 
 $string['settings_usermatch'] = 'Dopasowywanie użytkowników';
 $string['settings_usermatch_details'] = 'To narzędzie umożliwia dopasowanie użytkowników Moodle do użytkowników Microsoft 365 na podstawie przesłanego niestandardowego pliku danych.';
 $string['settings_usersyncgroupfilter'] = 'Filtr grupy synchronizacji użytkowników';
-$string['settings_usersyncgroupfilter_details'] = 'Po wprowadzeniu tutaj identyfikatora obiektu grupy (GUID) pełna synchronizacja użytkowników zostanie ograniczona do członków i właścicieli tej grupy Microsoft 365. Pozostaw puste, aby synchronizować wszystkich użytkowników z licencją w dzierżawcy.<br><br>
+$string['settings_usersyncgroupfilter_details'] = 'Po wprowadzeniu tutaj jednego lub kilku identyfikatorów obiektów grup (GUID) pełna synchronizacja użytkowników zostanie ograniczona do członków i właścicieli tych grup Microsoft 365, w tym członków grup zagnieżdżonych. Pozostaw puste, aby synchronizować wszystkich użytkowników z licencją w dzierżawcy.<br><br>
 <strong>UWAGA: To jest ustawienie zaawansowane. Nieprawidłowa konfiguracja może powodować poważne problemy z synchronizacją danych.</strong><br><br>
 <strong>Po skonfigurowaniu obowiązują następujące zasady:</strong><br>
 (1) Aktualizacje profilu, strefy czasowej i zdjęcia będą stosowane tylko do użytkowników, którzy są członkami lub właścicielami grupy<br>
 (2) Nowe konta Moodle będą tworzone tylko dla użytkowników, którzy są członkami lub właścicielami grupy<br>
 (3) Konta Moodle użytkowników niebędących członkami nie będą już otrzymywać aktualizacji i mogą przestać być zsynchronizowane z Microsoft 365<br>
 (4) Użytkownicy wyłączeni w Microsoft 365 nadal będą zawieszani w Moodle przez synchronizację stanu włączenia, która działa niezależnie od filtrowania grup<br>
-(5) Usunięcie użytkownika z grupy zatrzymuje przyszłe synchronizacje dla jego konta. Jego konto Moodle nie jest usuwane i jest zawieszane tylko wtedy, gdy włączona jest opcja „Zawieszaj konta w Moodle, gdy nie należą do skonfigurowanej grupy synchronizacji użytkowników”, która zawiesza każdego zsynchronizowanego użytkownika spoza grupy, niezależnie od tego, czy kiedykolwiek do niej należał<br><br>
+(5) Usunięcie użytkownika z grupy zatrzymuje przyszłe synchronizacje dla jego konta. Jego konto Moodle nie jest usuwane i jest zawieszane tylko wtedy, gdy włączona jest opcja „Zawieszaj konta w Moodle, gdy nie należą do skonfigurowanej grupy synchronizacji użytkowników”, która zawiesza każdego zsynchronizowanego użytkownika spoza grupy, niezależnie od tego, czy kiedykolwiek do niej należał. Ta opcja dotyczy tylko kont, które zostały zsynchronizowane co najmniej raz i mają zapisane połączenie z Microsoft; pozostałe konta nie są zawieszane<br><br>
 <strong>Ograniczenie synchronizacji przyrostowej (delta):</strong> Microsoft Graph nie obsługuje zapytań delta w punktach końcowych członkostwa w grupach. Po skonfigurowaniu tego ustawienia synchronizacje delta będą wykonywać pełną synchronizację członków grupy zamiast aktualizacji przyrostowej. Jest to prawidłowe zachowanie, ale może być wolniejsze niż zwykła synchronizacja delta.<br><br>
-Zweryfikuj identyfikator obiektu grupy przed zapisaniem. Wprowadź identyfikator obiektu grupy (GUID).';
-$string['settings_usersyncgroupfilter_validation_error'] = 'Nieprawidłowy format identyfikatora grupy. Identyfikator grupy musi być prawidłowym identyfikatorem GUID (np. 550e8400-e29b-41d4-a716-446655440000).';
+Zweryfikuj identyfikatory obiektów grup przed zapisaniem. Wprowadź jeden identyfikator obiektu grupy (GUID) w wierszu lub oddziel kilka identyfikatorów przecinkami.';
+$string['settings_usersyncgroupfilter_notfound'] = 'Nie znaleziono w Microsoft Entra ID: {$a}. Sprawdź identyfikatory obiektów grup.';
+$string['settings_usersyncgroupfilter_notverified'] = 'Nie udało się sprawdzić identyfikatorów obiektów grup w Microsoft Entra ID i zapisano je bez weryfikacji. Upewnij się, że identyfikatory są prawidłowe.';
+$string['settings_usersyncgroupfilter_validation_error'] = 'Nieprawidłowy format identyfikatora grupy: {$a}. Każdy identyfikator grupy musi być prawidłowym identyfikatorem GUID (np. 550e8400-e29b-41d4-a716-446655440000).';
 $string['settings_usersynccreationrestriction'] = 'Ograniczenie tworzenia użytkowników';
 $string['settings_usersynccreationrestriction_details'] = 'Jeśli ta opcja jest włączona, podczas synchronizacji użytkowników będą tworzeni tylko użytkownicy Microsoft Entra ID spełniający warunek. W przypadku członkostwa w grupie Microsoft 365 (identyfikator obiektu grupy) wprowadź jeden identyfikator obiektu grupy lub wiele identyfikatorów oddzielonych przecinkami.';
 $string['settings_usersynccreationrestriction_fieldval'] = 'Wartość pola';
@@ -1064,7 +1064,7 @@ $string['help_user_suspendnolink_help'] = 'Zwykle powyższe opcje zawieszania/wy
 
 Dopasowane konta, których brakuje w Entra ID lub które są tam wyłączone, są <strong>tylko zawieszane</strong>: nigdy nie są usuwane (bez zapisanego identyfikatora obiektu nie można sprawdzić okresu przechowywania usuniętych elementów w Entra ID) i nigdy nie są automatycznie ponownie włączane. Konta gości są pomijane.
 
-Ta opcja działa tylko wtedy, gdy oświadczenie nazwy użytkownika powiązania OpenID Connect jest ustawione na konkretne pole, które można wyszukać w Entra ID - „upn”, „oid”, „email” lub „samaccountname”. W przypadku wartości „auto” (gdzie efektywne oświadczenie jest wybierane przy każdym logowaniu i może się różnić między użytkownikami) lub dowolnego innego oświadczenia nazwy użytkownika Moodle nie można wiarygodnie dopasować do pojedynczego konta, a ta opcja nie robi nic.
+Ta opcja działa, gdy oświadczenie nazwy użytkownika powiązania OpenID Connect jest ustawione na „auto” lub na konkretne pole, które można wyszukać w Entra ID - „upn”, „oid”, „email” lub „samaccountname”. W przypadku wartości „auto” nazwa użytkownika Moodle jest dopasowywana do głównej nazwy użytkownika (UPN) w Entra ID, a konto jest również uznawane za istniejące w Entra ID, gdy jego nazwa użytkownika lub adres e-mail jest zgodny z adresem e-mail w Entra ID, aby nie zostało zawieszone przez pomyłkę. W przypadku dowolnego innego oświadczenia nazwy użytkownika Moodle nie można wiarygodnie dopasować do pojedynczego konta, a ta opcja nie robi nic.
 
 Po pierwszym uruchomieniu sprawdź zawieszonych użytkowników: konto ręcznie przełączone na tę metodę uwierzytelniania, które nigdy nie było prawdziwym użytkownikiem Entra ID, zostanie zawieszone przez tę opcję.';
 $string['help_user_match'] = 'Pomoc dotycząca dopasowywania kont';

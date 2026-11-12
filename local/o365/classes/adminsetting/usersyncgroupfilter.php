@@ -25,14 +25,15 @@
 
 namespace local_o365\adminsetting;
 
-use admin_setting_configtext;
-
+use admin_setting_configtextarea;
+use local_o365\feature\usersync\main;
+use moodle_exception;
 
 /**
  * Admin setting for group-based user sync filtering.
- * Stores the Microsoft 365 group ID whose members will be synced to Moodle.
+ * Stores the object IDs of the Microsoft 365 groups whose members (including members of nested groups) will be synced to Moodle.
  */
-class usersyncgroupfilter extends admin_setting_configtext {
+class usersyncgroupfilter extends admin_setting_configtextarea {
     /**
      * Constructor.
      *
@@ -42,29 +43,85 @@ class usersyncgroupfilter extends admin_setting_configtext {
      * @param mixed $defaultsetting string or array depending on implementation
      */
     public function __construct($name, $visiblename, $description, $defaultsetting = '') {
-        parent::__construct($name, $visiblename, $description, $defaultsetting, PARAM_TEXT);
+        parent::__construct($name, $visiblename, $description, $defaultsetting, PARAM_TEXT, '60', '3');
     }
 
     /**
-     * Write the setting to the database with GUID format validation.
+     * Write the setting to the database with GUID format validation of every group ID.
+     *
+     * The IDs are stored normalised as a comma separated list, so a single group ID is stored exactly as before.
      *
      * @param string $data The value to write
      * @return string Empty string if successful, error message if validation fails
      */
     public function write_setting($data) {
-        $data = trim((string) $data);
+        $ids = main::split_group_ids((string) $data);
 
         // Empty value is allowed (optional setting).
-        if ($data === '') {
-            return parent::write_setting($data);
+        if (empty($ids)) {
+            return parent::write_setting('');
         }
 
-        // Check if the value matches GUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
-        // Pattern: 8 hex digits, dash, 4 hex digits, dash, 4 hex digits, dash, 4 hex digits, dash, 12 hex digits.
-        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $data)) {
-            return get_string('settings_usersyncgroupfilter_validation_error', 'local_o365');
+        // Check every ID, so that all problems are reported at once instead of one per save.
+        $malformed = [];
+        $wellformed = [];
+        foreach ($ids as $id) {
+            // GUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
+            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/', $id)) {
+                $wellformed[] = $id;
+            } else {
+                $malformed[] = $id;
+            }
         }
 
-        return parent::write_setting($data);
+        $errors = [];
+        if (!empty($malformed)) {
+            $errors[] = get_string('settings_usersyncgroupfilter_validation_error', 'local_o365', implode(', ', $malformed));
+        }
+
+        // Check that the groups exist. This only covers the moment of saving: a group can still be deleted later, which the
+        // user sync reports when it runs.
+        $verified = true;
+        if (!empty($wellformed)) {
+            try {
+                $foundgroups = $this->get_group_api_client()->get_groups_batch($wellformed);
+                $notfound = [];
+                foreach ($wellformed as $id) {
+                    if (empty($foundgroups[$id]['id'])) {
+                        $notfound[] = $id;
+                    }
+                }
+                if (!empty($notfound)) {
+                    $errors[] = get_string('settings_usersyncgroupfilter_notfound', 'local_o365', implode(', ', $notfound));
+                }
+            } catch (moodle_exception $e) {
+                // Microsoft Graph is not configured or not reachable, which says nothing about the groups.
+                $verified = false;
+            }
+        }
+
+        if (!empty($errors)) {
+            return implode(' ', $errors);
+        }
+
+        if (!$verified) {
+            \core\notification::warning(get_string('settings_usersyncgroupfilter_notverified', 'local_o365'));
+        }
+
+        return parent::write_setting(implode(',', $ids));
+    }
+
+    /**
+     * Construct the Microsoft Graph API client used to check that the groups exist.
+     *
+     * Extracted into its own method so tests can override it to inject a stub API client.
+     *
+     * @return object An API client exposing get_groups_batch().
+     * @throws moodle_exception
+     */
+    protected function get_group_api_client() {
+        $usersync = new main();
+
+        return $usersync->construct_user_api();
     }
 }
