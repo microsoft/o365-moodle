@@ -1260,10 +1260,16 @@ class unified extends o365api {
      * @param array $odataqueries Initial OData query parameters (modified in place per page).
      * @param callable $pagehandler Receives the full parsed API result array for each page.
      *                              Must return int: the number of items processed from that page.
+     * @param array $headers Additional request headers as "Name: value" strings, sent with every page request.
      * @return array [int $totalprocessed, string|null $deltatokenvalue]
      * @throws moodle_exception
      */
-    private function execute_odata_paginated(string $endpoint, array $odataqueries, callable $pagehandler): array {
+    private function execute_odata_paginated(
+        string $endpoint,
+        array $odataqueries,
+        callable $pagehandler,
+        array $headers = []
+    ): array {
         $totalprocessed = 0;
         $deltatokenvalue = null;
         $continue = true;
@@ -1288,7 +1294,8 @@ class unified extends o365api {
                 $apimethod = $endpoint . '?' . rtrim($odataquerystring, '&');
             }
 
-            $response = $this->apicall('get', $apimethod);
+            // The headers are passed on every call, as each page is a separate request.
+            $response = $this->apicall('get', $apimethod, '', empty($headers) ? [] : ['headers' => $headers]);
             $result = $this->process_apicall_response($response, ['value' => null]);
 
             if (!empty($result) && is_array($result)) {
@@ -1493,8 +1500,138 @@ class unified extends o365api {
     }
 
     /**
-     * Process users from a specific group in batches with a callback function.
-     * This fetches members of the specified group using the /groups/{id}/members endpoint.
+     * Request headers for group member and owner queries that use the OData cast to users.
+     *
+     * Microsoft Graph requires the ConsistencyLevel header, together with the $count query parameter, when the OData cast
+     * (for example /groups/{id}/transitiveMembers/microsoft.graph.user) is used on these endpoints.
+     */
+    private const GROUP_MEMBER_QUERY_HEADERS = ['ConsistencyLevel: eventual'];
+
+    /**
+     * Process users from one or more groups in batches with a callback function.
+     *
+     * Members are fetched with the /groups/{id}/transitiveMembers endpoint, so users in nested groups are included, and
+     * owners of each listed group are included too. Each user is passed to the callback only once, even when the user
+     * belongs to several of the groups. When only one group is given, no deduplication state is kept in memory.
+     *
+     * @param string|array $groupids The Microsoft 365 group object ID, or an array of group object IDs
+     * @param callable $callback Function to call for each batch of users. Receives array of users as parameter.
+     * @param string|array $params User fields to select (use 'default' for default fields). The id field is always added.
+     * @return int Total number of unique users processed
+     * @throws moodle_exception
+     */
+    public function process_group_members_batched($groupids, callable $callback, $params = 'default'): int {
+        $groupids = array_values(array_unique((array) $groupids));
+
+        if (empty($groupids)) {
+            return 0;
+        }
+
+        if (count($groupids) === 1) {
+            try {
+                return $this->process_single_group_members_batched($groupids[0], $callback, $params);
+            } catch (moodle_exception $e) {
+                throw $this->get_group_fetch_exception($groupids[0], $e);
+            }
+        }
+
+        $this->assert_groups_exist($groupids);
+
+        // Several groups: only user IDs are remembered, so memory use grows by one small array key per user.
+        $seen = [];
+        $total = 0;
+        $dedupecallback = function (array $users) use (&$seen, &$total, $callback): void {
+            $new = [];
+            foreach ($users as $user) {
+                if (!empty($user['id']) && !isset($seen[$user['id']])) {
+                    $seen[$user['id']] = true;
+                    $new[] = $user;
+                }
+            }
+            if (!empty($new)) {
+                $callback($new);
+                $total += count($new);
+            }
+        };
+
+        foreach ($groupids as $groupid) {
+            try {
+                $this->process_single_group_members_batched($groupid, $dedupecallback, $params);
+            } catch (moodle_exception $e) {
+                throw $this->get_group_fetch_exception($groupid, $e);
+            }
+        }
+
+        return $total;
+    }
+
+    /**
+     * Check that every group exists before any of its members are retrieved, so a mistyped or deleted group ID fails the
+     * run before any user is processed, instead of after the members of the earlier groups were already handled.
+     *
+     * A group ID that is valid when it is saved can be invalid when the task runs, for example after the group is deleted.
+     * The check is all-or-nothing: when a group is confirmed missing, or when the check itself cannot be completed (for
+     * example because of a missing permission or a temporary service error), the run is aborted, so that the members of
+     * the earlier groups are never processed when a later group cannot be confirmed. This costs one batched request per 20
+     * groups.
+     *
+     * @param array $groupids The Microsoft 365 group object IDs.
+     * @return void
+     * @throws moodle_exception If any group does not exist, or the check cannot be completed. The message names all
+     *                          missing groups.
+     */
+    protected function assert_groups_exist(array $groupids): void {
+        try {
+            $found = $this->get_groups_batch($groupids);
+        } catch (moodle_exception $e) {
+            throw new moodle_exception(
+                'generalexceptionmessage',
+                'error',
+                '',
+                'Could not check that the user sync groups exist: ' . $e->getMessage(),
+                $e->debuginfo ?? ''
+            );
+        }
+
+        $missing = [];
+        foreach ($groupids as $groupid) {
+            if (empty($found[$groupid]['id'])) {
+                $missing[] = $groupid;
+            }
+        }
+
+        if (!empty($missing)) {
+            throw new moodle_exception(
+                'generalexceptionmessage',
+                'error',
+                '',
+                'Could not retrieve group members: these groups do not exist in Microsoft Entra ID: ' . implode(', ', $missing)
+            );
+        }
+    }
+
+    /**
+     * Wrap an error from retrieving the members of a group, so the message names the group that failed.
+     *
+     * Retrieval is all-or-nothing: when any configured group cannot be read, the caller gets an exception instead of
+     * a partial member list, so callers never act on incomplete membership (for example by suspending users).
+     *
+     * @param string $groupid The Microsoft 365 group object ID that could not be read.
+     * @param moodle_exception $e The original exception.
+     * @return moodle_exception The exception to throw.
+     */
+    protected function get_group_fetch_exception(string $groupid, moodle_exception $e): moodle_exception {
+        return new moodle_exception(
+            'generalexceptionmessage',
+            'error',
+            '',
+            'Could not retrieve the members of group ' . $groupid . ': ' . $e->getMessage(),
+            $e->debuginfo ?? ''
+        );
+    }
+
+    /**
+     * Process users from a single group (including nested group members and owners) in batches with a callback function.
      *
      * @param string $groupid The Microsoft 365 group object ID
      * @param callable $callback Function to call for each batch of users. Receives array of users as parameter.
@@ -1502,7 +1639,7 @@ class unified extends o365api {
      * @return int Total number of users processed
      * @throws moodle_exception
      */
-    public function process_group_members_batched(string $groupid, callable $callback, $params = 'default'): int {
+    protected function process_single_group_members_batched(string $groupid, callable $callback, $params = 'default'): int {
         $odataqueries = [];
         $droppablefields = [];
 
@@ -1517,11 +1654,17 @@ class unified extends o365api {
                     unset($params[$key]);
                 }
             }
+            // The user ID is always selected: it is needed to remove owners that are also members and users that are in
+            // several groups. Without it every user would be dropped, whatever other fields the caller selected.
+            if (!in_array('id', $params, true)) {
+                $params[] = 'id';
+            }
             $droppablefields = $this->get_custom_claim_fields_in($params);
             $odataqueries['$select'] = implode(',', $params);
         }
 
         $odataqueries['$top'] = (string)self::GRAPH_API_BATCH_SIZE;
+        $odataqueries['$count'] = 'true';
 
         $ownerids = [];
 
@@ -1546,7 +1689,7 @@ class unified extends o365api {
         $ownerpage = $this->track_custom_claim_field_presence($ownerpage, $droppablefields, $seenfields);
 
         $ownerendpoint = "/groups/{$groupid}/owners/microsoft.graph.user";
-        $this->execute_odata_paginated($ownerendpoint, $ownerqueries, $ownerpage);
+        $this->execute_odata_paginated($ownerendpoint, $ownerqueries, $ownerpage, self::GROUP_MEMBER_QUERY_HEADERS);
 
         // Fetch group members. As each page arrives, remove seen members from $ownerids
         // so only genuine owner-only accounts remain after pagination completes.
@@ -1565,8 +1708,14 @@ class unified extends o365api {
         };
         $pagehandler = $this->track_custom_claim_field_presence($pagehandler, $droppablefields, $seenfields);
 
-        $endpoint = "/groups/{$groupid}/members/microsoft.graph.user";
-        [$totalprocessed] = $this->execute_odata_paginated($endpoint, $odataqueries, $pagehandler);
+        // Transitive members include users in nested groups, resolved by Microsoft Graph in the same paged request.
+        $endpoint = "/groups/{$groupid}/transitiveMembers/microsoft.graph.user";
+        [$totalprocessed] = $this->execute_odata_paginated(
+            $endpoint,
+            $odataqueries,
+            $pagehandler,
+            self::GROUP_MEMBER_QUERY_HEADERS
+        );
 
         // Emit owners who were not present in any members page (owner-only accounts).
         // This is done once after all member pages to avoid duplicate processing.
@@ -1602,7 +1751,7 @@ class unified extends o365api {
      * added to the group may not appear in the delta (their user object may not have changed).
      * Periodic full syncs (nodelta mode) handle this edge case.
      *
-     * @param string $groupid The Microsoft 365 group object ID
+     * @param string|array $groupids The Microsoft 365 group object ID, or an array of group object IDs
      * @param callable $callback Function to call for each filtered batch of group-member users
      * @param string|array $params User fields to select (use 'default' for default fields)
      * @param string|null $deltatoken Delta token from a previous sync, or null for a full initial sync
@@ -1610,14 +1759,16 @@ class unified extends o365api {
      * @throws moodle_exception
      */
     public function process_group_members_delta_batched(
-        string $groupid,
+        $groupids,
         callable $callback,
         $params = 'default',
         ?string $deltatoken = null
     ): array {
+        $groupids = array_values(array_unique((array) $groupids));
+
         // Step 1: Fetch current group member and owner IDs (id field only — lightweight).
         $memberids = [];
-        $idquery = ['$select' => 'id', '$top' => '999'];
+        $idquery = ['$select' => 'id', '$top' => '999', '$count' => 'true'];
         $idhandler = function (array $result) use (&$memberids): int {
             if (!empty($result['value']) && is_array($result['value'])) {
                 foreach ($result['value'] as $user) {
@@ -1630,13 +1781,35 @@ class unified extends o365api {
             return 0;
         };
 
-        $this->execute_odata_paginated("/groups/{$groupid}/members/microsoft.graph.user", $idquery, $idhandler);
-        $this->execute_odata_paginated("/groups/{$groupid}/owners/microsoft.graph.user", $idquery, $idhandler);
+        if (count($groupids) > 1) {
+            $this->assert_groups_exist($groupids);
+        }
+
+        // Members are resolved transitively by Microsoft Graph, so users in nested groups are included without any
+        // extra requests. The IDs of all groups are collected into one map, which also removes duplicates.
+        foreach ($groupids as $groupid) {
+            try {
+                $this->execute_odata_paginated(
+                    "/groups/{$groupid}/transitiveMembers/microsoft.graph.user",
+                    $idquery,
+                    $idhandler,
+                    self::GROUP_MEMBER_QUERY_HEADERS
+                );
+                $this->execute_odata_paginated(
+                    "/groups/{$groupid}/owners/microsoft.graph.user",
+                    $idquery,
+                    $idhandler,
+                    self::GROUP_MEMBER_QUERY_HEADERS
+                );
+            } catch (moodle_exception $e) {
+                throw $this->get_group_fetch_exception($groupid, $e);
+            }
+        }
 
         if (empty($memberids)) {
-            // Group is empty or inaccessible — nothing to sync. Clear the delta token so the
+            // Groups are empty or inaccessible — nothing to sync. Clear the delta token so the
             // next run re-evaluates group membership from scratch.
-            utils::debug('Group ' . $groupid . ' has no members or owners; skipping delta sync.', __METHOD__);
+            utils::debug('Groups ' . implode(', ', $groupids) . ' have no members or owners; skipping delta sync.', __METHOD__);
             return [0, null, false];
         }
 

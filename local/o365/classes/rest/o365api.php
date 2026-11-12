@@ -213,6 +213,12 @@ abstract class o365api {
             'Authorization: Bearer ' . $this->token->get_token(),
         ];
 
+        // Additional request headers, each given as a "Name: value" string.
+        if (!empty($options['headers']) && is_array($options['headers'])) {
+            $header = array_merge($header, $options['headers']);
+        }
+        unset($options['headers']);
+
         if ($httpmethod !== 'put' && !empty($params) && is_string($params)) {
             $header[] = 'Content-length: ' . strlen($params);
         }

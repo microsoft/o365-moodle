@@ -151,8 +151,6 @@ $string['settings_usersync_emailsync'] = 'Tijdens de synchronisatie Microsoft En
 $string['settings_addsync_tzsync'] = 'Outlook-tijdzone synchroniseren naar Moodle in de cronjob';
 $string['settings_addsync_tzsynconlogin'] = 'Outlook-tijdzone synchroniseren naar Moodle bij aanmelden';
 $string['settings_usersync_guestsync'] = 'Gastgebruikers synchroniseren';
-$string['settings_suspend_delete_running_time'] = 'Uitvoeringstijd voor opschorten/verwijderen van gebruikers';
-$string['settings_suspend_delete_running_time_desc'] = 'Als de optie is ingeschakeld, wordt de functie voor opschorten/verwijderen van de gebruikerssynchronisatie eenmaal per dag uitgevoerd, op het tijdstip dat is ingesteld in de standaardtijdzone van de Moodle-site.';
 $string['settings_usersync_delete_delay'] = 'Wachttijd voordat opgeschorte gebruikers worden verwijderd';
 $string['settings_usersync_delete_delay_desc'] = 'De minimale tijd dat een gebruiker in Moodle opgeschort moet blijven voordat de gebruikerssynchronisatie het account verwijdert. Dit komt bovenop de bewaartermijn voor voorlopig verwijderen van Microsoft Entra ID, zodat verwijdering nooit eerder plaatsvindt. Stel in op 0 om te verwijderen zodra de bewaartermijn van Microsoft Entra ID is verstreken. Gebruikers die al waren opgeschort voordat deze instelling werd geïntroduceerd, worden geteld vanaf de eerste uitvoering van de gebruikerssynchronisatie die ze aantreft.';
 $string['settings_support_user_identifier_change'] = 'Wijziging van de waarde van de gebruikersnaamclaim voor de koppeling met een Microsoft-account ondersteunen';
@@ -454,17 +452,19 @@ $string['settings_teamconnections_details'] = 'Bekijk en beheer verbindingen tus
 $string['settings_usermatch'] = 'Gebruikers koppelen';
 $string['settings_usermatch_details'] = 'Met dit hulpmiddel kun je Moodle-gebruikers koppelen aan Microsoft 365-gebruikers op basis van een aangepast geüpload gegevensbestand.';
 $string['settings_usersyncgroupfilter'] = 'Groepsfilter voor gebruikerssynchronisatie';
-$string['settings_usersyncgroupfilter_details'] = 'Wanneer hier een object-ID (GUID) van een groep wordt ingevoerd, worden volledige gebruikerssynchronisaties beperkt tot de leden en eigenaars van die Microsoft 365-groep. Laat leeg om alle gebruikers met een licentie in je tenant te synchroniseren.<br><br>
+$string['settings_usersyncgroupfilter_details'] = 'Wanneer hier een of meer object-ID\'s (GUID\'s) van groepen worden ingevoerd, worden volledige gebruikerssynchronisaties beperkt tot de leden en eigenaars van die Microsoft 365-groepen, inclusief leden van geneste groepen. Laat leeg om alle gebruikers met een licentie in je tenant te synchroniseren.<br><br>
 <strong>LET OP: Dit is een geavanceerde instelling. Onjuiste configuratie kan aanzienlijke problemen met gegevenssynchronisatie veroorzaken.</strong><br><br>
 <strong>Wanneer geconfigureerd, geldt het volgende:</strong><br>
 (1) Profielupdates, tijdzone-updates en fotoupdates worden alleen toegepast op gebruikers die lid of eigenaar van de groep zijn<br>
 (2) Nieuwe Moodle-accounts worden alleen aangemaakt voor gebruikers die lid of eigenaar van de groep zijn<br>
 (3) Moodle-accounts van gebruikers die geen lid zijn, krijgen geen updates meer en kunnen niet meer synchroon lopen met Microsoft 365<br>
 (4) Gebruikers die in Microsoft 365 zijn uitgeschakeld, worden nog steeds in Moodle opgeschort door de synchronisatie van de ingeschakeldstatus, die onafhankelijk van groepsfiltering wordt uitgevoerd<br>
-(5) Wanneer een gebruiker uit de groep wordt verwijderd, worden toekomstige synchronisaties voor dat account gestopt. Het Moodle-account wordt niet verwijderd en wordt alleen opgeschort als de optie \'Accounts in Moodle opschorten wanneer ze niet in de geconfigureerde groep voor gebruikerssynchronisatie zitten\' is ingeschakeld. Die optie schort elke gesynchroniseerde gebruiker op die niet in de groep zit, ongeacht of de gebruiker er ooit in heeft gezeten<br><br>
+(5) Wanneer een gebruiker uit de groep wordt verwijderd, worden toekomstige synchronisaties voor dat account gestopt. Het Moodle-account wordt niet verwijderd en wordt alleen opgeschort als de optie \'Accounts in Moodle opschorten wanneer ze niet in de geconfigureerde groep voor gebruikerssynchronisatie zitten\' is ingeschakeld. Die optie schort elke gesynchroniseerde gebruiker op die niet in de groep zit, ongeacht of de gebruiker er ooit in heeft gezeten. Deze optie geldt alleen voor accounts die minstens één keer zijn gesynchroniseerd en dus een opgeslagen Microsoft-koppeling hebben; andere accounts worden niet opgeschort<br><br>
 <strong>Beperking van incrementele (delta) synchronisatie:</strong> Microsoft Graph ondersteunt geen deltaquery\'s op eindpunten voor groepslidmaatschap. Wanneer deze instelling is geconfigureerd, voeren deltasynchronisaties in plaats van een incrementele update een volledige synchronisatie van groepsleden uit. Dit is correct gedrag, maar kan trager zijn dan een normale deltasynchronisatie.<br><br>
-Valideer de object-ID van de groep voordat je opslaat. Voer de object-ID (GUID) van de groep in.';
-$string['settings_usersyncgroupfilter_validation_error'] = 'Ongeldige indeling van de groeps-ID. De groeps-ID moet een geldige GUID zijn (bijv. 550e8400-e29b-41d4-a716-446655440000).';
+Valideer de object-ID\'s van de groepen voordat je opslaat. Voer één object-ID (GUID) van een groep per regel in, of scheid meerdere ID\'s met komma\'s.';
+$string['settings_usersyncgroupfilter_notfound'] = 'Niet gevonden in Microsoft Entra ID: {$a}. Controleer de object-ID\'s van de groepen.';
+$string['settings_usersyncgroupfilter_notverified'] = 'De object-ID\'s van de groepen konden niet worden gecontroleerd in Microsoft Entra ID en zijn zonder controle opgeslagen. Controleer of de ID\'s juist zijn.';
+$string['settings_usersyncgroupfilter_validation_error'] = 'Ongeldige indeling van de groeps-ID: {$a}. Elke groeps-ID moet een geldige GUID zijn (bijv. 550e8400-e29b-41d4-a716-446655440000).';
 $string['settings_usersynccreationrestriction'] = 'Beperking voor het aanmaken van gebruikers';
 $string['settings_usersynccreationrestriction_details'] = 'Als deze optie is ingeschakeld, worden tijdens de gebruikerssynchronisatie alleen Microsoft Entra ID-gebruikers aangemaakt die aan de voorwaarde voldoen. Voer voor Microsoft 365-groepslidmaatschap (object-ID van de groep) één object-ID van een groep in, of meerdere object-ID\'s van groepen gescheiden door komma\'s.';
 $string['settings_usersynccreationrestriction_fieldval'] = 'Veldwaarde';
@@ -1064,7 +1064,7 @@ $string['help_user_suspendnolink_help'] = 'Normaal gesproken werken de bovenstaa
 
 Gekoppelde accounts die in Entra ID ontbreken of daar zijn uitgeschakeld, worden <strong>alleen opgeschort</strong>: ze worden nooit verwijderd (zonder opgeslagen object-ID kan de bewaartermijn voor voorlopig verwijderen van Entra ID niet worden gecontroleerd) en nooit automatisch opnieuw ingeschakeld. Gastaccounts worden overgeslagen.
 
-Deze optie werkt alleen wanneer de gebruikersnaamclaim voor de koppeling van OpenID Connect is ingesteld op een specifiek veld dat in Entra ID kan worden opgezocht - "upn", "oid", "email" of "samaccountname". Bij "auto" (waarbij de effectieve claim per aanmelding wordt gekozen en tussen gebruikers kan verschillen) of een andere claim kan de Moodle-gebruikersnaam niet betrouwbaar aan één account worden gekoppeld en doet deze optie niets.
+Deze optie werkt wanneer de gebruikersnaamclaim voor de koppeling van OpenID Connect is ingesteld op "auto" of op een specifiek veld dat in Entra ID kan worden opgezocht - "upn", "oid", "email" of "samaccountname". Bij "auto" wordt de Moodle-gebruikersnaam vergeleken met de user principal name van Entra ID, en een account wordt ook als aanwezig in Entra ID beschouwd wanneer de gebruikersnaam of het e-mailadres overeenkomt met een e-mailadres in Entra ID, zodat het niet per vergissing wordt opgeschort. Bij een andere claim kan de Moodle-gebruikersnaam niet betrouwbaar aan één account worden gekoppeld en doet deze optie niets.
 
 Controleer je opgeschorte gebruikers na de eerste uitvoering: een account dat handmatig naar deze authenticatiemethode is overgezet en nooit een echte Entra ID-gebruiker was, wordt door deze optie opgeschort.';
 $string['help_user_match'] = 'Help bij accounts koppelen';

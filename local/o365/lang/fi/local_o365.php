@@ -151,8 +151,6 @@ $string['settings_usersync_emailsync'] = 'Yhdistä Microsoft Entra ID -käyttäj
 $string['settings_addsync_tzsync'] = 'Synkronoi Outlookin aikavyöhyke Moodleen cron-työssä';
 $string['settings_addsync_tzsynconlogin'] = 'Synkronoi Outlookin aikavyöhyke Moodleen kirjautumisen yhteydessä';
 $string['settings_usersync_guestsync'] = 'Synkronoi vieraskäyttäjät';
-$string['settings_suspend_delete_running_time'] = 'Käyttäjien jäädytyksen/poiston suoritusaika';
-$string['settings_suspend_delete_running_time_desc'] = 'Jos asetus on käytössä, käyttäjien synkronoinnin jäädytys-/poistotoiminto suoritetaan kerran päivässä määritettyyn aikaan Moodle-sivuston oletusaikavyöhykkeen mukaan.';
 $string['settings_usersync_delete_delay'] = 'Viive ennen jäädytettyjen käyttäjien poistamista';
 $string['settings_usersync_delete_delay_desc'] = 'Vähimmäisaika, jonka käyttäjän on oltava jäädytettynä Moodlessa ennen kuin käyttäjien synkronointi poistaa tilin. Tämä aika lisätään Microsoft Entra ID:n pehmeän poiston säilytysajan päälle, joten poisto ei koskaan tapahdu sitä aiemmin. Aseta arvoksi 0, jos haluat poistaa tilin heti Microsoft Entra ID:n säilytysajan päätyttyä. Käyttäjille, jotka oli jäädytetty jo ennen tämän asetuksen käyttöönottoa, aika lasketaan ensimmäisestä käyttäjien synkronoinnin suorituskerrasta, joka löytää heidät.';
 $string['settings_support_user_identifier_change'] = 'Tue Microsoft-tilin sidonnan käyttäjätunnusväitteen arvon muutosta';
@@ -454,17 +452,19 @@ $string['settings_teamconnections_details'] = 'Tarkastele ja hallitse Moodle-kur
 $string['settings_usermatch'] = 'Käyttäjien yhdistäminen';
 $string['settings_usermatch_details'] = 'Tällä työkalulla voit yhdistää Moodle-käyttäjiä Microsoft 365 -käyttäjiin ladatun mukautetun datatiedoston perusteella.';
 $string['settings_usersyncgroupfilter'] = 'Käyttäjien synkronoinnin ryhmäsuodatin';
-$string['settings_usersyncgroupfilter_details'] = 'Kun tähän annetaan ryhmäobjektin tunnus (GUID), täydet käyttäjien synkronoinnit rajoitetaan kyseisen Microsoft 365 -ryhmän jäseniin ja omistajiin. Jätä tyhjäksi, jos haluat synkronoida kaikki vuokraajasi lisensoidut käyttäjät.<br><br>
+$string['settings_usersyncgroupfilter_details'] = 'Kun tähän annetaan yksi tai useampi ryhmäobjektin tunnus (GUID), täydet käyttäjien synkronoinnit rajoitetaan näiden Microsoft 365 -ryhmien jäseniin ja omistajiin, mukaan lukien sisäkkäisten ryhmien jäsenet. Jätä tyhjäksi, jos haluat synkronoida kaikki vuokraajasi lisensoidut käyttäjät.<br><br>
 <strong>VAROITUS: Tämä on edistynyt asetus. Virheelliset määritykset voivat aiheuttaa merkittäviä tietojen synkronointiongelmia.</strong><br><br>
 <strong>Kun asetus on määritetty, seuraavat koskevat synkronointia:</strong><br>
 (1) Profiilin, aikavyöhykkeen ja kuvan päivitykset tehdään vain käyttäjille, jotka ovat ryhmän jäseniä tai omistajia<br>
 (2) Uudet Moodle-tilit luodaan vain käyttäjille, jotka ovat ryhmän jäseniä tai omistajia<br>
 (3) Ryhmään kuulumattomien käyttäjien Moodle-tilit eivät enää saa päivityksiä ja voivat joutua epäsynkronoiduiksi Microsoft 365:n kanssa<br>
 (4) Microsoft 365:ssä käytöstä poistetut käyttäjät jäädytetään Moodlessa edelleen käyttöönottotilan synkronoinnin avulla, joka toimii ryhmäsuodatuksesta riippumatta<br>
-(5) Käyttäjän poistaminen ryhmästä lopettaa tilin tulevat synkronoinnit. Hänen Moodle-tiliään ei poisteta, ja se jäädytetään vain, jos "Jäädytä tilit Moodlessa, kun ne eivät kuulu määritettyyn käyttäjien synkronointiryhmään" -asetus on käytössä. Tämä asetus jäädyttää jokaisen synkronoidun käyttäjän, joka ei ole ryhmässä, riippumatta siitä, onko hän koskaan kuulunut siihen<br><br>
+(5) Käyttäjän poistaminen ryhmästä lopettaa tilin tulevat synkronoinnit. Hänen Moodle-tiliään ei poisteta, ja se jäädytetään vain, jos "Jäädytä tilit Moodlessa, kun ne eivät kuulu määritettyyn käyttäjien synkronointiryhmään" -asetus on käytössä. Tämä asetus jäädyttää jokaisen synkronoidun käyttäjän, joka ei ole ryhmässä, riippumatta siitä, onko hän koskaan kuulunut siihen. Tämä asetus koskee vain tilejä, jotka on synkronoitu vähintään kerran ja joilla on siksi tallennettu Microsoft-yhteys; muita tilejä ei jäädytetä<br><br>
 <strong>Inkrementaalisen (delta-) synkronoinnin rajoitus:</strong> Microsoft Graph ei tue delta-kyselyitä ryhmän jäsenyyden päätepisteissä. Kun tämä asetus on määritetty, delta-synkronoinnit suorittavat inkrementaalisen päivityksen sijaan ryhmän jäsenten täyden synkronoinnin. Tämä on oikea toiminta, mutta voi olla tavallista delta-synkronointia hitaampaa.<br><br>
-Tarkista ryhmäobjektin tunnus ennen tallentamista. Anna ryhmäobjektin tunnus (GUID).';
-$string['settings_usersyncgroupfilter_validation_error'] = 'Virheellinen ryhmätunnuksen muoto. Ryhmätunnuksen on oltava kelvollinen GUID (esim. 550e8400-e29b-41d4-a716-446655440000).';
+Tarkista ryhmäobjektien tunnukset ennen tallentamista. Anna yksi ryhmäobjektin tunnus (GUID) riviä kohden tai erota useat tunnukset pilkuilla.';
+$string['settings_usersyncgroupfilter_notfound'] = 'Ei löytynyt Microsoft Entra ID:stä: {$a}. Tarkista ryhmäobjektien tunnukset.';
+$string['settings_usersyncgroupfilter_notverified'] = 'Ryhmäobjektien tunnuksia ei voitu tarkistaa Microsoft Entra ID:stä, joten ne tallennettiin tarkistamatta. Varmista, että tunnukset ovat oikein.';
+$string['settings_usersyncgroupfilter_validation_error'] = 'Virheellinen ryhmätunnuksen muoto: {$a}. Jokaisen ryhmätunnuksen on oltava kelvollinen GUID (esim. 550e8400-e29b-41d4-a716-446655440000).';
 $string['settings_usersynccreationrestriction'] = 'Käyttäjien luonnin rajoitus';
 $string['settings_usersynccreationrestriction_details'] = 'Jos asetus on käytössä, käyttäjien synkronoinnissa luodaan vain ne Microsoft Entra ID -käyttäjät, jotka täyttävät ehdon. Microsoft 365 -ryhmän jäsenyyttä (ryhmäobjektin tunnus) varten anna yksi ryhmäobjektin tunnus tai useita pilkuilla erotettuja tunnuksia.';
 $string['settings_usersynccreationrestriction_fieldval'] = 'Kentän arvo';
@@ -1064,7 +1064,7 @@ $string['help_user_suspendnolink_help'] = 'Normaalisti yllä olevat jäädytys-/
 
 Täsmätyt tilit, jotka puuttuvat Entra ID:stä tai on poistettu siellä käytöstä, <strong>vain jäädytetään</strong>: niitä ei koskaan poisteta (ilman tallennettua objektin tunnusta Entra ID:n pehmeän poiston säilytysaikaa ei voi tarkistaa) eikä niitä oteta koskaan automaattisesti uudelleen käyttöön. Vierastilit ohitetaan.
 
-Tämä asetus toimii vain, kun OpenID Connectin sidonnan käyttäjätunnusväite on asetettu tiettyyn kenttään, joka voidaan hakea Entra ID:stä - "upn", "oid", "email" tai "samaccountname". Arvolla "auto" (jolloin käytettävä väite valitaan kirjautumiskohtaisesti ja voi vaihdella käyttäjien välillä) tai millä tahansa muulla väitteellä Moodle-käyttäjätunnusta ei voi luotettavasti täsmätä yhteen tiliin, eikä tämä asetus tee mitään.
+Tämä asetus toimii, kun OpenID Connectin sidonnan käyttäjätunnusväite on "auto" tai tietty kenttä, joka voidaan hakea Entra ID:stä - "upn", "oid", "email" tai "samaccountname". Arvolla "auto" Moodle-käyttäjätunnus täsmätään Entra ID:n käyttäjän yksilöivään nimeen (UPN), ja tili katsotaan myös olevan Entra ID:ssä, jos sen käyttäjätunnus tai sähköpostiosoite vastaa Entra ID:n sähköpostiosoitetta, jotta sitä ei jäädytetä erehdyksessä. Millä tahansa muulla väitteellä Moodle-käyttäjätunnusta ei voi luotettavasti täsmätä yhteen tiliin, eikä tämä asetus tee mitään.
 
 Tarkista jäädytetyt käyttäjät ensimmäisen suorituskerran jälkeen: tämä asetus jäädyttää tilin, joka vaihdettiin manuaalisesti tähän todennustapaan ja joka ei koskaan ollut oikea Entra ID -käyttäjä.';
 $string['help_user_match'] = 'Tilien täsmäyksen ohje';
