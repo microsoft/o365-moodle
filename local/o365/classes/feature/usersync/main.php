@@ -672,7 +672,7 @@ class main {
 
         $groupfilter = $this->get_usersync_group_filter();
         if (!empty($groupfilter)) {
-            $totalprocessed = $apiclient->process_group_members_batched($groupfilter, $callback, $params);
+            $totalprocessed = $apiclient->process_group_members_batched($this->get_usersync_group_filter_ids(), $callback, $params);
         } else {
             $totalprocessed = $apiclient->process_users_batched($callback, $params);
         }
@@ -698,7 +698,12 @@ class main {
 
         $groupfilter = $this->get_usersync_group_filter();
         if (!empty($groupfilter)) {
-            $result = $apiclient->process_group_members_delta_batched($groupfilter, $callback, $params, $deltatoken);
+            $result = $apiclient->process_group_members_delta_batched(
+                $this->get_usersync_group_filter_ids(),
+                $callback,
+                $params,
+                $deltatoken
+            );
         } else {
             $result = $apiclient->process_users_delta_batched($callback, $params, $deltatoken);
         }
@@ -1449,9 +1454,12 @@ class main {
      * Get the Microsoft Graph user resource field whose value is stored as the Moodle username, based on the configured
      * auth_oidc binding username claim.
      *
-     * Only returns a field when the Moodle username can be matched reliably against a single Graph user attribute, i.e.
-     * when the admin has explicitly selected one of upn, oid, email or samaccountname. Returns null for:
-     *  - "auto" - the effective claim is decided per token at login time and can differ between users;
+     * Only returns a field when the Moodle username can be matched against a single Graph user attribute, i.e. when the
+     * admin has selected one of upn, oid, email or samaccountname, or "auto". The user sync treats "auto" as the user
+     * principal name, so it maps to userPrincipalName here too; because the effective claim of an individual account can
+     * differ at login time, accounts that do not match by user principal name are also compared against the Entra mail
+     * address and object ID, and accounts whose username cannot be resolved are left alone
+     * (see {@see self::is_auto_binding_claim()}). Returns null for:
      *  - sub, unique_name, preferred_username - not Graph user resource fields;
      *  - a custom claim name.
      * In those cases the Moodle username cannot be resolved back to a single Entra ID account.
@@ -1461,6 +1469,7 @@ class main {
     public static function get_binding_graph_field(): ?string {
         $claim = auth_oidc_get_binding_username_claim();
         switch ($claim) {
+            case 'auto':
             case 'upn':
                 return 'userPrincipalName';
             case 'oid':
@@ -1472,6 +1481,31 @@ class main {
             default:
                 return null;
         }
+    }
+
+    /**
+     * Determine whether the auth_oidc binding username claim is set to "auto".
+     *
+     * With "auto" the claim that became the Moodle username is chosen per sign-in: the preferred username or email address,
+     * and when those are empty the object ID (oid) or the opaque subject (sub). A username is therefore not guaranteed to be
+     * the Entra user principal name. Matching of accounts without a stored Microsoft link then also considers the Entra mail
+     * address and object ID, and leaves alone accounts whose username is neither an email-like name nor an object ID (such
+     * as a subject), so that only accounts that can be resolved and match nothing are treated as missing from Entra ID.
+     *
+     * @return bool Whether the binding username claim is "auto".
+     */
+    public static function is_auto_binding_claim(): bool {
+        return auth_oidc_get_binding_username_claim() === 'auto';
+    }
+
+    /**
+     * Determine whether a value has the format of a GUID, such as a Microsoft Entra ID object ID.
+     *
+     * @param string $value The value to check.
+     * @return bool Whether the value is a GUID.
+     */
+    private static function is_guid(string $value): bool {
+        return (bool) preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $value);
     }
 
     /**
@@ -2453,15 +2487,18 @@ class main {
         }
 
         // Create temp table with objectid, accountenabled status, the binding username claim value (used to match
-        // Moodle accounts that have no local_o365_objects record - see suspend_unlinked_users_from_temp_table()) and
-        // the user sync group membership flag.
+        // Moodle accounts that have no local_o365_objects record - see suspend_unlinked_users_from_temp_table()), the Entra
+        // mail address (an additional match when the binding username claim is "auto") and the user sync group membership
+        // flag.
         $table = new \xmldb_table($tempname);
         $table->add_field('objectid', XMLDB_TYPE_CHAR, 255, null, XMLDB_NOTNULL, null, null);
         $table->add_field('accountenabled', XMLDB_TYPE_INTEGER, 1, null, XMLDB_NOTNULL, null, 0);
         $table->add_field('bindingvalue', XMLDB_TYPE_CHAR, 255, null, null, null, null);
+        $table->add_field('bindingmail', XMLDB_TYPE_CHAR, 255, null, null, null, null);
         $table->add_field('ingroup', XMLDB_TYPE_INTEGER, 1, null, XMLDB_NOTNULL, null, 1);
         $table->add_index('objectid', XMLDB_INDEX_UNIQUE, ['objectid']);
         $table->add_index('bindingvalue', XMLDB_INDEX_NOTUNIQUE, ['bindingvalue']);
+        $table->add_index('bindingmail', XMLDB_INDEX_NOTUNIQUE, ['bindingmail']);
 
         $dbman->create_temp_table($table);
 
@@ -2510,10 +2547,14 @@ class main {
         // matched to Entra. Null means the configured binding claim is not a queryable Graph field.
         $bindingfield = self::get_binding_graph_field();
         $extraselect = ($bindingfield !== null && $bindingfield !== 'id') ? [$bindingfield] : [];
+        $matchmail = $bindingfield !== null && self::is_auto_binding_claim();
+        if ($matchmail && !in_array('mail', $extraselect)) {
+            $extraselect[] = 'mail';
+        }
 
         // Intentionally unfiltered — see method docblock for rationale.
         $apiclient->process_users_minimal_batched(
-            function (array $entrabatch) use ($DB, $temptablename, &$insertcount, &$bindingcount, $bindingfield) {
+            function (array $entrabatch) use ($DB, $temptablename, &$insertcount, &$bindingcount, $bindingfield, $matchmail) {
                 $records = [];
                 foreach ($entrabatch as $user) {
                     if (!empty($user['id'])) {
@@ -2529,6 +2570,7 @@ class main {
                         if ($record->bindingvalue !== null) {
                             $bindingcount++;
                         }
+                        $record->bindingmail = ($matchmail && !empty($user['mail'])) ? core_text::strtolower($user['mail']) : null;
                         $records[] = $record;
                     }
                 }
@@ -2609,15 +2651,15 @@ class main {
     public function mark_group_members_in_temp_table(string $temptablename): bool {
         global $DB;
 
-        $groupid = $this->get_usersync_group_filter();
-        if (empty($groupid)) {
+        $groupids = $this->get_usersync_group_filter_ids();
+        if (empty($groupids)) {
             return false;
         }
 
         $memberids = [];
         try {
             $apiclient = $this->construct_user_api();
-            $apiclient->process_group_members_batched($groupid, function (array $batch) use (&$memberids) {
+            $apiclient->process_group_members_batched($groupids, function (array $batch) use (&$memberids) {
                 foreach ($batch as $user) {
                     if (!empty($user['id'])) {
                         $memberids[$user['id']] = true;
@@ -2854,8 +2896,9 @@ class main {
 
         // Group by user: a binding value can (rarely) match more than one Entra account. Treat the user as present in
         // Entra if any row matched, and as enabled if any matching account is enabled (conservative - avoids suspending
-        // someone who still has an active account).
-        $sql = 'SELECT u.id, u.username, u.suspended,
+        // someone who still has an active account). The temp table must be referenced only once in this query, because
+        // MySQL cannot open the same temporary table twice in one statement.
+        $sql = 'SELECT u.id, u.username, u.email, u.suspended,
                        MAX(CASE WHEN etmp.bindingvalue IS NOT NULL THEN 1 ELSE 0 END) AS isinentra,
                        MAX(COALESCE(etmp.accountenabled, 0)) AS accountenabled
                   FROM {user} u
@@ -2865,7 +2908,7 @@ class main {
                    AND u.deleted = ?
                    AND u.auth = ?
                    AND obj.id IS NULL
-              GROUP BY u.id, u.username, u.suspended';
+              GROUP BY u.id, u.username, u.email, u.suspended';
         $params = ['user', $CFG->mnet_localhost_id, '0', 'oidc'];
 
         $rs = $DB->get_recordset_sql($sql, $params);
@@ -2875,30 +2918,25 @@ class main {
         $alreadysuspendedcount = 0;
         $alreadysuspendedsample = [];
         $samplecap = 50;
-        foreach ($rs as $user) {
-            // Skip guest-style accounts - their username rarely maps cleanly to a binding value.
-            if (stripos($user->username, '_ext_') !== false || stripos($user->username, '#ext#') !== false) {
-                continue;
-            }
 
-            $reason = null;
-            if (!$user->isinentra && $dosuspend) {
-                $reason = 'not found in Entra ID';
-            } else if ($user->isinentra && !$user->accountenabled && $dodisabledsyncsuspend) {
-                $reason = 'disabled in Entra ID';
-            }
-
-            if ($reason === null) {
-                continue;
-            }
-
+        // Suspend an account, or report it if it is already suspended.
+        $apply = function (
+            \stdClass $user,
+            string $reason
+        ) use (
+            &$count,
+            &$tosuspend,
+            &$alreadysuspendedcount,
+            &$alreadysuspendedsample,
+            $samplecap
+        ): void {
             if ($user->suspended) {
                 // Already suspended - report only, do not touch. Keep a capped sample rather than the whole list.
                 $alreadysuspendedcount++;
                 if (count($alreadysuspendedsample) < $samplecap) {
                     $alreadysuspendedsample[] = $user->username . ' (' . $reason . ')';
                 }
-                continue;
+                return;
             }
 
             $tosuspend[] = $user->id;
@@ -2909,8 +2947,115 @@ class main {
                 $this->update_users_suspended(1, $tosuspend);
                 $tosuspend = [];
             }
+        };
+
+        // With the "auto" binding claim the username is not guaranteed to be the user principal name: it can be the preferred
+        // username or email address, the object ID or the opaque subject. An account that did not match by user principal
+        // name is only treated as missing from Entra when its username can be resolved (an email-like name or an object ID)
+        // and neither the username nor the email address equals an Entra mail address, and the username is not an Entra
+        // object ID. Accounts with an unresolvable username, such as a subject, are skipped. This can only prevent a
+        // suspension, never cause one. The candidates are checked in chunks, each with one lookup of an indexed column.
+        $checkmail = self::is_auto_binding_claim();
+        $unresolvable = 0;
+        $pending = [];
+        $flushpending = function () use (&$pending, $apply, $temptablename): void {
+            global $DB;
+
+            if (empty($pending)) {
+                return;
+            }
+
+            $addresses = [];
+            $objectids = [];
+            foreach ($pending as $candidate) {
+                $username = core_text::strtolower($candidate->username);
+                $addresses[$username] = true;
+                if (self::is_guid($username)) {
+                    $objectids[$username] = true;
+                }
+                if (!empty($candidate->email)) {
+                    $addresses[core_text::strtolower($candidate->email)] = true;
+                }
+            }
+            [$insql, $inparams] = $DB->get_in_or_equal(array_keys($addresses), SQL_PARAMS_QM);
+            $found = array_flip($DB->get_fieldset_sql(
+                'SELECT DISTINCT bindingmail FROM {' . $temptablename . '} WHERE bindingmail ' . $insql,
+                $inparams
+            ));
+
+            // Usernames that are object IDs are looked up by the unique object ID column.
+            $foundobjectids = [];
+            if (!empty($objectids)) {
+                [$insql, $inparams] = $DB->get_in_or_equal(array_keys($objectids), SQL_PARAMS_QM);
+                $foundobjectids = array_flip(array_map(
+                    [core_text::class, 'strtolower'],
+                    $DB->get_fieldset_sql('SELECT objectid FROM {' . $temptablename . '} WHERE objectid ' . $insql, $inparams)
+                ));
+            }
+
+            foreach ($pending as $candidate) {
+                $username = core_text::strtolower($candidate->username);
+                if (
+                    isset($found[$username]) ||
+                    isset($foundobjectids[$username]) ||
+                    (!empty($candidate->email) && isset($found[core_text::strtolower($candidate->email)]))
+                ) {
+                    continue;
+                }
+                $apply($candidate, 'not found in Entra ID');
+            }
+            $pending = [];
+        };
+
+        $additionaltenantdomains = $this->get_additional_tenant_domains();
+        foreach ($rs as $user) {
+            // Skip guest-style accounts - their username rarely maps cleanly to a binding value.
+            if (stripos($user->username, '_ext_') !== false || stripos($user->username, '#ext#') !== false) {
+                continue;
+            }
+
+            // The Entra user list only covers the hosting tenant, so an account from an additional tenant that is not in it
+            // is not known to be missing. The domain of the username is checked, and also the domain of the email address,
+            // because a username can be an object ID or another value without a domain.
+            if (
+                !$user->isinentra &&
+                (
+                    $this->is_additional_tenant_user($user, $additionaltenantdomains) ||
+                    (!empty($user->email) && $this->is_additional_tenant_user(
+                        (object) ['username' => $user->email],
+                        $additionaltenantdomains
+                    ))
+                )
+            ) {
+                continue;
+            }
+
+            if (!$user->isinentra && $dosuspend) {
+                if ($checkmail) {
+                    if (!self::is_guid($user->username) && strpos($user->username, '@') === false) {
+                        // Neither an object ID nor an email-like name, for example an opaque subject, so it cannot be
+                        // resolved to an Entra account safely.
+                        $unresolvable++;
+                        continue;
+                    }
+                    $pending[] = $user;
+                    if (count($pending) >= 500) {
+                        $flushpending();
+                    }
+                } else {
+                    $apply($user, 'not found in Entra ID');
+                }
+            } else if ($user->isinentra && !$user->accountenabled && $dodisabledsyncsuspend) {
+                $apply($user, 'disabled in Entra ID');
+            }
         }
+        $flushpending();
         $rs->close();
+
+        if ($unresolvable > 0) {
+            $this->mtrace('Skipped ' . $unresolvable . ' account(s) with no stored Microsoft link whose username is not an ' .
+                'email-like name or an object ID, so it cannot be matched to a Microsoft Entra ID account.');
+        }
 
         if (!empty($tosuspend)) {
             $this->update_users_suspended(1, $tosuspend);
@@ -2933,10 +3078,37 @@ class main {
     /**
      * Get the configured Microsoft 365 group filter for user sync.
      *
-     * @return string|null The group object ID if configured, null otherwise
+     * @return string|null The group object IDs as a comma separated list if configured, null otherwise
      */
     public function get_usersync_group_filter(): ?string {
-        $groupid = get_config('local_o365', 'usersyncgroupfilter');
-        return !empty($groupid) ? trim($groupid) : null;
+        $groupids = $this->get_usersync_group_filter_ids();
+
+        return !empty($groupids) ? implode(',', $groupids) : null;
+    }
+
+    /**
+     * Split a stored or submitted group filter value into a list of unique, lowercase group IDs.
+     *
+     * Group IDs may be separated by commas, semicolons, spaces or line breaks. The values are not validated.
+     * This lives here rather than in the admin setting class, because scheduled tasks do not load the admin library.
+     *
+     * @param string $value The raw setting value.
+     * @return array The list of group IDs, without empty entries and duplicates.
+     */
+    public static function split_group_ids(string $value): array {
+        $ids = preg_split('/[\s,;]+/', strtolower($value), -1, PREG_SPLIT_NO_EMPTY);
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * Get the Microsoft 365 group object IDs configured as the user sync group filter.
+     *
+     * @return array The list of group object IDs, empty if no group filter is configured
+     */
+    public function get_usersync_group_filter_ids(): array {
+        $value = get_config('local_o365', 'usersyncgroupfilter');
+
+        return !empty($value) ? self::split_group_ids((string) $value) : [];
     }
 }

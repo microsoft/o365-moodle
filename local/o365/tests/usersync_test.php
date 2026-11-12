@@ -1247,24 +1247,67 @@ final class usersync_test extends advanced_testcase {
     }
 
     /**
-     * Test that 'suspendnolink' does nothing when the binding username claim is "auto" (its effective claim is decided
-     * per login and can differ between users, so the Moodle username cannot be reliably matched to one Entra account).
+     * Test that the "auto" binding username claim is matched as the user principal name.
+     *
+     * @covers \local_o365\feature\usersync\main::get_binding_graph_field
+     * @covers \local_o365\feature\usersync\main::is_auto_binding_claim
+     */
+    public function test_get_binding_graph_field_auto(): void {
+        $this->resetAfterTest();
+
+        set_config('bindingusernameclaim', 'auto', 'auth_oidc');
+        $this->assertSame('userPrincipalName', main::get_binding_graph_field());
+        $this->assertTrue(main::is_auto_binding_claim());
+
+        set_config('bindingusernameclaim', 'upn', 'auth_oidc');
+        $this->assertSame('userPrincipalName', main::get_binding_graph_field());
+        $this->assertFalse(main::is_auto_binding_claim());
+
+        set_config('bindingusernameclaim', 'sub', 'auth_oidc');
+        $this->assertNull(main::get_binding_graph_field());
+    }
+
+    /**
+     * Test that 'suspendnolink' with the "auto" binding claim suspends unlinked accounts missing from Entra, and spares
+     * accounts matched by user principal name, by Entra mail against the username or the email, or by object ID, as well as
+     * accounts whose username cannot be resolved (such as an opaque subject).
      *
      * @covers \local_o365\feature\usersync\main::suspend_unlinked_users_from_temp_table
-     * @covers \local_o365\feature\usersync\main::get_binding_graph_field
      */
-    public function test_process_user_status_suspend_unlinked_requires_specific_claim(): void {
+    public function test_process_user_status_suspend_unlinked_auto_claim(): void {
         global $DB;
+        $this->resetAfterTest();
 
         set_config('bindingusernameclaim', 'auto', 'auth_oidc');
 
-        $orphan = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 0]);
+        $generator = $this->getDataGenerator();
+        $missing = $generator->create_user(['auth' => 'oidc', 'suspended' => 0, 'username' => 'gone@example.com',
+            'email' => 'gone@example.com']);
+        $byupn = $generator->create_user(['auth' => 'oidc', 'suspended' => 0, 'username' => 'upn@example.com',
+            'email' => 'other1@example.com']);
+        $bymailusername = $generator->create_user(['auth' => 'oidc', 'suspended' => 0, 'username' => 'mailname@example.com',
+            'email' => 'other2@example.com']);
+        $bymailemail = $generator->create_user(['auth' => 'oidc', 'suspended' => 0, 'username' => 'someaccount@example.com',
+            'email' => 'mailemail@example.com']);
+        $byobjectid = $generator->create_user(['auth' => 'oidc', 'suspended' => 0,
+            'username' => 'aaaaaaaa-1111-2222-3333-444444444444', 'email' => 'nomail@example.com']);
+        $missingobjectid = $generator->create_user(['auth' => 'oidc', 'suspended' => 0,
+            'username' => '99999999-1111-2222-3333-444444444444', 'email' => 'nomail2@example.com']);
+        $opaque = $generator->create_user(['auth' => 'oidc', 'suspended' => 0, 'username' => 'zm9vymfyx3n1ymplc3q',
+            'email' => 'nomail3@example.com']);
 
         $usersync = new main();
         $temptablename = $usersync->create_entra_users_temp_table();
         try {
             $DB->insert_records($temptablename, [
-                (object) ['objectid' => 'obj-x', 'accountenabled' => 1, 'bindingvalue' => 'someone-else'],
+                (object) ['objectid' => 'o1', 'accountenabled' => 1, 'bindingvalue' => 'upn@example.com',
+                    'bindingmail' => null],
+                (object) ['objectid' => 'o2', 'accountenabled' => 1, 'bindingvalue' => 'x1@tenant.com',
+                    'bindingmail' => 'mailname@example.com'],
+                (object) ['objectid' => 'o3', 'accountenabled' => 1, 'bindingvalue' => 'x2@tenant.com',
+                    'bindingmail' => 'mailemail@example.com'],
+                (object) ['objectid' => 'aaaaaaaa-1111-2222-3333-444444444444', 'accountenabled' => 1,
+                    'bindingvalue' => 'oidowner@tenant.com', 'bindingmail' => null],
             ]);
             [, $suspended] = $usersync->process_user_status_from_temp_table(
                 $temptablename,
@@ -1276,12 +1319,97 @@ final class usersync_test extends advanced_testcase {
                 true
             );
 
+            $this->assertEquals(2, $suspended);
+            $this->assertEquals(1, $DB->get_field('user', 'suspended', ['id' => $missing->id]));
+            $this->assertEquals(1, $DB->get_field('user', 'suspended', ['id' => $missingobjectid->id]));
+            $this->assertEquals(0, $DB->get_field('user', 'suspended', ['id' => $byupn->id]));
+            $this->assertEquals(0, $DB->get_field('user', 'suspended', ['id' => $bymailusername->id]));
+            $this->assertEquals(0, $DB->get_field('user', 'suspended', ['id' => $bymailemail->id]));
+            $this->assertEquals(0, $DB->get_field('user', 'suspended', ['id' => $byobjectid->id]), 'Object ID usernames.');
+            $this->assertEquals(0, $DB->get_field('user', 'suspended', ['id' => $opaque->id]), 'Unresolvable usernames.');
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
+     * Test that the mail guard is not applied when the binding claim is a specific one, and that 'suspendnolink' does
+     * nothing when the claim cannot be mapped to a Graph field.
+     *
+     * @covers \local_o365\feature\usersync\main::suspend_unlinked_users_from_temp_table
+     */
+    public function test_process_user_status_suspend_unlinked_specific_and_unmappable_claim(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 0, 'username' => 'name@example.com']);
+        $usersync = new main();
+        $temptablename = $usersync->create_entra_users_temp_table();
+        try {
+            $DB->insert_records($temptablename, [
+                (object) ['objectid' => 'o1', 'accountenabled' => 1, 'bindingvalue' => 'x@tenant.com',
+                    'bindingmail' => 'name@example.com'],
+            ]);
+
+            // Unmappable claim: nothing happens.
+            set_config('bindingusernameclaim', 'sub', 'auth_oidc');
+            [, $suspended] = $usersync->process_user_status_from_temp_table($temptablename, false, true, false, false, false, true);
             $this->assertEquals(0, $suspended);
-            $this->assertEquals(
-                0,
-                $DB->get_field('user', 'suspended', ['id' => $orphan->id]),
-                'Unlinked matching must not run when the binding claim is "auto".'
-            );
+
+            // Specific claim: the mail column is ignored, so the unmatched account is suspended.
+            set_config('bindingusernameclaim', 'upn', 'auth_oidc');
+            [, $suspended] = $usersync->process_user_status_from_temp_table($temptablename, false, true, false, false, false, true);
+            $this->assertEquals(1, $suspended);
+            $this->assertEquals(1, $DB->get_field('user', 'suspended', ['id' => $user->id]));
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
+     * Test that unlinked accounts from additional tenants are never treated as missing from the hosting tenant's Entra
+     * user list, by the domain of the username or of the email address, with the "auto" claim and a specific claim.
+     *
+     * @covers \local_o365\feature\usersync\main::suspend_unlinked_users_from_temp_table
+     */
+    public function test_process_user_status_suspend_unlinked_skips_additional_tenant_users(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        set_config('multitenants', json_encode(['tenant-2' => ['Other.example.ac.at']]), 'local_o365');
+        $generator = $this->getDataGenerator();
+        $hosting = $generator->create_user(['auth' => 'oidc', 'suspended' => 0, 'username' => 'gone@host.example.com',
+            'email' => 'gone@host.example.com']);
+        $byusername = $generator->create_user(['auth' => 'oidc', 'suspended' => 0, 'username' => 'user@other.example.ac.at',
+            'email' => 'x1@host.example.com']);
+        $byemail = $generator->create_user(['auth' => 'oidc', 'suspended' => 0,
+            'username' => 'bbbbbbbb-1111-2222-3333-444444444444', 'email' => 'person@other.example.ac.at']);
+
+        $usersync = new main();
+        $temptablename = $usersync->create_entra_users_temp_table();
+        try {
+            $DB->insert_records($temptablename, [
+                (object) ['objectid' => 'o1', 'accountenabled' => 1, 'bindingvalue' => 'someone@host.example.com',
+                    'bindingmail' => null],
+            ]);
+
+            foreach (['auto', 'upn'] as $claim) {
+                set_config('bindingusernameclaim', $claim, 'auth_oidc');
+                [, $suspended] = $usersync->process_user_status_from_temp_table(
+                    $temptablename,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    true
+                );
+                $this->assertEquals(1, $suspended, $claim);
+                $this->assertEquals(1, $DB->get_field('user', 'suspended', ['id' => $hosting->id]), $claim);
+                $this->assertEquals(0, $DB->get_field('user', 'suspended', ['id' => $byusername->id]), $claim);
+                $this->assertEquals(0, $DB->get_field('user', 'suspended', ['id' => $byemail->id]), $claim);
+                $DB->set_field('user', 'suspended', 0, ['id' => $hosting->id]);
+            }
         } finally {
             $usersync->drop_entra_users_temp_table($temptablename);
         }
@@ -1382,13 +1510,13 @@ final class usersync_test extends advanced_testcase {
             /**
              * Emit the configured member batches.
              *
-             * @param string $groupid Group object ID.
+             * @param string|array $groupids Group object ID or IDs.
              * @param callable $callback Batch callback.
              * @param string|array $params Requested user fields.
              * @return int
              */
-            public function process_group_members_batched(string $groupid, callable $callback, $params = 'default'): int {
-                $this->requested = [$groupid, $params];
+            public function process_group_members_batched($groupids, callable $callback, $params = 'default'): int {
+                $this->requested = [$groupids, $params];
                 if ($this->throw) {
                     throw new \moodle_exception('generalexceptionmessage', 'error', '', 'API error');
                 }
@@ -1471,7 +1599,14 @@ final class usersync_test extends advanced_testcase {
                 ['entra-member' => 1, 'entra-owner' => 1, 'entra-outside' => 0],
                 $getflags()
             );
-            $this->assertEquals([$groupid, ['id']], $apiclient->requested);
+            $this->assertEquals([[$groupid], ['id']], $apiclient->requested);
+
+            // Several groups, separated by commas and line breaks, are all passed to the API client.
+            $secondgroupid = '22222222-2222-2222-2222-222222222222';
+            set_config('usersyncgroupfilter', $groupid . ",\n" . strtoupper($secondgroupid), 'local_o365');
+            $this->assertTrue($usersync->mark_group_members_in_temp_table($temptablename));
+            $this->assertEquals([[$groupid, $secondgroupid], ['id']], $apiclient->requested);
+            $this->assertEquals($groupid . ',' . $secondgroupid, $usersync->get_usersync_group_filter());
 
             // A later run with a different membership resets previously flagged users.
             $apiclient->batches = [[['id' => 'entra-owner']]];

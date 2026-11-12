@@ -151,8 +151,6 @@ $string['settings_usersync_emailsync'] = '同期中、Microsoft Entra IDのユ�
 $string['settings_addsync_tzsync'] = 'cronジョブでOutlookのタイムゾーンをMoodleに同期する';
 $string['settings_addsync_tzsynconlogin'] = 'ログイン時にOutlookのタイムゾーンをMoodleに同期する';
 $string['settings_usersync_guestsync'] = 'ゲストユーザを同期する';
-$string['settings_suspend_delete_running_time'] = 'ユーザ一時停止/削除の実行時刻';
-$string['settings_suspend_delete_running_time_desc'] = 'このオプションを有効にした場合、ユーザ同期機能の一時停止/削除処理は、Moodleインスタンスのデフォルトタイムゾーンで設定された時刻に1日1回実行されます。';
 $string['settings_usersync_delete_delay'] = '一時停止されたユーザを削除するまでの待機時間';
 $string['settings_usersync_delete_delay_desc'] = 'ユーザ同期がアカウントを削除する前に、ユーザがMoodleで一時停止状態のままでなければならない最短期間です。この期間はMicrosoft Entra IDの論理削除の保持期間に加えて適用されるため、削除がそれより早く行われることはありません。Microsoft Entra IDの保持期間が終了した直後に削除するには、0に設定してください。この設定の導入前にすでに一時停止されていたユーザについては、そのユーザを最初に検出したユーザ同期の実行時点から計算されます。';
 $string['settings_support_user_identifier_change'] = 'Microsoftアカウントのバインド用ユーザ名クレーム値の変更をサポートする';
@@ -454,17 +452,19 @@ $string['settings_teamconnections_details'] = 'MoodleコースとMicrosoft Teams
 $string['settings_usermatch'] = 'ユーザマッチング';
 $string['settings_usermatch_details'] = 'このツールを使用すると、アップロードしたカスタムデータファイルに基づいて、MoodleユーザとMicrosoft 365ユーザを照合できます。';
 $string['settings_usersyncgroupfilter'] = 'ユーザ同期グループフィルタ';
-$string['settings_usersyncgroupfilter_details'] = 'ここにグループオブジェクトID (GUID) を入力した場合、完全ユーザ同期はそのMicrosoft 365グループのメンバーと所有者に制限されます。テナント内のライセンスが付与されたすべてのユーザを同期するには、空白のままにしてください。<br><br>
+$string['settings_usersyncgroupfilter_details'] = 'ここに1つ以上のグループオブジェクトID (GUID) を入力した場合、完全ユーザ同期は、入れ子になったグループのメンバーを含め、それらのMicrosoft 365グループのメンバーと所有者に制限されます。テナント内のライセンスが付与されたすべてのユーザを同期するには、空白のままにしてください。<br><br>
 <strong>注意: これは高度な設定です。設定を誤ると、データ同期に重大な問題が発生する可能性があります。</strong><br><br>
 <strong>設定した場合、次のことが適用されます:</strong><br>
 (1) プロファイルの更新、タイムゾーンの更新、写真の更新は、グループのメンバーまたは所有者であるユーザにのみ適用されます<br>
 (2) 新しいMoodleアカウントは、グループのメンバーまたは所有者であるユーザに対してのみ作成されます<br>
 (3) メンバーではないユーザのMoodleアカウントは更新されなくなり、Microsoft 365と同期されない状態になる可能性があります<br>
 (4) Microsoft 365で無効にされたユーザは、グループフィルタリングとは独立して実行される有効状態の同期によって、引き続きMoodleで一時停止されます<br>
-(5) ユーザをグループから削除すると、そのアカウントの今後の同期は停止されます。Moodleアカウントは削除されず、「設定されたユーザ同期グループに属していない場合、Moodleのアカウントを一時停止する」オプションが有効な場合にのみ一時停止されます。このオプションは、過去にグループに属していたかどうかにかかわらず、グループに属していないすべての同期済みユーザを一時停止します<br><br>
+(5) ユーザをグループから削除すると、そのアカウントの今後の同期は停止されます。Moodleアカウントは削除されず、「設定されたユーザ同期グループに属していない場合、Moodleのアカウントを一時停止する」オプションが有効な場合にのみ一時停止されます。このオプションは、過去にグループに属していたかどうかにかかわらず、グループに属していないすべての同期済みユーザを一時停止します。このオプションは、少なくとも1回同期されており、保存されたMicrosoftとのリンクがあるアカウントにのみ適用されます。それ以外のアカウントは一時停止されません<br><br>
 <strong>増分 (差分) 同期の制限:</strong> Microsoft Graphは、グループメンバーシップのエンドポイントに対する差分クエリをサポートしていません。この設定が設定されている場合、差分同期は増分更新の代わりにグループメンバーの完全同期を実行します。これは正しい動作ですが、通常の差分同期よりも遅くなる場合があります。<br><br>
-保存する前にグループオブジェクトIDを検証してください。グループオブジェクトID (GUID) を入力してください。';
-$string['settings_usersyncgroupfilter_validation_error'] = 'グループIDの形式が無効です。グループIDは有効なGUIDである必要があります (例: 550e8400-e29b-41d4-a716-446655440000)。';
+保存する前にグループオブジェクトIDを検証してください。グループオブジェクトID (GUID) を1行に1つ入力するか、複数のIDをカンマで区切ってください。';
+$string['settings_usersyncgroupfilter_notfound'] = 'Microsoft Entra IDで見つかりません: {$a}。グループオブジェクトIDを確認してください。';
+$string['settings_usersyncgroupfilter_notverified'] = 'グループオブジェクトIDをMicrosoft Entra IDで確認できなかったため、未確認のまま保存されました。IDが正しいことを確認してください。';
+$string['settings_usersyncgroupfilter_validation_error'] = 'グループIDの形式が無効です: {$a}。各グループIDは有効なGUIDである必要があります (例: 550e8400-e29b-41d4-a716-446655440000)。';
 $string['settings_usersynccreationrestriction'] = 'ユーザ作成の制限';
 $string['settings_usersynccreationrestriction_details'] = '有効にした場合、ユーザ同期中には条件に一致するMicrosoft Entra IDユーザのみが作成されます。Microsoft 365グループメンバーシップ (グループオブジェクトID) の場合は、1つのグループオブジェクトID、またはカンマで区切った複数のグループオブジェクトIDを入力してください。';
 $string['settings_usersynccreationrestriction_fieldval'] = 'フィールド値';
@@ -1064,7 +1064,7 @@ $string['help_user_suspendnolink_help'] = '通常、上記の一時停止/無効
 
 Entra IDに存在しない、または無効になっている一致したアカウントは、<strong>一時停止のみ</strong>されます。削除されることはなく (保存されたオブジェクトIDがないため、Entra IDの論理削除の保持期間を確認できません)、自動的に再度有効になることもありません。ゲストアカウントはスキップされます。
 
-このオプションは、OpenID Connectのバインド用ユーザ名クレームが、Entra IDで検索できる特定のフィールド (「upn」、「oid」、「email」または「samaccountname」) に設定されている場合にのみ機能します。「auto」 (有効なクレームがログインごとに選択され、ユーザによって異なる場合がある) またはその他のクレームでは、Moodleのユーザ名を単一のアカウントと確実に照合できないため、このオプションは何も行いません。
+このオプションは、OpenID Connectのバインド用ユーザ名クレームが「auto」、またはEntra IDで検索できる特定のフィールド (「upn」、「oid」、「email」または「samaccountname」) に設定されている場合に機能します。「auto」の場合、Moodleのユーザ名はEntra IDのユーザプリンシパル名と照合され、さらにユーザ名またはメールアドレスがEntra IDのメールアドレスと一致するアカウントはEntra IDに存在するものとして扱われるため、誤って一時停止されることはありません。その他のクレームでは、Moodleのユーザ名を単一のアカウントと確実に照合できないため、このオプションは何も行いません。
 
 最初の実行後に、一時停止されたユーザを確認してください。この認証方法に手動で切り替えられた、実際にはEntra IDユーザではなかったアカウントは、このオプションによって一時停止されます。';
 $string['help_user_match'] = 'アカウントのマッチングのヘルプ';
