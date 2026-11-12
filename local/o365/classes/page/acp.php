@@ -2342,7 +2342,6 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 'disablegraphapi',
                 'odburl',
                 'usersynccreationrestriction',
-                'task_usersync_lastdelete',
                 'task_usersync_lastdeltatoken',
                 'unifiedapiactive',
                 'delete_group_on_course_deletion',

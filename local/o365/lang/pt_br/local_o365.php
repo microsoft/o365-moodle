@@ -151,8 +151,6 @@ $string['settings_usersync_emailsync'] = 'Associar nomes de usuário do Microsof
 $string['settings_addsync_tzsync'] = 'Sincronizar o fuso horário do Outlook com o Moodle no cron';
 $string['settings_addsync_tzsynconlogin'] = 'Sincronizar o fuso horário do Outlook com o Moodle no login';
 $string['settings_usersync_guestsync'] = 'Sincronizar usuários convidados';
-$string['settings_suspend_delete_running_time'] = 'Horário de execução da suspensão/exclusão de usuários';
-$string['settings_suspend_delete_running_time_desc'] = 'Se a opção estiver ativada, o recurso de suspensão/exclusão da sincronização de usuários será executado uma vez ao dia, no horário configurado no fuso horário padrão da instância do Moodle.';
 $string['settings_usersync_delete_delay'] = 'Atraso antes de excluir usuários suspensos';
 $string['settings_usersync_delete_delay_desc'] = 'O tempo mínimo que um usuário deve permanecer suspenso no Moodle antes que a sincronização de usuários exclua a conta. Isso se aplica além do período de retenção de exclusão reversível do Microsoft Entra ID, portanto a exclusão nunca ocorre antes dele. Defina como 0 para excluir assim que o período de retenção do Microsoft Entra ID terminar. Os usuários que já estavam suspensos antes da introdução desta configuração são contados a partir da primeira execução da sincronização de usuários que os encontrar.';
 $string['settings_support_user_identifier_change'] = 'Oferecer suporte à alteração do valor da declaração de nome de usuário de vinculação da conta Microsoft';
@@ -454,17 +452,19 @@ $string['settings_teamconnections_details'] = 'Revise e gerencie as conexões en
 $string['settings_usermatch'] = 'Correspondência de usuários';
 $string['settings_usermatch_details'] = 'Esta ferramenta permite associar usuários do Moodle a usuários do Microsoft 365 com base em um arquivo de dados personalizado enviado.';
 $string['settings_usersyncgroupfilter'] = 'Filtro de grupo da sincronização de usuários';
-$string['settings_usersyncgroupfilter_details'] = 'Quando um ID de objeto de grupo (GUID) é inserido aqui, as sincronizações completas de usuários ficam restritas aos membros e proprietários desse grupo do Microsoft 365. Deixe em branco para sincronizar todos os usuários licenciados do seu locatário.<br><br>
+$string['settings_usersyncgroupfilter_details'] = 'Quando um ou mais IDs de objeto de grupo (GUID) são inseridos aqui, as sincronizações completas de usuários ficam restritas aos membros e proprietários desses grupos do Microsoft 365, incluindo os membros de grupos aninhados. Deixe em branco para sincronizar todos os usuários licenciados do seu locatário.<br><br>
 <strong>ATENÇÃO: esta é uma configuração avançada. Uma configuração incorreta pode causar sérios problemas de sincronização de dados.</strong><br><br>
 <strong>Quando configurada, aplica-se o seguinte:</strong><br>
 (1) As atualizações de perfil, de fuso horário e de foto serão aplicadas somente a usuários que são membros ou proprietários do grupo<br>
 (2) Novas contas do Moodle serão criadas somente para usuários que são membros ou proprietários do grupo<br>
 (3) As contas do Moodle de usuários que não são membros deixarão de receber atualizações e podem ficar dessincronizadas em relação ao Microsoft 365<br>
 (4) Os usuários desativados no Microsoft 365 ainda serão suspensos no Moodle pela sincronização do status de ativação, que é executada independentemente da filtragem por grupo<br>
-(5) Remover um usuário do grupo interrompe as sincronizações futuras dessa conta. A conta do Moodle dele não é excluída e só é suspensa se a opção "Suspender contas no Moodle quando não estiverem no grupo de sincronização de usuários configurado" estiver ativada, o que suspende todos os usuários sincronizados que não estão no grupo, quer tenham estado nele ou não<br><br>
+(5) Remover um usuário do grupo interrompe as sincronizações futuras dessa conta. A conta do Moodle dele não é excluída e só é suspensa se a opção "Suspender contas no Moodle quando não estiverem no grupo de sincronização de usuários configurado" estiver ativada, o que suspende todos os usuários sincronizados que não estão no grupo, quer tenham estado nele ou não. Essa opção se aplica apenas a contas que foram sincronizadas pelo menos uma vez e, portanto, têm um vínculo com a Microsoft armazenado; as demais contas não são suspensas<br><br>
 <strong>Limitação da sincronização incremental (delta):</strong> o Microsoft Graph não oferece suporte a consultas delta nos pontos de extremidade de associação a grupos. Quando esta configuração está definida, as sincronizações delta executarão uma sincronização completa dos membros do grupo em vez de uma atualização incremental. Esse é o comportamento correto, mas pode ser mais lento que uma sincronização delta normal.<br><br>
-Valide o ID de objeto do grupo antes de salvar. Insira o ID de objeto do grupo (GUID).';
-$string['settings_usersyncgroupfilter_validation_error'] = 'Formato de ID de grupo inválido. O ID do grupo deve ser um GUID válido (por exemplo, 550e8400-e29b-41d4-a716-446655440000).';
+Valide os IDs de objeto de grupo antes de salvar. Insira um ID de objeto de grupo (GUID) por linha ou separe vários IDs com vírgulas.';
+$string['settings_usersyncgroupfilter_notfound'] = 'Não encontrado no Microsoft Entra ID: {$a}. Verifique os IDs de objeto de grupo.';
+$string['settings_usersyncgroupfilter_notverified'] = 'Não foi possível verificar os IDs de objeto de grupo no Microsoft Entra ID e eles foram salvos sem verificação. Verifique se os IDs estão corretos.';
+$string['settings_usersyncgroupfilter_validation_error'] = 'Formato de ID de grupo inválido: {$a}. Cada ID de grupo deve ser um GUID válido (por exemplo, 550e8400-e29b-41d4-a716-446655440000).';
 $string['settings_usersynccreationrestriction'] = 'Restrição de criação de usuários';
 $string['settings_usersynccreationrestriction_details'] = 'Se ativada, somente os usuários do Microsoft Entra ID que correspondam à condição serão criados durante a sincronização de usuários. Para Associação a grupo do Microsoft 365 (ID de objeto do grupo), insira um ID de objeto de grupo ou vários IDs de objeto de grupo separados por vírgulas.';
 $string['settings_usersynccreationrestriction_fieldval'] = 'Valor do campo';
@@ -1064,7 +1064,7 @@ $string['help_user_suspendnolink_help'] = 'Normalmente, as opções de suspensã
 
 As contas associadas que estão ausentes do Entra ID, ou desativadas nele, são <strong>apenas suspensas</strong>: nunca são excluídas (sem um ID de objeto armazenado, o período de retenção de exclusão reversível do Entra ID não pode ser verificado) e nunca são reativadas automaticamente. As contas de convidado são ignoradas.
 
-Esta opção só funciona quando a declaração de nome de usuário de vinculação do OpenID Connect está definida como um campo específico que pode ser consultado no Entra ID - "upn", "oid", "email" ou "samaccountname". Com "auto" (em que a declaração efetiva é escolhida a cada login e pode variar entre usuários) ou qualquer outra declaração, o nome de usuário do Moodle não pode ser associado de forma confiável a uma única conta, e esta opção não faz nada.
+Esta opção funciona quando a declaração de nome de usuário de vinculação do OpenID Connect está definida como "auto" ou como um campo específico que pode ser consultado no Entra ID - "upn", "oid", "email" ou "samaccountname". Com "auto", o nome de usuário do Moodle é comparado ao nome principal de usuário do Entra ID, e uma conta também é considerada presente no Entra ID quando seu nome de usuário ou e-mail corresponde a um endereço de e-mail do Entra ID, para que não seja suspensa por engano. Com qualquer outra declaração, o nome de usuário do Moodle não pode ser associado de forma confiável a uma única conta, e esta opção não faz nada.
 
 Revise os usuários suspensos após a primeira execução: uma conta alterada manualmente para este método de autenticação que nunca foi um usuário real do Entra ID será suspensa por esta opção.';
 $string['help_user_match'] = 'Ajuda sobre a associação de contas';
