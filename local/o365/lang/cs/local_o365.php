@@ -151,8 +151,6 @@ $string['settings_usersync_emailsync'] = 'Během synchronizace párovat uživate
 $string['settings_addsync_tzsync'] = 'Synchronizovat časové pásmo z Outlooku do Moodlu v úloze cron';
 $string['settings_addsync_tzsynconlogin'] = 'Synchronizovat časové pásmo z Outlooku do Moodlu při přihlášení';
 $string['settings_usersync_guestsync'] = 'Synchronizovat uživatele typu host';
-$string['settings_suspend_delete_running_time'] = 'Čas spuštění pozastavení/odstranění uživatelů';
-$string['settings_suspend_delete_running_time_desc'] = 'Pokud je tato možnost povolena, funkce pozastavení/odstranění v rámci synchronizace uživatelů se spustí jednou denně v nastaveném čase ve výchozím časovém pásmu instance Moodle.';
 $string['settings_usersync_delete_delay'] = 'Prodleva před odstraněním pozastavených uživatelů';
 $string['settings_usersync_delete_delay_desc'] = 'Minimální doba, po kterou musí být uživatel v Moodlu pozastaven, než synchronizace uživatelů jeho účet odstraní. Tato doba se přičítá k době uchování obnovitelně odstraněných uživatelů v Microsoft Entra ID, takže k odstranění nikdy nedojde dříve. Nastavte 0 pro odstranění ihned po uplynutí doby uchování v Microsoft Entra ID. U uživatelů, kteří byli pozastaveni již před zavedením tohoto nastavení, se doba počítá od prvního spuštění synchronizace uživatelů, které je najde.';
 $string['settings_support_user_identifier_change'] = 'Podporovat změnu hodnoty deklarace uživatelského jména použité k propojení účtu Microsoft';
@@ -454,17 +452,19 @@ $string['settings_teamconnections_details'] = 'Kontrola a správa připojení me
 $string['settings_usermatch'] = 'Párování uživatelů';
 $string['settings_usermatch_details'] = 'Tento nástroj umožňuje párovat uživatele Moodlu s uživateli Microsoft 365 na základě nahraného vlastního datového souboru.';
 $string['settings_usersyncgroupfilter'] = 'Filtr skupiny pro synchronizaci uživatelů';
-$string['settings_usersyncgroupfilter_details'] = 'Pokud zde zadáte ID objektu skupiny (GUID), úplné synchronizace uživatelů budou omezeny na členy a vlastníky této skupiny Microsoft 365. Ponechte prázdné, chcete-li synchronizovat všechny licencované uživatele ve vašem tenantu.<br><br>
+$string['settings_usersyncgroupfilter_details'] = 'Pokud zde zadáte jedno nebo více ID objektů skupin (GUID), úplné synchronizace uživatelů budou omezeny na členy a vlastníky těchto skupin Microsoft 365, včetně členů vnořených skupin. Ponechte prázdné, chcete-li synchronizovat všechny licencované uživatele ve vašem tenantu.<br><br>
 <strong>POZOR: Toto je pokročilé nastavení. Chybná konfigurace může způsobit závažné problémy se synchronizací dat.</strong><br><br>
 <strong>Je-li nakonfigurováno, platí následující:</strong><br>
 (1) Aktualizace profilu, časového pásma a fotografie se použijí pouze u uživatelů, kteří jsou členy nebo vlastníky skupiny<br>
 (2) Nové účty Moodlu se vytvoří pouze pro uživatele, kteří jsou členy nebo vlastníky skupiny<br>
 (3) Účty Moodlu uživatelů, kteří nejsou členy, již nebudou dostávat aktualizace a mohou se rozejít s Microsoft 365<br>
 (4) Uživatelé zakázaní v Microsoft 365 budou v Moodlu i nadále pozastaveni synchronizací stavu povolení, která běží nezávisle na filtrování podle skupiny<br>
-(5) Odebrání uživatele ze skupiny zastaví budoucí synchronizace tohoto účtu. Jeho účet v Moodlu se neodstraní a pozastaví se pouze v případě, že je povolena možnost „Pozastavit účty v Moodlu, které nejsou v nakonfigurované skupině pro synchronizaci uživatelů“, která pozastaví každého synchronizovaného uživatele, který ve skupině není, bez ohledu na to, zda v ní někdy byl<br><br>
+(5) Odebrání uživatele ze skupiny zastaví budoucí synchronizace tohoto účtu. Jeho účet v Moodlu se neodstraní a pozastaví se pouze v případě, že je povolena možnost „Pozastavit účty v Moodlu, které nejsou v nakonfigurované skupině pro synchronizaci uživatelů“, která pozastaví každého synchronizovaného uživatele, který ve skupině není, bez ohledu na to, zda v ní někdy byl. Tato možnost se vztahuje pouze na účty, které byly alespoň jednou synchronizovány a mají tedy uložené propojení s Microsoftem; ostatní účty se nepozastavují<br><br>
 <strong>Omezení přírůstkové (delta) synchronizace:</strong> Microsoft Graph nepodporuje delta dotazy na koncové body členství ve skupinách. Je-li toto nastavení nakonfigurováno, delta synchronizace místo přírůstkové aktualizace provedou úplnou synchronizaci členů skupiny. Jde o správné chování, ale může být pomalejší než běžná delta synchronizace.<br><br>
-Před uložením ID objektu skupiny ověřte. Zadejte ID objektu skupiny (GUID).';
-$string['settings_usersyncgroupfilter_validation_error'] = 'Neplatný formát ID skupiny. ID skupiny musí být platný GUID (např. 550e8400-e29b-41d4-a716-446655440000).';
+Před uložením ID objektů skupin ověřte. Zadejte jedno ID objektu skupiny (GUID) na řádek nebo oddělte více ID čárkami.';
+$string['settings_usersyncgroupfilter_notfound'] = 'Nenalezeno v Microsoft Entra ID: {$a}. Zkontrolujte ID objektů skupin.';
+$string['settings_usersyncgroupfilter_notverified'] = 'ID objektů skupin nebylo možné ověřit v Microsoft Entra ID a byla uložena bez ověření. Ujistěte se, že jsou ID správná.';
+$string['settings_usersyncgroupfilter_validation_error'] = 'Neplatný formát ID skupiny: {$a}. Každé ID skupiny musí být platný GUID (např. 550e8400-e29b-41d4-a716-446655440000).';
 $string['settings_usersynccreationrestriction'] = 'Omezení vytváření uživatelů';
 $string['settings_usersynccreationrestriction_details'] = 'Pokud je povoleno, budou během synchronizace uživatelů vytvořeni pouze uživatelé Microsoft Entra ID, kteří splňují podmínku. Pro členství ve skupině Microsoft 365 (ID objektu skupiny) zadejte jedno ID objektu skupiny nebo více ID objektů skupin oddělených čárkami.';
 $string['settings_usersynccreationrestriction_fieldval'] = 'Hodnota pole';
@@ -1064,7 +1064,7 @@ $string['help_user_suspendnolink_help'] = 'Výše uvedené možnosti pozastaven�
 
 Spárované účty, které v Entra ID chybí nebo jsou tam zakázané, jsou <strong>pouze pozastaveny</strong>: nikdy nejsou odstraněny (bez uloženého ID objektu nelze zkontrolovat dobu uchování obnovitelně odstraněných objektů v Entra ID) a nikdy nejsou automaticky znovu povoleny. Účty hostů se přeskakují.
 
-Tato možnost funguje pouze tehdy, když je deklarace uživatelského jména pro propojení OpenID Connect nastavena na konkrétní pole, které lze v Entra ID vyhledat – „upn“, „oid“, „email“ nebo „samaccountname“. U hodnoty „auto“ (kdy se účinná deklarace volí při každém přihlášení a může se mezi uživateli lišit) nebo jakékoli jiné deklarace nelze uživatelské jméno v Moodlu spolehlivě spárovat s jediným účtem a tato možnost nic nedělá.
+Tato možnost funguje, když je deklarace uživatelského jména pro propojení OpenID Connect nastavena na „auto“ nebo na konkrétní pole, které lze v Entra ID vyhledat – „upn“, „oid“, „email“ nebo „samaccountname“. U hodnoty „auto“ se uživatelské jméno v Moodlu porovnává s hlavním názvem uživatele (UPN) v Entra ID a účet se rovněž považuje za existující v Entra ID, pokud se jeho uživatelské jméno nebo e-mailová adresa shoduje s e-mailovou adresou v Entra ID, aby nebyl pozastaven omylem. U jakékoli jiné deklarace nelze uživatelské jméno v Moodlu spolehlivě spárovat s jediným účtem a tato možnost nic nedělá.
 
 Po prvním spuštění zkontrolujte své pozastavené uživatele: účet ručně přepnutý na tuto metodu ověřování, který nikdy nebyl skutečným uživatelem Entra ID, bude touto možností pozastaven.';
 $string['help_user_match'] = 'Nápověda k párování účtů';

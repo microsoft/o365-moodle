@@ -125,17 +125,23 @@ class photoandtimezonesync extends scheduled_task {
                     }
                 };
 
-                $apiclient->process_group_members_batched($groupfilter, $memberhandler, ['id', 'userPrincipalName']);
-                $this->mtrace('Group has ' . count($groupmembersupns) . ' members (including owners).');
+                $apiclient->process_group_members_batched(
+                    $usersync->get_usersync_group_filter_ids(),
+                    $memberhandler,
+                    ['id', 'userPrincipalName']
+                );
+                $this->mtrace(
+                    'Group filter has ' . count($groupmembersupns) . ' members (including nested group members and owners).'
+                );
             } catch (moodle_exception $e) {
                 $this->mtrace('Error fetching group members: ' . $e->getMessage());
                 $this->mtrace('');
-                $this->mtrace('NOTE: Group filter is enabled (Group ID: ' . $groupfilter . ')');
+                $this->mtrace('NOTE: Group filter is enabled (Group ID(s): ' . $groupfilter . ')');
                 $this->mtrace('This error may indicate:');
-                $this->mtrace('  - The group ID is invalid or does not exist');
-                $this->mtrace('  - The application does not have permission to access the group');
-                $this->mtrace('  - The group was deleted or the ID changed');
-                $this->mtrace('Please verify the group ID is correct and the application has the necessary permissions.');
+                $this->mtrace('  - A group ID is invalid or does not exist');
+                $this->mtrace('  - The application does not have permission to access a group');
+                $this->mtrace('  - A group was deleted or its ID changed');
+                $this->mtrace('Please verify the group IDs are correct and the application has the necessary permissions.');
                 utils::debug($e->getMessage(), __METHOD__, $e);
                 return true;
             }

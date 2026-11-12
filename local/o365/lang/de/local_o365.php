@@ -151,8 +151,6 @@ $string['settings_usersync_emailsync'] = 'Microsoft Entra ID-Anmeldenamen währe
 $string['settings_addsync_tzsync'] = 'Outlook-Zeitzone im Cron-Task mit Moodle synchronisieren';
 $string['settings_addsync_tzsynconlogin'] = 'Outlook-Zeitzone bei der Anmeldung mit Moodle synchronisieren';
 $string['settings_usersync_guestsync'] = 'Gastnutzer/innen synchronisieren';
-$string['settings_suspend_delete_running_time'] = 'Ausführungszeit für Sperrung/Löschung von Nutzer/innen';
-$string['settings_suspend_delete_running_time_desc'] = 'Wenn die Option aktiviert ist, wird die Sperr-/Löschfunktion der Nutzersynchronisierung einmal täglich zur konfigurierten Uhrzeit in der Standardzeitzone der Moodle-Instanz ausgeführt.';
 $string['settings_usersync_delete_delay'] = 'Verzögerung vor dem Löschen gesperrter Nutzer/innen';
 $string['settings_usersync_delete_delay_desc'] = 'Die Mindestdauer, die Nutzer/innen in Moodle gesperrt bleiben müssen, bevor die Nutzersynchronisierung das Konto löscht. Dies gilt zusätzlich zur Aufbewahrungsfrist für vorläufig gelöschte Objekte in Microsoft Entra ID, sodass das Löschen nie früher erfolgt. Setzen Sie den Wert auf 0, um zu löschen, sobald die Aufbewahrungsfrist in Microsoft Entra ID abgelaufen ist. Bei Nutzer/innen, die bereits vor Einführung dieser Einstellung gesperrt waren, wird ab dem ersten Durchlauf der Nutzersynchronisierung gezählt, der sie findet.';
 $string['settings_support_user_identifier_change'] = 'Änderung des Werts des bindenden Anmeldenamen-Claims von Microsoft-Konten unterstützen';
@@ -454,17 +452,19 @@ $string['settings_teamconnections_details'] = 'Verbindungen zwischen Moodle-Kurs
 $string['settings_usermatch'] = 'Nutzerzuordnung';
 $string['settings_usermatch_details'] = 'Mit diesem Werkzeug können Sie Moodle-Nutzer/innen anhand einer hochgeladenen Datendatei Microsoft 365-Nutzer/innen zuordnen.';
 $string['settings_usersyncgroupfilter'] = 'Gruppenfilter für die Nutzersynchronisierung';
-$string['settings_usersyncgroupfilter_details'] = 'Wenn hier eine Gruppenobjekt-ID (GUID) eingegeben wird, werden vollständige Nutzersynchronisierungen auf Mitglieder und Besitzer/innen dieser Microsoft 365-Gruppe beschränkt. Lassen Sie das Feld leer, um alle lizenzierten Nutzer/innen in Ihrem Mandanten zu synchronisieren.<br><br>
+$string['settings_usersyncgroupfilter_details'] = 'Wenn hier eine oder mehrere Gruppenobjekt-IDs (GUIDs) eingegeben werden, werden vollständige Nutzersynchronisierungen auf Mitglieder und Besitzer/innen dieser Microsoft 365-Gruppen beschränkt, einschließlich der Mitglieder verschachtelter Gruppen. Lassen Sie das Feld leer, um alle lizenzierten Nutzer/innen in Ihrem Mandanten zu synchronisieren.<br><br>
 <strong>VORSICHT: Dies ist eine erweiterte Einstellung. Eine Fehlkonfiguration kann erhebliche Probleme bei der Datensynchronisierung verursachen.</strong><br><br>
 <strong>Wenn konfiguriert, gilt Folgendes:</strong><br>
 (1) Profil-, Zeitzonen- und Bildaktualisierungen werden nur für Nutzer/innen übernommen, die Mitglieder oder Besitzer/innen der Gruppe sind<br>
 (2) Neue Moodle-Konten werden nur für Nutzer/innen erstellt, die Mitglieder oder Besitzer/innen der Gruppe sind<br>
 (3) Moodle-Konten von Nicht-Mitgliedern erhalten keine Aktualisierungen mehr und können von Microsoft 365 abweichen<br>
 (4) In Microsoft 365 deaktivierte Nutzer/innen werden weiterhin durch die Synchronisierung des Aktivierungsstatus in Moodle gesperrt, die unabhängig von der Gruppenfilterung ausgeführt wird<br>
-(5) Wird ein/e Nutzer/in aus der Gruppe entfernt, wird das Konto künftig nicht mehr synchronisiert. Das Moodle-Konto wird nicht gelöscht und nur dann gesperrt, wenn die Option "Konten in Moodle sperren, wenn sie nicht in der konfigurierten Gruppe für die Nutzersynchronisierung sind" aktiviert ist. Diese sperrt alle synchronisierten Nutzer/innen, die nicht in der Gruppe sind, unabhängig davon, ob sie jemals Mitglied waren<br><br>
+(5) Wird ein/e Nutzer/in aus der Gruppe entfernt, wird das Konto künftig nicht mehr synchronisiert. Das Moodle-Konto wird nicht gelöscht und nur dann gesperrt, wenn die Option "Konten in Moodle sperren, wenn sie nicht in der konfigurierten Gruppe für die Nutzersynchronisierung sind" aktiviert ist. Diese sperrt alle synchronisierten Nutzer/innen, die nicht in der Gruppe sind, unabhängig davon, ob sie jemals Mitglied waren. Diese Option gilt nur für Konten, die mindestens einmal synchronisiert wurden und daher eine gespeicherte Microsoft-Verknüpfung haben; andere Konten werden nicht gesperrt<br><br>
 <strong>Einschränkung der inkrementellen (Delta-)Synchronisierung:</strong> Microsoft Graph unterstützt keine Delta-Abfragen für Endpunkte der Gruppenmitgliedschaft. Wenn diese Einstellung konfiguriert ist, führen Delta-Synchronisierungen statt einer inkrementellen Aktualisierung eine vollständige Synchronisierung der Gruppenmitglieder durch. Dies ist korrektes Verhalten, kann aber langsamer sein als eine normale Delta-Synchronisierung.<br><br>
-Validieren Sie die Gruppenobjekt-ID vor dem Speichern. Geben Sie die Gruppenobjekt-ID (GUID) ein.';
-$string['settings_usersyncgroupfilter_validation_error'] = 'Ungültiges Format der Gruppen-ID. Die Gruppen-ID muss eine gültige GUID sein (z. B. 550e8400-e29b-41d4-a716-446655440000).';
+Validieren Sie die Gruppenobjekt-IDs vor dem Speichern. Geben Sie eine Gruppenobjekt-ID (GUID) pro Zeile ein oder trennen Sie mehrere IDs durch Kommas.';
+$string['settings_usersyncgroupfilter_notfound'] = 'In Microsoft Entra ID nicht gefunden: {$a}. Prüfen Sie die Gruppenobjekt-IDs.';
+$string['settings_usersyncgroupfilter_notverified'] = 'Die Gruppenobjekt-IDs konnten nicht in Microsoft Entra ID geprüft werden und wurden ungeprüft gespeichert. Stellen Sie sicher, dass die IDs korrekt sind.';
+$string['settings_usersyncgroupfilter_validation_error'] = 'Ungültiges Format der Gruppen-ID: {$a}. Jede Gruppen-ID muss eine gültige GUID sein (z. B. 550e8400-e29b-41d4-a716-446655440000).';
 $string['settings_usersynccreationrestriction'] = 'Einschränkung der Nutzererstellung';
 $string['settings_usersynccreationrestriction_details'] = 'Wenn aktiviert, werden bei der Nutzersynchronisierung nur Microsoft Entra ID-Nutzer/innen erstellt, die die Bedingung erfüllen. Geben Sie für "Microsoft 365-Gruppenmitgliedschaft (Gruppenobjekt-ID)" eine Gruppenobjekt-ID oder mehrere durch Kommas getrennte Gruppenobjekt-IDs ein.';
 $string['settings_usersynccreationrestriction_fieldval'] = 'Feldwert';
@@ -1064,7 +1064,7 @@ $string['help_user_suspendnolink_help'] = 'Normalerweise wirken die obigen Optio
 
 Zugeordnete Konten, die in Entra ID fehlen oder dort deaktiviert sind, werden <strong>nur gesperrt</strong>: Sie werden nie gelöscht (ohne gespeicherte Objekt-ID kann die Aufbewahrungsfrist für vorläufig gelöschte Objekte in Entra ID nicht geprüft werden) und nie automatisch wieder aktiviert. Gastkonten werden übersprungen.
 
-Diese Option funktioniert nur, wenn der bindende Anmeldenamen-Claim von OpenID Connect auf ein bestimmtes Feld gesetzt ist, das in Entra ID nachgeschlagen werden kann – "upn", "oid", "email" oder "samaccountname". Bei "auto" (wobei der wirksame Claim pro Anmeldung gewählt wird und sich zwischen Nutzer/innen unterscheiden kann) oder einem anderen Claim kann der Moodle-Anmeldename nicht zuverlässig einem einzelnen Konto zugeordnet werden, und diese Option bewirkt nichts.
+Diese Option funktioniert, wenn der bindende Anmeldenamen-Claim von OpenID Connect auf "auto" oder auf ein bestimmtes Feld gesetzt ist, das in Entra ID nachgeschlagen werden kann – "upn", "oid", "email" oder "samaccountname". Bei "auto" wird der Moodle-Anmeldename mit dem Benutzerprinzipalnamen in Entra ID abgeglichen, und ein Konto gilt außerdem als in Entra ID vorhanden, wenn sein Anmeldename oder seine E-Mail-Adresse einer E-Mail-Adresse in Entra ID entspricht, damit es nicht versehentlich gesperrt wird. Bei jedem anderen Claim kann der Moodle-Anmeldename nicht zuverlässig einem einzelnen Konto zugeordnet werden, und diese Option bewirkt nichts.
 
 Prüfen Sie Ihre gesperrten Nutzer/innen nach dem ersten Durchlauf: Ein Konto, das manuell auf diese Authentifizierungsmethode umgestellt wurde und nie ein echtes Entra ID-Konto war, wird durch diese Option gesperrt.';
 $string['help_user_match'] = 'Hilfe zum Abgleichen von Konten';
