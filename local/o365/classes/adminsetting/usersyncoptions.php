@@ -123,7 +123,7 @@ class usersyncoptions extends admin_setting_configmulticheckbox {
                 ],
         ];
 
-        $dependents = ['delete', 'matchswitchauth', 'groupsyncsuspend'];
+        $dependents = ['delete', 'matchswitchauth'];
 
         $return = '<div class="form-multicheckbox">';
         $return .= '<input type="hidden" name="' . $this->get_full_name() . '[xxxxx]" value="1" />';
