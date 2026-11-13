@@ -524,5 +524,15 @@ $string['change_binding_username_claim_tool_result'] = 'Výsledky aktualizace';
 $string['update_username_results'] = 'Výsledky aktualizace uživatelských jmen';
 $string['new_username'] = 'Nové uživatelské jméno';
 
+// Role sync.
+$string['settings_page_role_sync'] = 'Synchronizace rolí';
+$string['settings_role_sync_intro'] = 'Automaticky přiřazuje uživatelům systémové role Moodle (například Manažer nebo Tvůrce kurzů) na základě tvrzení (claim) v jejich tokenu ID OIDC. Tvrzení se vyhodnocuje při každém přihlášení uživatele přes OIDC a funguje s jakýmkoli poskytovatelem identity OIDC. Tato funkce odebírá pouze role, které sama přiřadila; ručně přiřazené role se nikdy nemění.';
+$string['settings_role_sync_claimmap'] = 'Mapování hodnot tvrzení na role';
+$string['settings_role_sync_claimmap_details'] = 'Jedno mapování na řádek ve formátu <code>tvrzení|hodnota=krátký název role</code>, například <code>roles|moodle-managers=manager</code>, nebo <code>groups|ID objektu skupiny=coursecreator</code> při použití tvrzení groups z Entra ID. Více rolí lze oddělit čárkami. Různé řádky mohou používat různá tvrzení a uživatel získá role ze všech odpovídajících řádků. Hodnoty se porovnávají bez rozlišení velikosti písmen a řádky začínající znakem # jsou ignorovány. Tvrzení musí být obsažena v tokenu ID vydaném vaším poskytovatelem identity; v Microsoft Entra ID nakonfigurujte v registraci aplikace volitelné tvrzení groups nebo role aplikace. Pokud Entra ID tvrzení groups vynechá, protože uživatel patří do příliš mnoha skupin, role tohoto uživatele zůstanou beze změny. Role se použijí v systémovém kontextu při přihlášení uživatele.';
+$string['settings_role_sync_revoke'] = 'Odebírat role, které již neodpovídají';
+$string['settings_role_sync_revoke_details'] = 'Je-li povoleno, role dříve přiřazené touto funkcí se uživateli odeberou při dalším přihlášení, pokud tvrzení již neobsahuje namapovanou hodnotu. Ručně nebo jinak přiřazené role se nikdy neodebírají.';
+$string['settings_role_sync_error_format'] = 'Neplatný řádek mapování „{$a}“. Použijte formát tvrzení|hodnota=krátkýnázev[,krátkýnázev].';
+$string['settings_role_sync_error_role'] = 'Neznámý nebo nepodporovaný krátký název role „{$a}“. Lze použít pouze role, které lze přiřadit v systémovém kontextu.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

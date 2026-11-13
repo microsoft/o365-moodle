@@ -524,5 +524,15 @@ $string['change_binding_username_claim_tool_result'] = 'Ergebnisse der Aktualisi
 $string['update_username_results'] = 'Ergebnisse der Aktualisierung der Anmeldenamen';
 $string['new_username'] = 'Neuer Anmeldename';
 
+// Role sync.
+$string['settings_page_role_sync'] = 'Rollensynchronisierung';
+$string['settings_role_sync_intro'] = 'Weist Benutzern automatisch Moodle-Systemrollen (z. B. Manager oder Kursersteller) zu, basierend auf einem Claim in ihrem OIDC-ID-Token. Der Claim wird bei jeder Anmeldung per OIDC ausgewertet und funktioniert mit jedem OIDC-Identitätsanbieter. Diese Funktion entfernt ausschließlich Rollen, die sie selbst zugewiesen hat; manuell zugewiesene Rollen werden nie geändert.';
+$string['settings_role_sync_claimmap'] = 'Zuordnung von Claim-Werten zu Rollen';
+$string['settings_role_sync_claimmap_details'] = 'Eine Zuordnung pro Zeile im Format <code>Claim|Wert=Rollenkurzname</code>, z. B. <code>roles|moodle-managers=manager</code>, oder <code>groups|Gruppenobjekt-ID=coursecreator</code> bei Verwendung des Entra-ID-Groups-Claims. Mehrere Rollen können durch Kommas getrennt werden. Verschiedene Zeilen können unterschiedliche Claims verwenden, und der Benutzer erhält die Rollen aller passenden Zeilen. Werte werden ohne Beachtung der Groß-/Kleinschreibung verglichen; Zeilen, die mit # beginnen, werden ignoriert. Die Claims müssen im vom Identitätsanbieter ausgestellten ID-Token enthalten sein; bei Microsoft Entra ID konfigurieren Sie dazu den optionalen Groups-Claim oder App-Rollen in der App-Registrierung. Lässt Entra ID den Groups-Claim weg, weil der Benutzer zu viele Gruppen hat, bleiben die Rollen dieses Benutzers unverändert. Die Rollen werden bei der Anmeldung des Benutzers im Systemkontext angewendet.';
+$string['settings_role_sync_revoke'] = 'Nicht mehr zutreffende Rollen entfernen';
+$string['settings_role_sync_revoke_details'] = 'Wenn aktiviert, werden durch diese Funktion zugewiesene Rollen bei der nächsten Anmeldung des Benutzers entfernt, sobald der Claim keinen zugeordneten Wert mehr enthält. Manuell oder anderweitig zugewiesene Rollen werden nie entfernt.';
+$string['settings_role_sync_error_format'] = 'Ungültige Zuordnungszeile „{$a}“. Verwenden Sie das Format claim|wert=rollenkurzname[,rollenkurzname].';
+$string['settings_role_sync_error_role'] = 'Unbekannter oder nicht unterstützter Rollenkurzname „{$a}“. Es können nur Rollen verwendet werden, die im Systemkontext zugewiesen werden können.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

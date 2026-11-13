@@ -524,5 +524,15 @@ $string['change_binding_username_claim_tool_result'] = 'Resultados de la actuali
 $string['update_username_results'] = 'Resultados de la actualización de nombres de usuario';
 $string['new_username'] = 'Nuevo nombre de usuario';
 
+// Role sync.
+$string['settings_page_role_sync'] = 'Sincronización de roles';
+$string['settings_role_sync_intro'] = 'Asigna automáticamente roles del sistema de Moodle (por ejemplo, Gestor o Creador de cursos) a los usuarios según una notificación (claim) de su token de ID de OIDC. La notificación se evalúa cada vez que un usuario inicia sesión con OIDC y funciona con cualquier proveedor de identidad OIDC. Esta función solo elimina los roles que ella misma ha asignado; los roles asignados manualmente nunca se modifican.';
+$string['settings_role_sync_claimmap'] = 'Asignación de valores de notificación a roles';
+$string['settings_role_sync_claimmap_details'] = 'Una asignación por línea, con el formato <code>notificación|valor=nombre corto del rol</code>, por ejemplo <code>roles|moodle-managers=manager</code>, o <code>groups|ID de objeto del grupo=coursecreator</code> al usar la notificación groups de Entra ID. Se pueden separar varios roles con comas. Líneas distintas pueden usar notificaciones distintas, y el usuario recibe los roles de todas las líneas coincidentes. Los valores se comparan sin distinguir mayúsculas de minúsculas y se ignoran las líneas que empiezan por #. Las notificaciones deben estar presentes en el token de ID emitido por su proveedor de identidad; en Microsoft Entra ID, configure la notificación opcional groups o los roles de aplicación en el registro de la aplicación. Si Entra ID omite la notificación groups porque el usuario pertenece a demasiados grupos, los roles de ese usuario no se modifican. Los roles se aplican en el contexto del sistema cuando el usuario inicia sesión.';
+$string['settings_role_sync_revoke'] = 'Eliminar los roles que ya no coinciden';
+$string['settings_role_sync_revoke_details'] = 'Si se activa, los roles asignados anteriormente por esta función se eliminan de un usuario en su próximo inicio de sesión cuando la notificación ya no contiene un valor asignado. Los roles asignados manualmente o de otro modo nunca se eliminan.';
+$string['settings_role_sync_error_format'] = 'Línea de asignación no válida «{$a}». Use el formato notificación|valor=nombrecortorol[,nombrecortorol].';
+$string['settings_role_sync_error_role'] = 'Nombre corto de rol desconocido o no admitido «{$a}». Solo se pueden usar roles que puedan asignarse en el contexto del sistema.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

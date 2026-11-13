@@ -524,5 +524,15 @@ $string['change_binding_username_claim_tool_result'] = 'Résultats de la mise à
 $string['update_username_results'] = 'Résultats de la mise à jour des noms d’utilisateur';
 $string['new_username'] = 'Nouveau nom d’utilisateur';
 
+// Role sync.
+$string['settings_page_role_sync'] = 'Synchronisation des rôles';
+$string['settings_role_sync_intro'] = 'Attribue automatiquement des rôles système Moodle (par exemple Gestionnaire ou Créateur de cours) aux utilisateurs en fonction d\'une revendication (claim) de leur jeton d\'ID OIDC. La revendication est évaluée à chaque connexion de l\'utilisateur via OIDC et fonctionne avec tout fournisseur d\'identité OIDC. Cette fonctionnalité ne supprime que les rôles qu\'elle a elle-même attribués ; les rôles attribués manuellement ne sont jamais modifiés.';
+$string['settings_role_sync_claimmap'] = 'Correspondance valeur de revendication-rôle';
+$string['settings_role_sync_claimmap_details'] = 'Une correspondance par ligne, au format <code>revendication|valeur=nom abrégé du rôle</code>, par exemple <code>roles|moodle-managers=manager</code>, ou <code>groups|ID d\'objet du groupe=coursecreator</code> avec la revendication groups d\'Entra ID. Plusieurs rôles peuvent être séparés par des virgules. Des lignes différentes peuvent utiliser des revendications différentes, et l\'utilisateur reçoit les rôles de toutes les lignes correspondantes. Les valeurs sont comparées sans tenir compte de la casse, et les lignes commençant par # sont ignorées. Les revendications doivent être présentes dans le jeton d\'ID émis par votre fournisseur d\'identité ; pour Microsoft Entra ID, configurez la revendication facultative groups ou les rôles d\'application dans l\'inscription de l\'application. Si Entra ID omet la revendication groups parce que l\'utilisateur appartient à trop de groupes, les rôles de cet utilisateur restent inchangés. Les rôles sont appliqués dans le contexte système lors de la connexion de l\'utilisateur.';
+$string['settings_role_sync_revoke'] = 'Supprimer les rôles qui ne correspondent plus';
+$string['settings_role_sync_revoke_details'] = 'Si cette option est activée, les rôles précédemment attribués par cette fonctionnalité sont retirés d\'un utilisateur à sa prochaine connexion lorsque la revendication ne contient plus de valeur associée. Les rôles attribués manuellement ou autrement ne sont jamais supprimés.';
+$string['settings_role_sync_error_format'] = 'Ligne de correspondance non valide « {$a} ». Utilisez le format revendication|valeur=nomabrégé[,nomabrégé].';
+$string['settings_role_sync_error_role'] = 'Nom abrégé de rôle inconnu ou non pris en charge « {$a} ». Seuls les rôles pouvant être attribués dans le contexte système peuvent être utilisés.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
