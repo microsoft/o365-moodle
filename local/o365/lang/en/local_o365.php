@@ -1168,5 +1168,19 @@ $string['error_template_id_not_found'] = '✗ Template ID "{$a}" was not found. 
 $string['error_template_validation_failed'] = '✗ Template validation failed: {$a}';
 $string['error_template_validation_error'] = '✗ An error occurred while validating the template. Please try again or contact your administrator.';
 
+// Role sync feature.
+$string['settings_header_rolesync'] = 'Role Sync';
+$string['task_rolesync'] = 'Sync system roles from Microsoft 365 groups';
+$string['settings_rolesync_intro'] = 'Automatically assign Moodle system roles (for example Manager or Course creator) to users based on their Microsoft 365 group membership. Roles assigned by this feature are the only roles it will ever remove; roles assigned manually are never changed. To assign roles from a claim in the OIDC ID token instead, which works with any identity provider, use the <a href="{$a}">Role sync page of the OpenID Connect authentication plugin</a>.';
+$string['settings_rolesync_groupheading'] = 'Role sync from Microsoft 365 groups';
+$string['settings_rolesync_groupheading_desc'] = 'Runs as the scheduled task "Sync system roles from Microsoft 365 groups" (every 15 minutes by default), independently of user sync. It does not run at login, so a change in group membership takes effect the next time the task runs. Only users that are already connected to Microsoft 365 are processed.';
+$string['settings_rolesync_groupmap'] = 'Group to role mapping';
+$string['settings_rolesync_groupmap_details'] = 'One mapping per line, in the format <code>group object ID=role short name</code>. Several roles can be separated by commas, for example <code>550e8400-e29b-41d4-a716-446655440000=manager,coursecreator</code>. Members and owners of the group, including members of nested groups, receive the roles in the system context. Only users that are connected to Microsoft 365 are affected. Lines starting with # are ignored.';
+$string['settings_rolesync_revoke'] = 'Remove roles that no longer match';
+$string['settings_rolesync_revoke_details'] = 'When enabled, roles previously assigned by group role sync are removed from a user the next time the scheduled task runs and the user is no longer in a mapped group. Roles assigned manually or by other means are never removed.';
+$string['settings_rolesync_error_format'] = 'Invalid mapping line "{$a}". Use the format source=roleshortname[,roleshortname].';
+$string['settings_rolesync_error_group'] = 'Invalid group object ID "{$a}". It must be a GUID.';
+$string['settings_rolesync_error_role'] = 'Unknown or unsupported role short name "{$a}". Only roles that can be assigned in the system context can be used.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
