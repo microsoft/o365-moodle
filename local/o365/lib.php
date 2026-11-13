@@ -472,6 +472,7 @@ function local_o365_get_settings_nav_html(string $currentpage, ?string $subtitle
     $pages = [
         'local_o365' => get_string('settings_header_setup', 'local_o365'),
         'local_o365_usersync' => get_string('settings_header_usersync', 'local_o365'),
+        'local_o365_rolesync' => get_string('settings_header_rolesync', 'local_o365'),
         'local_o365_coursesync' => get_string('settings_header_coursesync', 'local_o365'),
         'local_o365_advanced' => get_string('settings_header_advanced', 'local_o365'),
         'local_o365_sds' => get_string('settings_header_sds', 'local_o365'),
