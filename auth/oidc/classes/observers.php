@@ -29,6 +29,7 @@ use auth_oidc\loginflow\authcode;
 use core\event\config_log_created;
 use core\event\user_deleted;
 use core\event\user_loggedout;
+use core\event\user_updated;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -48,6 +49,25 @@ class observers {
         global $DB;
         $userid = $event->objectid;
         return $DB->delete_records('auth_oidc_token', ['userid' => $userid]);
+    }
+
+    /**
+     * Handle user_updated event - remove the system roles assigned by role sync when the user is switched away from
+     * the OIDC authentication method, as their roles are no longer synced at login.
+     *
+     * @param user_updated $event The triggered event.
+     * @return bool Success/Failure.
+     */
+    public static function handle_user_updated(user_updated $event) {
+        global $DB;
+
+        $userid = $event->objectid;
+        $assignment = ['userid' => $userid, 'component' => rolesync::COMPONENT, 'itemid' => rolesync::ITEMID];
+        if ($DB->record_exists('role_assignments', $assignment) && $DB->get_field('user', 'auth', ['id' => $userid]) !== 'oidc') {
+            rolesync::remove_user_roles($userid);
+        }
+
+        return true;
     }
 
     /**
