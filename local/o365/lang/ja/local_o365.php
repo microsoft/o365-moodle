@@ -1168,5 +1168,19 @@ $string['error_template_id_not_found'] = '✗ テンプレートID「{$a}」が�
 $string['error_template_validation_failed'] = '✗ テンプレートの検証に失敗しました: {$a}';
 $string['error_template_validation_error'] = '✗ テンプレートの検証中にエラーが発生しました。再度お試しいただくか、管理者に連絡してください。';
 
+// Role sync feature.
+$string['settings_header_rolesync'] = 'ロール同期';
+$string['task_rolesync'] = 'Microsoft 365 グループからシステムロールを同期';
+$string['settings_rolesync_intro'] = 'Microsoft 365 のグループメンバーシップに基づいて、Moodle のシステムロール（たとえばマネージャーやコース作成者）をユーザーに自動的に割り当てます。この機能が削除するのは、この機能自身が割り当てたロールのみで、手動で割り当てられたロールが変更されることはありません。OIDC ID トークン内のクレームからロールを割り当てる場合（任意の ID プロバイダーで動作します）は、<a href="{$a}">OpenID Connect 認証プラグインのロール同期ページ</a>を使用してください。';
+$string['settings_rolesync_groupheading'] = 'Microsoft 365 グループからのロール同期';
+$string['settings_rolesync_groupheading_desc'] = 'スケジュールタスク「Microsoft 365 グループからシステムロールを同期」（デフォルトでは 15 分ごと）として、ユーザー同期とは独立して実行されます。ログイン時には実行されないため、グループメンバーシップの変更はタスクの次回実行時に反映されます。すでに Microsoft 365 に接続されているユーザーのみが処理されます。';
+$string['settings_rolesync_groupmap'] = 'グループとロールのマッピング';
+$string['settings_rolesync_groupmap_details'] = '1 行につき 1 つのマッピングを <code>グループのオブジェクト ID=ロールの短縮名</code> の形式で指定します。複数のロールはカンマで区切ります（例: <code>550e8400-e29b-41d4-a716-446655440000=manager,coursecreator</code>）。ネストされたグループのメンバーを含め、グループのメンバーと所有者にはシステムコンテキストでロールが付与されます。影響を受けるのは Microsoft 365 に接続されているユーザーのみです。# で始まる行は無視されます。';
+$string['settings_rolesync_revoke'] = '一致しなくなったロールを削除する';
+$string['settings_rolesync_revoke_details'] = 'ユーザーがマッピングされたグループに所属しなくなった場合、有効にすると、グループのロール同期によって以前に割り当てられたロールが、スケジュールタスクの次回実行時にそのユーザーから削除されます。手動またはその他の方法で割り当てられたロールは削除されません。';
+$string['settings_rolesync_error_format'] = 'マッピング行 "{$a}" が無効です。ソース=ロール短縮名[,ロール短縮名] の形式を使用してください。';
+$string['settings_rolesync_error_group'] = 'グループのオブジェクト ID "{$a}" が無効です。GUID である必要があります。';
+$string['settings_rolesync_error_role'] = 'ロールの短縮名 "{$a}" は不明、またはサポートされていません。システムコンテキストで割り当て可能なロールのみ使用できます。';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

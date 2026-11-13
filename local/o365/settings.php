@@ -35,6 +35,7 @@ use local_o365\adminsetting\serviceresource;
 use local_o365\adminsetting\toollink;
 use local_o365\adminsetting\coursesync;
 use local_o365\adminsetting\usersyncgroupfilter;
+use local_o365\adminsetting\rolesyncmapping;
 use local_o365\adminsetting\usersynccreationrestriction;
 use local_o365\adminsetting\team_type_custom_id;
 use local_o365\feature\coursesync\main;
@@ -254,6 +255,44 @@ if ($hassiteconfig) {
             $desc,
             '0'
         ));
+
+        // ROLE SYNC SETTINGS PAGE.
+        $rolesyncsettings = new admin_settingpage(
+            'local_o365_rolesync',
+            get_string('settings_header_rolesync', 'local_o365')
+        );
+        $ADMIN->add('local_o365_folder', $rolesyncsettings);
+        $rolesyncsettings->add(new admin_setting_heading(
+            'local_o365_rolesync_nav',
+            '',
+            local_o365_get_settings_nav_html('local_o365_rolesync')
+        ));
+        $rolesyncsettings->add(new admin_setting_heading(
+            'local_o365_rolesync_intro',
+            '',
+            get_string(
+                'settings_rolesync_intro',
+                'local_o365',
+                (new url('/admin/settings.php', ['section' => 'auth_oidc_role_sync']))->out(false)
+            )
+        ));
+
+        // Group based role sync.
+        $rolesyncsettings->add(new admin_setting_heading(
+            'local_o365_rolesync_groupheading',
+            get_string('settings_rolesync_groupheading', 'local_o365'),
+            get_string('settings_rolesync_groupheading_desc', 'local_o365')
+        ));
+
+        // Group to role mapping.
+        $label = new lang_string('settings_rolesync_groupmap', 'local_o365');
+        $desc = new lang_string('settings_rolesync_groupmap_details', 'local_o365');
+        $rolesyncsettings->add(new rolesyncmapping('local_o365/rolesync_groupmap', $label, $desc));
+
+        // Remove roles that are no longer matched.
+        $label = new lang_string('settings_rolesync_revoke', 'local_o365');
+        $desc = new lang_string('settings_rolesync_revoke_details', 'local_o365');
+        $rolesyncsettings->add(new admin_setting_configcheckbox('local_o365/rolesync_revoke', $label, $desc, '1'));
 
         // COURSE SYNC SETTINGS PAGE.
         $coursesyncsettings = new admin_settingpage(

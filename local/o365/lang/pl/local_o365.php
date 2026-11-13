@@ -1168,5 +1168,19 @@ $string['error_template_id_not_found'] = '✗ Nie znaleziono identyfikatora szab
 $string['error_template_validation_failed'] = '✗ Weryfikacja szablonu nie powiodła się: {$a}';
 $string['error_template_validation_error'] = '✗ Wystąpił błąd podczas weryfikacji szablonu. Spróbuj ponownie lub skontaktuj się z administratorem.';
 
+// Role sync feature.
+$string['settings_header_rolesync'] = 'Synchronizacja ról';
+$string['task_rolesync'] = 'Synchronizuj role systemowe z grup Microsoft 365';
+$string['settings_rolesync_intro'] = 'Automatycznie przypisuje użytkownikom role systemowe Moodle (na przykład Menedżer lub Twórca kursów) na podstawie członkostwa w grupach Microsoft 365. Ta funkcja usuwa wyłącznie role, które sama przypisała; role przypisane ręcznie nigdy nie są zmieniane. Aby przypisywać role na podstawie oświadczenia w tokenie ID OIDC, co działa z dowolnym dostawcą tożsamości, użyj <a href="{$a}">strony Synchronizacja ról wtyczki uwierzytelniania OpenID Connect</a>.';
+$string['settings_rolesync_groupheading'] = 'Synchronizacja ról z grup Microsoft 365';
+$string['settings_rolesync_groupheading_desc'] = 'Uruchamiana jako zaplanowane zadanie „Synchronizuj role systemowe z grup Microsoft 365” (domyślnie co 15 minut), niezależnie od synchronizacji użytkowników. Nie jest uruchamiana przy logowaniu, więc zmiana członkostwa w grupie zaczyna działać przy następnym uruchomieniu zadania. Przetwarzani są tylko użytkownicy już połączeni z Microsoft 365.';
+$string['settings_rolesync_groupmap'] = 'Mapowanie grup na role';
+$string['settings_rolesync_groupmap_details'] = 'Jedno mapowanie w wierszu, w formacie <code>ID obiektu grupy=krótka nazwa roli</code>. Kilka ról można rozdzielić przecinkami, na przykład <code>550e8400-e29b-41d4-a716-446655440000=manager,coursecreator</code>. Członkowie i właściciele grupy, w tym członkowie grup zagnieżdżonych, otrzymują role w kontekście systemu. Dotyczy to tylko użytkowników połączonych z Microsoft 365. Wiersze zaczynające się od # są ignorowane.';
+$string['settings_rolesync_revoke'] = 'Usuwaj role, które już nie pasują';
+$string['settings_rolesync_revoke_details'] = 'Gdy opcja jest włączona, role wcześniej przypisane przez synchronizację ról z grup są usuwane użytkownikowi przy następnym uruchomieniu zaplanowanego zadania, gdy nie należy już do zmapowanej grupy. Role przypisane ręcznie lub w inny sposób nigdy nie są usuwane.';
+$string['settings_rolesync_error_format'] = 'Nieprawidłowy wiersz mapowania „{$a}”. Użyj formatu źródło=krótkanazwa[,krótkanazwa].';
+$string['settings_rolesync_error_group'] = 'Nieprawidłowe ID obiektu grupy „{$a}”. Musi to być identyfikator GUID.';
+$string['settings_rolesync_error_role'] = 'Nieznana lub nieobsługiwana krótka nazwa roli „{$a}”. Można używać tylko ról, które można przypisać w kontekście systemu.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
