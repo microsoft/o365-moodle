@@ -60,6 +60,9 @@ class token {
     /** @var array IDs of users whose token request was rejected because multi-factor authentication is required. */
     protected static $mfarequiredusers = [];
 
+    /** @var array Claims challenges returned with an MFA requirement, indexed by user ID. */
+    protected static $mfaclaims = [];
+
     /**
      * Constructor.
      *
@@ -302,7 +305,7 @@ class token {
             $tokenresult = @json_decode($tokenresult, true);
 
             // Forget any MFA requirement from an earlier attempt, it is set again below if this attempt needs MFA.
-            unset(static::$mfarequiredusers[$userid]);
+            unset(static::$mfarequiredusers[$userid], static::$mfaclaims[$userid]);
 
             if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
                 $expiry = $tokenresult['expires_on'] ?? time() + $tokenresult['expires_in'];
@@ -334,6 +337,9 @@ class token {
 
                 if (static::is_mfa_required_response($tokenresult)) {
                     static::$mfarequiredusers[$userid] = true;
+                    if (!empty($tokenresult['claims']) && is_string($tokenresult['claims'])) {
+                        static::$mfaclaims[$userid] = $tokenresult['claims'];
+                    }
                     $errmsg = 'Problem encountered getting a new token. Multi-factor authentication is required, ' .
                         'the user must sign in to Microsoft 365 again to complete it.';
                 }
@@ -378,10 +384,37 @@ class token {
      * @return bool
      */
     public static function consume_mfa_required_for_user($userid) {
+        global $FULLME;
+
         $required = !empty(static::$mfarequiredusers[$userid]);
-        unset(static::$mfarequiredusers[$userid]);
+        $claims = static::$mfaclaims[$userid] ?? '';
+        unset(static::$mfarequiredusers[$userid], static::$mfaclaims[$userid]);
+
+        // Let the current user complete the requirement by authenticating again, with the claims challenge if any.
+        if ($required && static::can_step_up_user($userid)) {
+            // The page URL may lack the query string, so prefer the full URL of the current request.
+            $returnurl = !empty($FULLME) ? $FULLME : qualified_me();
+            \auth_oidc\loginflow\authcode::prepare_stepup($claims, $returnurl);
+        }
 
         return $required;
+    }
+
+    /**
+     * Check whether the user can complete a step-up authentication (e.g. MFA) in the current request.
+     *
+     * This is only possible for the user who is using the site in a web request.
+     *
+     * @param int $userid The ID of the Moodle user.
+     * @return bool
+     */
+    public static function can_step_up_user($userid): bool {
+        global $USER;
+
+        // Background tasks run without a web request, so the user cannot be sent to Microsoft from them.
+        $webrequest = !CLI_SCRIPT || PHPUNIT_TEST;
+
+        return $webrequest && isloggedin() && !isguestuser() && (int)$USER->id === (int)$userid;
     }
 
     /**
