@@ -524,5 +524,15 @@ $string['change_binding_username_claim_tool_result'] = 'Wyniki aktualizacji';
 $string['update_username_results'] = 'Wyniki aktualizacji nazw użytkowników';
 $string['new_username'] = 'Nowa nazwa użytkownika';
 
+// Role sync.
+$string['settings_page_role_sync'] = 'Synchronizacja ról';
+$string['settings_role_sync_intro'] = 'Automatycznie przypisuje użytkownikom role systemowe Moodle (na przykład Menedżer lub Twórca kursów) na podstawie oświadczenia (claim) w ich tokenie ID OIDC. Oświadczenie jest oceniane przy każdym logowaniu użytkownika przez OIDC i działa z dowolnym dostawcą tożsamości OIDC. Ta funkcja usuwa wyłącznie role, które sama przypisała; role przypisane ręcznie nigdy nie są zmieniane.';
+$string['settings_role_sync_claimmap'] = 'Mapowanie wartości oświadczenia na role';
+$string['settings_role_sync_claimmap_details'] = 'Jedno mapowanie w wierszu, w formacie <code>oświadczenie|wartość=krótka nazwa roli</code>, na przykład <code>roles|moodle-managers=manager</code>, lub <code>groups|ID obiektu grupy=coursecreator</code> przy użyciu oświadczenia groups z Entra ID. Kilka ról można rozdzielić przecinkami. Różne wiersze mogą używać różnych oświadczeń, a użytkownik otrzymuje role ze wszystkich pasujących wierszy. Wartości są porównywane bez uwzględniania wielkości liter, a wiersze zaczynające się od # są ignorowane. Oświadczenia muszą występować w tokenie ID wydawanym przez dostawcę tożsamości; w Microsoft Entra ID skonfiguruj opcjonalne oświadczenie groups lub role aplikacji w rejestracji aplikacji. Jeśli Entra ID pominie oświadczenie groups, ponieważ użytkownik należy do zbyt wielu grup, role tego użytkownika pozostają bez zmian. Role są stosowane w kontekście systemu podczas logowania użytkownika.';
+$string['settings_role_sync_revoke'] = 'Usuwaj role, które już nie pasują';
+$string['settings_role_sync_revoke_details'] = 'Gdy opcja jest włączona, role wcześniej przypisane przez tę funkcję są usuwane użytkownikowi przy następnym logowaniu, gdy oświadczenie nie zawiera już zmapowanej wartości. Role przypisane ręcznie lub w inny sposób nigdy nie są usuwane.';
+$string['settings_role_sync_error_format'] = 'Nieprawidłowy wiersz mapowania „{$a}”. Użyj formatu oświadczenie|wartość=krótkanazwa[,krótkanazwa].';
+$string['settings_role_sync_error_role'] = 'Nieznana lub nieobsługiwana krótka nazwa roli „{$a}”. Można używać tylko ról, które można przypisać w kontekście systemu.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

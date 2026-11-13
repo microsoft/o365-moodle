@@ -30,6 +30,7 @@ use auth_oidc\adminsetting\auth_oidc_admin_setting_customclaims;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_endpoint;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_iconselect;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_redirecturi;
+use auth_oidc\adminsetting\auth_oidc_admin_setting_rolesyncmapping;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_secretexpiryrecipients;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_section_heading;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_stateexpiry;
@@ -954,6 +955,31 @@ if ($hassiteconfig) {
     ));
 
     $ADMIN->add('oidcfolder', $fieldmappingspage);
+
+    // Role sync settings page.
+    $rolesyncpage = new admin_settingpage('auth_oidc_role_sync', get_string('settings_page_role_sync', 'auth_oidc'));
+    $rolesyncpage->add(new admin_setting_heading(
+        'auth_oidc_role_sync_nav',
+        '',
+        auth_oidc_get_settings_nav_html('auth_oidc_role_sync', null, get_string('settings_role_sync_intro', 'auth_oidc'))
+    ));
+
+    // Claim value to role mapping.
+    $rolesyncpage->add(new auth_oidc_admin_setting_rolesyncmapping(
+        'auth_oidc/rolesync_claimmap',
+        get_string('settings_role_sync_claimmap', 'auth_oidc'),
+        get_string('settings_role_sync_claimmap_details', 'auth_oidc')
+    ));
+
+    // Remove roles that are no longer matched.
+    $rolesyncpage->add(new admin_setting_configcheckbox(
+        'auth_oidc/rolesync_revoke',
+        get_string('settings_role_sync_revoke', 'auth_oidc'),
+        get_string('settings_role_sync_revoke_details', 'auth_oidc'),
+        '1'
+    ));
+
+    $ADMIN->add('oidcfolder', $rolesyncpage);
 
     // Display locking / mapping of profile fields.
     $authplugin = get_auth_plugin('oidc');
