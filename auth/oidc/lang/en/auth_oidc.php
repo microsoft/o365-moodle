@@ -524,5 +524,15 @@ $string['change_binding_username_claim_tool_result'] = 'Update results';
 $string['update_username_results'] = 'Update username results';
 $string['new_username'] = 'New username';
 
+// Role sync.
+$string['settings_page_role_sync'] = 'Role sync';
+$string['settings_role_sync_intro'] = 'Automatically assign Moodle system roles (for example Manager or Course creator) to users based on a claim in their OIDC ID token. The claim is evaluated each time a user logs in with OIDC, and works with any OIDC identity provider. Roles assigned by this feature are the only roles it will ever remove; roles assigned manually are never changed.';
+$string['settings_role_sync_claimmap'] = 'Claim value to role mapping';
+$string['settings_role_sync_claimmap_details'] = 'One mapping per line, in the format <code>claim|value=role short name</code>, for example <code>roles|moodle-managers=manager</code>, or <code>groups|group object ID=coursecreator</code> when using the Entra ID groups claim. Several roles can be separated by commas. Different lines can use different claims, and the user gets the roles of every matching line. Values are matched case-insensitively, and lines starting with # are ignored. The claims must be present in the ID token issued by your identity provider; for Microsoft Entra ID, configure the optional groups claim or app roles in the app registration. If Entra ID omits the groups claim because the user belongs to too many groups, the roles of that user are left unchanged. Roles are applied in the system context when the user logs in.';
+$string['settings_role_sync_revoke'] = 'Remove roles that no longer match';
+$string['settings_role_sync_revoke_details'] = 'When enabled, roles previously assigned by this feature are removed from a user at their next login when the claim no longer contains a mapped value. Roles assigned manually or by other means are never removed.';
+$string['settings_role_sync_error_format'] = 'Invalid mapping line "{$a}". Use the format claim|value=roleshortname[,roleshortname].';
+$string['settings_role_sync_error_role'] = 'Unknown or unsupported role short name "{$a}". Only roles that can be assigned in the system context can be used.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
