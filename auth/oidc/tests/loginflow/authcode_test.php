@@ -361,4 +361,77 @@ final class authcode_test extends advanced_testcase {
             'no error' => ['', '', false],
         ];
     }
+
+    /**
+     * Test preparing a step-up authentication.
+     *
+     * @covers ::prepare_stepup
+     * @return void
+     */
+    public function test_prepare_stepup(): void {
+        global $SESSION;
+        $this->resetAfterTest();
+
+        // Only a logged in user can step up.
+        $this->assertFalse(authcode::prepare_stepup('{"access_token":{"acrs":{}}}'));
+        $this->assertObjectNotHasProperty('auth_oidc_stepup', $SESSION);
+
+        $this->setUser($this->getDataGenerator()->create_user());
+
+        $claims = '{"access_token":{"capolids":{"essential":true,"values":["abc"]}}}';
+        $this->assertTrue(authcode::prepare_stepup($claims, 'https://example.com/page'));
+        $this->assertSame($claims, $SESSION->auth_oidc_stepup['claims']);
+        $this->assertSame('https://example.com/page', $SESSION->auth_oidc_stepup['returnurl']);
+    }
+
+    /**
+     * Test that a step-up without a valid claims challenge is prepared as a plain re-authentication.
+     *
+     * @param string $claims The claims challenge.
+     * @covers ::prepare_stepup
+     * @dataProvider prepare_stepup_without_claims_provider
+     * @return void
+     */
+    public function test_prepare_stepup_without_claims(string $claims): void {
+        global $SESSION;
+        $this->resetAfterTest();
+        $this->setUser($this->getDataGenerator()->create_user());
+
+        // A previous challenge must not be reused.
+        authcode::prepare_stepup('{"access_token":{"acrs":{}}}');
+        $this->assertTrue(authcode::prepare_stepup($claims));
+        $this->assertSame('', $SESSION->auth_oidc_stepup['claims']);
+        $this->assertNull($SESSION->auth_oidc_stepup['returnurl']);
+    }
+
+    /**
+     * Data provider for test_prepare_stepup_without_claims().
+     *
+     * @return array
+     */
+    public static function prepare_stepup_without_claims_provider(): array {
+        return [
+            'no claims' => [''],
+            'not json' => ['not json'],
+            'empty array' => ['[]'],
+            'empty object' => ['{}'],
+            'not an object' => ['"claims"'],
+        ];
+    }
+
+    /**
+     * Test that empty nested objects in a claims challenge are not turned into arrays.
+     *
+     * @covers ::prepare_stepup
+     * @return void
+     */
+    public function test_prepare_stepup_keeps_empty_objects(): void {
+        global $SESSION;
+        $this->resetAfterTest();
+        $this->setUser($this->getDataGenerator()->create_user());
+
+        $claims = '{"access_token":{"acrs":{}}}';
+        $this->assertTrue(authcode::prepare_stepup($claims));
+        $this->assertSame($claims, $SESSION->auth_oidc_stepup['claims']);
+    }
 }
