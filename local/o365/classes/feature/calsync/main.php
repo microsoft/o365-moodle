@@ -88,13 +88,17 @@ class main {
         }
 
         if (empty($token) && $systemfallback === true) {
-            $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
+            try {
+                $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
+            } catch (moodle_exception $e) {
+                // Without an application token, the user is told if they can fix the problem by completing MFA.
+                $this->throw_if_mfa_stepup_available($muserid);
+                throw $e;
+            }
         }
 
         if (empty($token)) {
-            if (token::consume_mfa_required_for_user($muserid)) {
-                throw new moodle_exception('errormfarequired', 'local_o365');
-            }
+            $this->throw_if_mfa_stepup_available($muserid);
 
             throw new moodle_exception('errornotoken', 'local_o365', '', $muserid);
         }
@@ -102,6 +106,21 @@ class main {
         $apiclient = new unified($token, $this->httpclient);
 
         return $apiclient;
+    }
+
+    /**
+     * Throw an exception that lets the user complete multi-factor authentication, if that is why they have no token.
+     *
+     * Only the user in the current web request can complete it, so nothing is thrown for anyone else.
+     *
+     * @param int $muserid The ID of the Moodle user a token was requested for.
+     * @throws moodle_exception
+     */
+    protected function throw_if_mfa_stepup_available($muserid): void {
+        if (token::consume_mfa_required_for_user($muserid) && token::can_step_up_user($muserid)) {
+            $stepupurl = new \core\url('/auth/oidc/', ['stepup' => 1]);
+            throw new moodle_exception('errormfarequired', 'local_o365', $stepupurl->out(false));
+        }
     }
 
     /**
