@@ -1168,5 +1168,19 @@ $string['error_template_id_not_found'] = '✗ Sjabloon-ID "{$a}" is niet gevonde
 $string['error_template_validation_failed'] = '✗ Validatie van sjabloon mislukt: {$a}';
 $string['error_template_validation_error'] = '✗ Er is een fout opgetreden bij het valideren van de sjabloon. Probeer het opnieuw of neem contact op met je beheerder.';
 
+// Role sync feature.
+$string['settings_header_rolesync'] = 'Rolsynchronisatie';
+$string['task_rolesync'] = 'Systeemrollen synchroniseren vanuit Microsoft 365-groepen';
+$string['settings_rolesync_intro'] = 'Wijst automatisch Moodle-systeemrollen (bijvoorbeeld Manager of Cursusmaker) toe aan gebruikers op basis van hun lidmaatschap van Microsoft 365-groepen. Deze functie verwijdert alleen rollen die ze zelf heeft toegewezen; handmatig toegewezen rollen worden nooit gewijzigd. Gebruik de <a href="{$a}">pagina Rolsynchronisatie van de OpenID Connect-authenticatieplug-in</a> om rollen toe te wijzen op basis van een claim in het OIDC-ID-token, wat met elke identiteitsprovider werkt.';
+$string['settings_rolesync_groupheading'] = 'Rolsynchronisatie vanuit Microsoft 365-groepen';
+$string['settings_rolesync_groupheading_desc'] = 'Wordt uitgevoerd als de geplande taak "Systeemrollen synchroniseren vanuit Microsoft 365-groepen" (standaard elke 15 minuten), onafhankelijk van gebruikerssynchronisatie. Wordt niet bij het inloggen uitgevoerd, dus een wijziging in groepslidmaatschap werkt door bij de volgende uitvoering van de taak. Alleen gebruikers die al met Microsoft 365 zijn verbonden worden verwerkt.';
+$string['settings_rolesync_groupmap'] = 'Groep-naar-rol-toewijzing';
+$string['settings_rolesync_groupmap_details'] = 'Eén toewijzing per regel, in het formaat <code>object-ID van de groep=korte naam van de rol</code>. Meerdere rollen kunnen met komma\'s worden gescheiden, bijvoorbeeld <code>550e8400-e29b-41d4-a716-446655440000=manager,coursecreator</code>. Leden en eigenaren van de groep, inclusief leden van geneste groepen, krijgen de rollen in de systeemcontext. Alleen gebruikers die met Microsoft 365 zijn verbonden worden beïnvloed. Regels die met # beginnen worden genegeerd.';
+$string['settings_rolesync_revoke'] = 'Rollen verwijderen die niet meer overeenkomen';
+$string['settings_rolesync_revoke_details'] = 'Indien ingeschakeld, worden rollen die eerder door groepsrolsynchronisatie zijn toegewezen verwijderd bij de volgende uitvoering van de geplande taak wanneer de gebruiker niet meer in een toegewezen groep zit. Handmatig of op andere wijze toegewezen rollen worden nooit verwijderd.';
+$string['settings_rolesync_error_format'] = 'Ongeldige toewijzingsregel "{$a}". Gebruik het formaat bron=kortenaam[,kortenaam].';
+$string['settings_rolesync_error_group'] = 'Ongeldige object-ID van groep "{$a}". Deze moet een GUID zijn.';
+$string['settings_rolesync_error_role'] = 'Onbekende of niet-ondersteunde korte naam van rol "{$a}". Alleen rollen die in de systeemcontext kunnen worden toegewezen, kunnen worden gebruikt.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

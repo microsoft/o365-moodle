@@ -1168,5 +1168,19 @@ $string['error_template_id_not_found'] = '✗ ID šablony „{$a}“ nebylo nale
 $string['error_template_validation_failed'] = '✗ Ověření šablony selhalo: {$a}';
 $string['error_template_validation_error'] = '✗ Při ověřování šablony došlo k chybě. Zkuste to prosím znovu nebo kontaktujte správce.';
 
+// Role sync feature.
+$string['settings_header_rolesync'] = 'Synchronizace rolí';
+$string['task_rolesync'] = 'Synchronizovat systémové role ze skupin Microsoft 365';
+$string['settings_rolesync_intro'] = 'Automaticky přiřazuje uživatelům systémové role Moodle (například Manažer nebo Tvůrce kurzů) na základě členství ve skupinách Microsoft 365. Tato funkce odebírá pouze role, které sama přiřadila; ručně přiřazené role se nikdy nemění. Chcete-li role přiřazovat na základě tvrzení v tokenu ID OIDC, což funguje s jakýmkoli poskytovatelem identity, použijte <a href="{$a}">stránku Synchronizace rolí v pluginu ověřování OpenID Connect</a>.';
+$string['settings_rolesync_groupheading'] = 'Synchronizace rolí ze skupin Microsoft 365';
+$string['settings_rolesync_groupheading_desc'] = 'Spouští se jako naplánovaná úloha „Synchronizovat systémové role ze skupin Microsoft 365“ (ve výchozím nastavení každých 15 minut), nezávisle na synchronizaci uživatelů. Nespouští se při přihlášení, takže změna členství ve skupině se projeví při dalším spuštění úlohy. Zpracovávají se pouze uživatelé již připojení k Microsoft 365.';
+$string['settings_rolesync_groupmap'] = 'Mapování skupin na role';
+$string['settings_rolesync_groupmap_details'] = 'Jedno mapování na řádek ve formátu <code>ID objektu skupiny=krátký název role</code>. Více rolí lze oddělit čárkami, například <code>550e8400-e29b-41d4-a716-446655440000=manager,coursecreator</code>. Členové a vlastníci skupiny, včetně členů vnořených skupin, získají role v systémovém kontextu. Týká se to pouze uživatelů připojených k Microsoft 365. Řádky začínající znakem # jsou ignorovány.';
+$string['settings_rolesync_revoke'] = 'Odebírat role, které již neodpovídají';
+$string['settings_rolesync_revoke_details'] = 'Je-li povoleno, role dříve přiřazené synchronizací rolí ze skupin se uživateli odeberou při dalším spuštění naplánované úlohy, pokud již není členem namapované skupiny. Ručně nebo jinak přiřazené role se nikdy neodebírají.';
+$string['settings_rolesync_error_format'] = 'Neplatný řádek mapování „{$a}“. Použijte formát zdroj=krátkýnázev[,krátkýnázev].';
+$string['settings_rolesync_error_group'] = 'Neplatné ID objektu skupiny „{$a}“. Musí jít o identifikátor GUID.';
+$string['settings_rolesync_error_role'] = 'Neznámý nebo nepodporovaný krátký název role „{$a}“. Lze použít pouze role, které lze přiřadit v systémovém kontextu.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
