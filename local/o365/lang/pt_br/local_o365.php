@@ -1168,5 +1168,19 @@ $string['error_template_id_not_found'] = '✗ O ID de modelo "{$a}" não foi enc
 $string['error_template_validation_failed'] = '✗ Falha na validação do modelo: {$a}';
 $string['error_template_validation_error'] = '✗ Ocorreu um erro ao validar o modelo. Tente novamente ou entre em contato com o administrador.';
 
+// Role sync feature.
+$string['settings_header_rolesync'] = 'Sincronização de papéis';
+$string['task_rolesync'] = 'Sincronizar papéis do sistema a partir de grupos do Microsoft 365';
+$string['settings_rolesync_intro'] = 'Atribui automaticamente papéis do sistema do Moodle (por exemplo, Gerente ou Criador de curso) aos usuários com base na participação em grupos do Microsoft 365. Este recurso remove apenas os papéis que ele mesmo atribuiu; papéis atribuídos manualmente nunca são alterados. Para atribuir papéis a partir de uma declaração do token de ID OIDC, o que funciona com qualquer provedor de identidade, use a <a href="{$a}">página Sincronização de papéis do plugin de autenticação OpenID Connect</a>.';
+$string['settings_rolesync_groupheading'] = 'Sincronização de papéis a partir de grupos do Microsoft 365';
+$string['settings_rolesync_groupheading_desc'] = 'Executada pela tarefa agendada "Sincronizar papéis do sistema a partir de grupos do Microsoft 365" (a cada 15 minutos por padrão), independentemente da sincronização de usuários. Não é executada no login, portanto uma alteração na participação em grupos entra em vigor na próxima execução da tarefa. Somente usuários já conectados ao Microsoft 365 são processados.';
+$string['settings_rolesync_groupmap'] = 'Mapeamento de grupo para papel';
+$string['settings_rolesync_groupmap_details'] = 'Um mapeamento por linha, no formato <code>ID do objeto do grupo=nome curto do papel</code>. Vários papéis podem ser separados por vírgulas, por exemplo <code>550e8400-e29b-41d4-a716-446655440000=manager,coursecreator</code>. Os membros e proprietários do grupo, incluindo os membros de grupos aninhados, recebem os papéis no contexto do sistema. Somente usuários conectados ao Microsoft 365 são afetados. Linhas que começam com # são ignoradas.';
+$string['settings_rolesync_revoke'] = 'Remover papéis que não correspondem mais';
+$string['settings_rolesync_revoke_details'] = 'Quando ativado, os papéis atribuídos anteriormente pela sincronização de papéis por grupo são removidos de um usuário na próxima execução da tarefa agendada, quando ele deixa de pertencer a um grupo mapeado. Papéis atribuídos manualmente ou de outra forma nunca são removidos.';
+$string['settings_rolesync_error_format'] = 'Linha de mapeamento inválida "{$a}". Use o formato origem=nomecurto[,nomecurto].';
+$string['settings_rolesync_error_group'] = 'ID de objeto de grupo inválido "{$a}". Deve ser um GUID.';
+$string['settings_rolesync_error_role'] = 'Nome curto de papel desconhecido ou não suportado "{$a}". Somente papéis que podem ser atribuídos no contexto do sistema podem ser usados.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
