@@ -524,5 +524,15 @@ $string['change_binding_username_claim_tool_result'] = 'Päivityksen tulokset';
 $string['update_username_results'] = 'Käyttäjätunnusten päivityksen tulokset';
 $string['new_username'] = 'Uusi käyttäjätunnus';
 
+// Role sync.
+$string['settings_page_role_sync'] = 'Roolien synkronointi';
+$string['settings_role_sync_intro'] = 'Määrittää käyttäjille automaattisesti Moodlen järjestelmärooleja (esimerkiksi Hallinnoija tai Kurssin luoja) heidän OIDC-tunnistetokeninsa väitteen (claim) perusteella. Väite arvioidaan aina, kun käyttäjä kirjautuu sisään OIDC:llä, ja se toimii minkä tahansa OIDC-identiteettipalveluntarjoajan kanssa. Tämä ominaisuus poistaa vain itse määrittämänsä roolit; manuaalisesti määritettyjä rooleja ei koskaan muuteta.';
+$string['settings_role_sync_claimmap'] = 'Väitteen arvojen ja roolien yhdistäminen';
+$string['settings_role_sync_claimmap_details'] = 'Yksi yhdistäminen riviä kohden muodossa <code>väite|arvo=roolin lyhyt nimi</code>, esimerkiksi <code>roles|moodle-managers=manager</code>, tai <code>groups|ryhmän objektitunnus=coursecreator</code>, kun käytetään Entra ID:n groups-väitettä. Useita rooleja voi erottaa pilkuilla. Eri rivit voivat käyttää eri väitteitä, ja käyttäjä saa kaikkien täsmäävien rivien roolit. Arvot täsmäytetään kirjainkoosta riippumatta, ja #-merkillä alkavat rivit ohitetaan. Väitteiden on oltava identiteettipalveluntarjoajan myöntämässä tunnistetokenissa; Microsoft Entra ID:ssä määritä sovellusrekisteröinnissä valinnainen groups-väite tai sovellusroolit. Jos Entra ID jättää groups-väitteen pois, koska käyttäjä kuuluu liian moneen ryhmään, kyseisen käyttäjän roolit säilyvät ennallaan. Roolit otetaan käyttöön järjestelmäkontekstissa, kun käyttäjä kirjautuu sisään.';
+$string['settings_role_sync_revoke'] = 'Poista roolit, jotka eivät enää täsmää';
+$string['settings_role_sync_revoke_details'] = 'Kun asetus on käytössä, tämän ominaisuuden aiemmin määrittämät roolit poistetaan käyttäjältä seuraavassa kirjautumisessa, kun väite ei enää sisällä yhdistettyä arvoa. Manuaalisesti tai muutoin määritettyjä rooleja ei koskaan poisteta.';
+$string['settings_role_sync_error_format'] = 'Virheellinen yhdistämisrivi "{$a}". Käytä muotoa väite|arvo=lyhytnimi[,lyhytnimi].';
+$string['settings_role_sync_error_role'] = 'Tuntematon tai ei-tuettu roolin lyhyt nimi "{$a}". Vain järjestelmäkontekstissa määritettävissä olevia rooleja voi käyttää.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

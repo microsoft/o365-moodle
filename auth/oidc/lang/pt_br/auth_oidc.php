@@ -524,5 +524,15 @@ $string['change_binding_username_claim_tool_result'] = 'Resultados da atualizaç
 $string['update_username_results'] = 'Resultados da atualização de nomes de usuário';
 $string['new_username'] = 'Novo nome de usuário';
 
+// Role sync.
+$string['settings_page_role_sync'] = 'Sincronização de papéis';
+$string['settings_role_sync_intro'] = 'Atribui automaticamente papéis do sistema do Moodle (por exemplo, Gerente ou Criador de curso) aos usuários com base em uma declaração (claim) do token de ID OIDC. A declaração é avaliada sempre que um usuário faz login com OIDC e funciona com qualquer provedor de identidade OIDC. Este recurso remove apenas os papéis que ele mesmo atribuiu; papéis atribuídos manualmente nunca são alterados.';
+$string['settings_role_sync_claimmap'] = 'Mapeamento de valor da declaração para papel';
+$string['settings_role_sync_claimmap_details'] = 'Um mapeamento por linha, no formato <code>declaração|valor=nome curto do papel</code>, por exemplo <code>roles|moodle-managers=manager</code>, ou <code>groups|ID do objeto do grupo=coursecreator</code> ao usar a declaração groups do Entra ID. Vários papéis podem ser separados por vírgulas. Linhas diferentes podem usar declarações diferentes, e o usuário recebe os papéis de todas as linhas correspondentes. Os valores são comparados sem diferenciar maiúsculas de minúsculas, e linhas que começam com # são ignoradas. As declarações devem estar presentes no token de ID emitido pelo seu provedor de identidade; no Microsoft Entra ID, configure a declaração opcional groups ou os papéis de aplicativo no registro do aplicativo. Se o Entra ID omitir a declaração groups porque o usuário pertence a grupos demais, os papéis desse usuário permanecem inalterados. Os papéis são aplicados no contexto do sistema quando o usuário faz login.';
+$string['settings_role_sync_revoke'] = 'Remover papéis que não correspondem mais';
+$string['settings_role_sync_revoke_details'] = 'Quando ativado, os papéis atribuídos anteriormente por este recurso são removidos de um usuário no próximo login quando a declaração não contiver mais um valor mapeado. Papéis atribuídos manualmente ou de outra forma nunca são removidos.';
+$string['settings_role_sync_error_format'] = 'Linha de mapeamento inválida "{$a}". Use o formato declaração|valor=nomecurto[,nomecurto].';
+$string['settings_role_sync_error_role'] = 'Nome curto de papel desconhecido ou não suportado "{$a}". Somente papéis que podem ser atribuídos no contexto do sistema podem ser usados.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

@@ -524,5 +524,15 @@ $string['change_binding_username_claim_tool_result'] = 'Updateresultaten';
 $string['update_username_results'] = 'Resultaten van bijwerken van gebruikersnamen';
 $string['new_username'] = 'Nieuwe gebruikersnaam';
 
+// Role sync.
+$string['settings_page_role_sync'] = 'Rolsynchronisatie';
+$string['settings_role_sync_intro'] = 'Wijst automatisch Moodle-systeemrollen (bijvoorbeeld Manager of Cursusmaker) toe aan gebruikers op basis van een claim in hun OIDC-ID-token. De claim wordt beoordeeld telkens wanneer een gebruiker inlogt via OIDC en werkt met elke OIDC-identiteitsprovider. Deze functie verwijdert alleen rollen die ze zelf heeft toegewezen; handmatig toegewezen rollen worden nooit gewijzigd.';
+$string['settings_role_sync_claimmap'] = 'Claimwaarde-naar-rol-toewijzing';
+$string['settings_role_sync_claimmap_details'] = 'Eén toewijzing per regel, in het formaat <code>claim|waarde=korte naam van de rol</code>, bijvoorbeeld <code>roles|moodle-managers=manager</code>, of <code>groups|object-ID van de groep=coursecreator</code> bij gebruik van de Entra ID-groups-claim. Meerdere rollen kunnen met komma\'s worden gescheiden. Verschillende regels kunnen verschillende claims gebruiken en de gebruiker krijgt de rollen van elke overeenkomende regel. Waarden worden hoofdletterongevoelig vergeleken en regels die met # beginnen worden genegeerd. De claims moeten aanwezig zijn in het ID-token dat door uw identiteitsprovider wordt uitgegeven; configureer voor Microsoft Entra ID de optionele groups-claim of app-rollen in de app-registratie. Als Entra ID de groups-claim weglaat omdat de gebruiker lid is van te veel groepen, blijven de rollen van die gebruiker ongewijzigd. Rollen worden toegepast in de systeemcontext wanneer de gebruiker inlogt.';
+$string['settings_role_sync_revoke'] = 'Rollen verwijderen die niet meer overeenkomen';
+$string['settings_role_sync_revoke_details'] = 'Indien ingeschakeld, worden rollen die eerder door deze functie zijn toegewezen bij de volgende login van een gebruiker verwijderd wanneer de claim geen toegewezen waarde meer bevat. Handmatig of op andere wijze toegewezen rollen worden nooit verwijderd.';
+$string['settings_role_sync_error_format'] = 'Ongeldige toewijzingsregel "{$a}". Gebruik het formaat claim|waarde=kortenaam[,kortenaam].';
+$string['settings_role_sync_error_role'] = 'Onbekende of niet-ondersteunde korte naam van rol "{$a}". Alleen rollen die in de systeemcontext kunnen worden toegewezen, kunnen worden gebruikt.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

@@ -33,6 +33,12 @@ $observers = [
         'internal' => false,
     ],
     [
+        'eventname' => '\core\event\user_updated',
+        'callback' => '\auth_oidc\observers::handle_user_updated',
+        'priority' => 200,
+        'internal' => false,
+    ],
+    [
         'eventname' => '\core\event\user_loggedout',
         'callback' => '\auth_oidc\observers::handle_user_loggedout',
         'priority' => 200,

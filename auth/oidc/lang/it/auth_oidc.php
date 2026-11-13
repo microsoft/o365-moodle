@@ -524,5 +524,15 @@ $string['change_binding_username_claim_tool_result'] = 'Risultati dell\'aggiorna
 $string['update_username_results'] = 'Risultati dell\'aggiornamento dei nomi utente';
 $string['new_username'] = 'Nuovo nome utente';
 
+// Role sync.
+$string['settings_page_role_sync'] = 'Sincronizzazione dei ruoli';
+$string['settings_role_sync_intro'] = 'Assegna automaticamente i ruoli di sistema di Moodle (ad esempio Manager o Creatore di corsi) agli utenti in base a un claim nel loro token ID OIDC. Il claim viene valutato a ogni accesso dell\'utente tramite OIDC e funziona con qualsiasi provider di identità OIDC. Questa funzionalità rimuove solo i ruoli da essa assegnati; i ruoli assegnati manualmente non vengono mai modificati.';
+$string['settings_role_sync_claimmap'] = 'Mappatura valore del claim-ruolo';
+$string['settings_role_sync_claimmap_details'] = 'Una mappatura per riga, nel formato <code>claim|valore=nome breve del ruolo</code>, ad esempio <code>roles|moodle-managers=manager</code>, oppure <code>groups|ID oggetto del gruppo=coursecreator</code> con il claim groups di Entra ID. Più ruoli possono essere separati da virgole. Righe diverse possono usare claim diversi e l\'utente riceve i ruoli di tutte le righe corrispondenti. I valori vengono confrontati senza distinzione tra maiuscole e minuscole e le righe che iniziano con # vengono ignorate. I claim devono essere presenti nel token ID emesso dal provider di identità; per Microsoft Entra ID, configurare il claim facoltativo groups o i ruoli dell\'app nella registrazione dell\'app. Se Entra ID omette il claim groups perché l\'utente appartiene a troppi gruppi, i ruoli di tale utente restano invariati. I ruoli vengono applicati nel contesto di sistema quando l\'utente accede.';
+$string['settings_role_sync_revoke'] = 'Rimuovi i ruoli non più corrispondenti';
+$string['settings_role_sync_revoke_details'] = 'Se abilitata, i ruoli assegnati in precedenza da questa funzionalità vengono rimossi da un utente al successivo accesso quando il claim non contiene più un valore mappato. I ruoli assegnati manualmente o in altro modo non vengono mai rimossi.';
+$string['settings_role_sync_error_format'] = 'Riga di mappatura non valida "{$a}". Usare il formato claim|valore=nomebreve[,nomebreve].';
+$string['settings_role_sync_error_role'] = 'Nome breve del ruolo sconosciuto o non supportato "{$a}". Possono essere usati solo ruoli assegnabili nel contesto di sistema.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

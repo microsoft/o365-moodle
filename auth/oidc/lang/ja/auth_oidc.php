@@ -524,5 +524,15 @@ $string['change_binding_username_claim_tool_result'] = '更新結果';
 $string['update_username_results'] = 'ユーザ名の更新結果';
 $string['new_username'] = '新しいユーザ名';
 
+// Role sync.
+$string['settings_page_role_sync'] = 'ロール同期';
+$string['settings_role_sync_intro'] = 'OIDC ID トークン内のクレームに基づいて、Moodle のシステムロール（たとえばマネージャーやコース作成者）をユーザーに自動的に割り当てます。クレームは OIDC でユーザーがログインするたびに評価され、任意の OIDC ID プロバイダーで動作します。この機能が削除するのは、この機能自身が割り当てたロールのみで、手動で割り当てられたロールが変更されることはありません。';
+$string['settings_role_sync_claimmap'] = 'クレーム値とロールのマッピング';
+$string['settings_role_sync_claimmap_details'] = '1 行につき 1 つのマッピングを <code>クレーム|値=ロールの短縮名</code> の形式で指定します（例: <code>roles|moodle-managers=manager</code>。Entra ID の groups クレームを使用する場合は <code>groups|グループのオブジェクト ID=coursecreator</code>）。複数のロールはカンマで区切ります。行ごとに異なるクレームを使用でき、ユーザーには一致するすべての行のロールが付与されます。値は大文字と小文字を区別せずに照合され、# で始まる行は無視されます。クレームは ID プロバイダーが発行する ID トークンに含まれている必要があります。Microsoft Entra ID では、アプリの登録でオプションの groups クレームまたはアプリロールを構成してください。ユーザーが所属するグループが多すぎるために Entra ID が groups クレームを省略した場合、そのユーザーのロールは変更されません。ロールはユーザーのログイン時にシステムコンテキストで適用されます。';
+$string['settings_role_sync_revoke'] = '一致しなくなったロールを削除する';
+$string['settings_role_sync_revoke_details'] = '有効にすると、クレームにマッピングされた値が含まれなくなった場合、この機能によって以前に割り当てられたロールは、ユーザーの次回ログイン時に削除されます。手動またはその他の方法で割り当てられたロールは削除されません。';
+$string['settings_role_sync_error_format'] = 'マッピング行 "{$a}" が無効です。クレーム|値=ロール短縮名[,ロール短縮名] の形式を使用してください。';
+$string['settings_role_sync_error_role'] = 'ロールの短縮名 "{$a}" は不明、またはサポートされていません。システムコンテキストで割り当て可能なロールのみ使用できます。';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
