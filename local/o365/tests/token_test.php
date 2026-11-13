@@ -215,4 +215,77 @@ final class token_test extends advanced_testcase {
         $this->assertFalse($gettoken());
         $this->assertFalse(\local_o365\oauth2\token::consume_mfa_required_for_user($user->id));
     }
+
+    /**
+     * Test that a rejected token request prepares a step-up for the current user, with or without a claims challenge.
+     *
+     * @param array $response The token endpoint response.
+     * @param string $expectedclaims The claims challenge the step-up is expected to carry.
+     *
+     * @covers \local_o365\oauth2\token::consume_mfa_required_for_user
+     * @covers \local_o365\oauth2\token::can_step_up_user
+     * @dataProvider mfa_stepup_provider
+     */
+    public function test_consume_mfa_required_prepares_stepup(array $response, string $expectedclaims): void {
+        global $DB, $SESSION;
+
+        $user = $this->getDataGenerator()->create_user();
+        $otheruser = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        $DB->insert_record('auth_oidc_token', (object)[
+            'oidcuniqid' => 'oidcuniqid' . $user->id,
+            'username' => $user->username,
+            'userid' => $user->id,
+            'oidcusername' => $user->username,
+            'scope' => 'scope',
+            'tokenresource' => 'https://graph.microsoft.com',
+            'authcode' => 'authcode',
+            'token' => 'graphtoken',
+            'expiry' => time() - 1000,
+            'refreshtoken' => 'refreshtoken',
+            'idtoken' => 'idtoken',
+        ]);
+
+        $httpclient = new \local_o365\tests\mockhttpclient();
+        $httpclient->set_response(json_encode($response));
+        $clientdata = new \local_o365\oauth2\clientdata(
+            'clientid',
+            'clientsecret',
+            'http://example.com/auth',
+            'http://example.com/token'
+        );
+
+        $this->assertTrue(\local_o365\oauth2\token::can_step_up_user($user->id));
+        $this->assertFalse(\local_o365\oauth2\token::can_step_up_user($otheruser->id));
+
+        $this->assertFalse(\local_o365\oauth2\token::get_for_new_resource(
+            $user->id,
+            'https://outlook.office.com',
+            $clientdata,
+            $httpclient
+        ));
+        $this->assertTrue(\local_o365\oauth2\token::consume_mfa_required_for_user($user->id));
+        $this->assertSame($expectedclaims, $SESSION->auth_oidc_stepup['claims']);
+    }
+
+    /**
+     * Data provider for test_consume_mfa_required_prepares_stepup().
+     *
+     * @return array
+     */
+    public static function mfa_stepup_provider(): array {
+        $claims = '{"access_token":{"capolids":{"essential":true,"values":["abc"]}}}';
+
+        return [
+            'with claims challenge' => [
+                ['error' => 'interaction_required', 'error_codes' => [50076], 'claims' => $claims],
+                $claims,
+            ],
+            'without claims challenge' => [
+                ['error' => 'interaction_required', 'error_codes' => [50076]],
+                '',
+            ],
+        ];
+    }
 }
