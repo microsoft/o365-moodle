@@ -164,12 +164,43 @@ class authcode extends base {
     }
 
     /**
+     * Prepare a step-up authentication, so the user can complete it by authenticating again with Microsoft.
+     *
+     * This is used when Microsoft requires more from the user than their existing tokens give, e.g. multi-factor
+     * authentication. If Microsoft returned a claims challenge it is sent with the request. Without one (or with
+     * an invalid one), the request is an interactive re-authentication. The step-up is only started by a later
+     * request to the redirect URL with the "stepup" parameter set, and it can only be used once.
+     *
+     * @param string $claims The claims challenge, a JSON string, or an empty string if there is none.
+     * @param string|null $returnurl A local URL to return the user to after authentication.
+     * @return bool Whether the step-up was prepared, which is only possible for a user who is logged in.
+     */
+    public static function prepare_stepup(string $claims = '', ?string $returnurl = null): bool {
+        global $SESSION;
+
+        if (!isloggedin() || isguestuser()) {
+            return false;
+        }
+
+        // Decode as objects, so empty nested objects (e.g. {"acrs":{}}) are not turned into arrays when re-encoded.
+        $decoded = json_decode($claims);
+        $validclaims = is_object($decoded) && !empty((array)$decoded);
+
+        $SESSION->auth_oidc_stepup = [
+            'claims' => $validclaims ? json_encode($decoded) : '',
+            'returnurl' => $returnurl,
+        ];
+
+        return true;
+    }
+
+    /**
      * Handle requests to the redirect URL.
      *
      * @return mixed Determined by loginflow.
      */
     public function handleredirect() {
-        global $CFG, $SESSION;
+        global $CFG, $DB, $SESSION, $USER;
 
         $error = optional_param('error', '', PARAM_TEXT);
         $errordescription = optional_param('error_description', '', PARAM_TEXT);
@@ -218,6 +249,19 @@ class authcode extends base {
         $promptlogin = (bool)optional_param('promptlogin', 0, PARAM_BOOL);
         $promptaconsent = (bool)optional_param('promptaconsent', 0, PARAM_BOOL);
         $justauth = (bool)optional_param('justauth', 0, PARAM_BOOL);
+        $stepup = null;
+        if (optional_param('stepup', 0, PARAM_BOOL) && !empty($SESSION->auth_oidc_stepup) && isloggedin()) {
+            // The user needs to complete a step-up authentication (e.g. MFA) requested by Microsoft.
+            $stepup = $SESSION->auth_oidc_stepup;
+            unset($SESSION->auth_oidc_stepup);
+            if (!empty($stepup['returnurl']) && $this->is_valid_local_url($stepup['returnurl'])) {
+                $SESSION->wantsurl = $stepup['returnurl'];
+            }
+            if (($stepup['claims'] ?? '') === '') {
+                // Without a claims challenge, the user must authenticate interactively for Microsoft to ask for MFA.
+                $promptlogin = true;
+            }
+        }
         if (!empty($state) && $selectaccount === false) {
             $requestparams = [
                 'state' => $state,
@@ -228,7 +272,7 @@ class authcode extends base {
             // Response from OP.
             $this->handleauthresponse($requestparams);
         } else {
-            if (isloggedin() && !isguestuser() && empty($justauth) && empty($promptaconsent)) {
+            if (isloggedin() && !isguestuser() && empty($justauth) && empty($promptaconsent) && $stepup === null) {
                 if (isset($SESSION->wantsurl) && $this->is_valid_local_url($SESSION->wantsurl)) {
                     $urltogo = $SESSION->wantsurl;
                     unset($SESSION->wantsurl);
@@ -269,6 +313,25 @@ class authcode extends base {
             }
             if ($justauth === true) {
                 $stateparams['justauth'] = true;
+            }
+            if ($stepup !== null) {
+                // Complete the step-up as a token renewal for the current user, bound to their Microsoft account.
+                $stateparams['stepup'] = true;
+                $stateparams['stepupuserid'] = (int)$USER->id;
+                // The return URL is carried in the state, do not leave it behind in the session.
+                unset($SESSION->wantsurl);
+                if (!empty($stepup['claims'])) {
+                    $stateparams['claims'] = $stepup['claims'];
+                    $extraparams['claims'] = $stepup['claims'];
+                    if (get_config('auth_oidc', 'silentloginmode')) {
+                        // The prompt must be interactive, a silent request cannot display multi-factor authentication.
+                        $extraparams['prompt'] = 'select_account';
+                    }
+                }
+                $loginhint = $DB->get_field('auth_oidc_token', 'oidcusername', ['userid' => $USER->id]);
+                if (!empty($loginhint)) {
+                    $extraparams['login_hint'] = $loginhint;
+                }
             }
             $this->initiateauthrequest($promptlogin, $stateparams, $extraparams, $selectaccount);
         }
@@ -316,7 +379,7 @@ class authcode extends base {
             // cross-site POST (response_mode=form_post), which a SameSite=Lax session cookie is not sent on, so the
             // session may not survive the round trip. Storing the user id here lets handleauthresponse() identify
             // the initiating user from the (unguessable, single-use) state record instead of the live session.
-            $stateparams['initiatinguserid'] = $USER->id;
+            $stateparams['initiatinguserid'] = $stateparams['initiatinguserid'] ?? $USER->id;
         }
 
         $this->set_csrf_cookie();
@@ -585,10 +648,10 @@ class authcode extends base {
 
         if (!empty($authparams['error']) || !empty($authparams['error_description'])) {
             utils::debug('Authorization error.', __METHOD__, $authparams);
+            $errormessage = get_string('errorauthgeneral', 'auth_oidc');
             if (static::is_mfa_required_error($authparams['error'] ?? '', $authparams['error_description'] ?? '')) {
                 $errormessage = get_string('errorauthmfarequired', 'auth_oidc');
-            } else {
-                $errormessage = get_string('errorauthgeneral', 'auth_oidc');
+                $this->retry_mfa_required_request($authparams['state'] ?? '');
             }
             redirect($CFG->wwwroot, $errormessage, null, notification::NOTIFY_ERROR);
         }
@@ -642,6 +705,11 @@ class authcode extends base {
             $errstr = 'User prevented from logging in due to restrictions.';
             utils::debug($errstr, __METHOD__, $idtoken);
             throw new moodle_exception('errorrestricted', 'auth_oidc');
+        }
+
+        // Step-up authentication only renews the tokens of the user who requested it.
+        if (!empty($additionaldata['stepup']) && !empty($additionaldata['stepupuserid'])) {
+            $this->handlestepupresponse($oidcuniqid, $authparams, $tokenparams, $additionaldata, $csrfverified);
         }
 
         // This is for setting the system API user.
@@ -758,6 +826,100 @@ class authcode extends base {
             }
             redirect(core_login_get_return_url());
         }
+    }
+
+    /**
+     * Retry a request that Microsoft rejected because multi-factor authentication is required, once, interactively.
+     *
+     * The failed request's state is validated and consumed first. The retry carries the same workflow data (and any
+     * claims challenge), and is marked in the new state so that it cannot be repeated, even if the session is lost.
+     * Returns without doing anything if the request cannot be retried.
+     *
+     * @param string $state The state returned by the identity provider.
+     */
+    protected function retry_mfa_required_request(string $state): void {
+        global $DB, $CFG;
+
+        if ($state === '') {
+            return;
+        }
+
+        $staterec = $DB->get_record('auth_oidc_state', ['state' => $state]);
+        if (empty($staterec)) {
+            return;
+        }
+
+        $csrfverified = is_https() || !empty($CFG->sslproxy) || !empty($_COOKIE['auth_oidc_csrf']);
+        if ($csrfverified) {
+            $this->verify_csrf_cookie($staterec);
+        }
+
+        $additionaldata = [];
+        if (!empty($staterec->additionaldata)) {
+            $additionaldata = @unserialize($staterec->additionaldata);
+            if (!is_array($additionaldata)) {
+                $additionaldata = [];
+            }
+        }
+        $DB->delete_records('auth_oidc_state', ['id' => $staterec->id]);
+
+        if (!empty($additionaldata['mfaretried'])) {
+            return;
+        }
+
+        $additionaldata['mfaretried'] = true;
+        $extraparams = [];
+        if (!empty($additionaldata['claims']) && is_string($additionaldata['claims'])) {
+            $extraparams['claims'] = $additionaldata['claims'];
+        }
+        $this->initiateauthrequest(true, $additionaldata, $extraparams);
+        die();
+    }
+
+    /**
+     * Complete a step-up authentication by renewing the tokens of the user who requested it.
+     *
+     * The Microsoft account that authenticated must be the one the user is already connected with. The user's login
+     * method is not changed, and nobody is logged in as a different user.
+     *
+     * @param string $oidcuniqid A unique identifier for the Microsoft account that authenticated.
+     * @param array $authparams Parameters received from the auth request.
+     * @param array $tokenparams Parameters received from the token request.
+     * @param array $additionaldata The stored state data.
+     * @param bool $csrfverified Whether the request was verified with the CSRF cookie.
+     */
+    protected function handlestepupresponse(
+        string $oidcuniqid,
+        array $authparams,
+        array $tokenparams,
+        array $additionaldata,
+        bool $csrfverified
+    ): void {
+        global $DB, $USER, $CFG;
+
+        $user = core_user::get_user((int)$additionaldata['stepupuserid']);
+        $tokenrec = null;
+        if ($user && empty($user->deleted)) {
+            $tokenrec = $DB->get_record('auth_oidc_token', ['userid' => $user->id]);
+        }
+
+        if (empty($tokenrec) || $tokenrec->oidcuniqid !== $oidcuniqid) {
+            utils::debug('Step-up authentication completed with a different Microsoft account.', __METHOD__);
+            redirect($CFG->wwwroot, get_string('errorauthmfarequired', 'auth_oidc'), null, notification::NOTIFY_ERROR);
+        }
+
+        // Restore the session if the cookie did not survive the callback.
+        if ($csrfverified && (!isloggedin() || isguestuser() || (int)$USER->id !== (int)$user->id)) {
+            \core\session\manager::login_user($user);
+        }
+
+        $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
+
+        $wantsurl = new url('/');
+        if (!empty($additionaldata['wantsurl']) && $this->is_valid_local_url((string)$additionaldata['wantsurl'])) {
+            $wantsurl = new url((string)$additionaldata['wantsurl']);
+        }
+        redirect($wantsurl);
     }
 
     /**
