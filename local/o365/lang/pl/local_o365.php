@@ -106,6 +106,7 @@ $string['settings_verifysetup_errorcheck'] = 'Wystąpił błąd podczas próby s
 $string['settings_verifysetup_noinfo'] = 'Nie mamy jeszcze żadnych informacji o konfiguracji aplikacji Microsoft Entra ID. Kliknij przycisk Aktualizuj, aby sprawdzić.';
 $string['settings_verifysetup_strunifiedpermerror'] = 'Wystąpił błąd podczas sprawdzania uprawnień interfejsu Microsoft Graph API.';
 $string['settings_verifysetup_strtenanterror'] = 'Przed aktualizacją konfiguracji aplikacji Microsoft Entra ID użyj przycisku Wykryj, aby ustawić dzierżawcę Microsoft Entra.';
+$string['settings_verifysetup_required'] = 'Zaktualizowano ustawienia, które wpływają na konfigurację aplikacji Microsoft Entra ID. Kliknij przycisk Aktualizuj, aby ponownie zweryfikować konfigurację.';
 $string['settings_verifysetup_unifiedheader'] = 'Microsoft Graph API';
 $string['settings_verifysetup_unifieddesc'] = 'Interfejs Microsoft Graph API umożliwia komunikację między platformą Moodle a pakietem Microsoft 365.';
 $string['settings_verifysetup_unifiederror'] = 'Wystąpił błąd podczas sprawdzania obsługi interfejsu Microsoft Graph API.';

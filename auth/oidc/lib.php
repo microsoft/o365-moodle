@@ -128,40 +128,141 @@ const AUTH_OIDC_AUTH_CERT_SOURCE_FILE = 2;
 const AUTH_OIDC_CUSTOMICON_ALLOWED_EXTENSIONS = ['png', 'jpg', 'gif'];
 
 /**
- * Callback invoked when application credentials or endpoint settings are updated.
+ * Settings of auth_oidc that make the results of the Microsoft 365 "Verify setup" check invalid when they are updated.
  *
- * Clears cached application tokens and the setup verification result so that
- * the connection is re-validated with the new values.
+ * The check is made with an application token, which is requested using the IdP type, Microsoft cloud, client ID, client
+ * credentials and endpoints below. The OIDC scope is listed because updating it has always reset the application tokens.
+ * Settings that only affect user login, e.g. custom claims, are not listed.
  *
- * @param string $settingname The full name of the setting that was updated.
- * @return void
+ * When one of these settings is updated, the application tokens and the verify setup results are cleared by
+ * \local_o365\observers::handle_config_log_created(), and the site admin is sent to the verify setup page.
  */
-function auth_oidc_reset_app_tokens($settingname) {
-    // Use a static flag so cache purging and token clearing only happen once per request,
-    // even when multiple settings with this callback change in the same save.
-    static $cachespurged = false;
-    if (!$cachespurged) {
-        unset_config('apptokens', 'local_o365');
-        unset_config('verifysetupresult', 'local_o365');
-        purge_all_caches();
-        $cachespurged = true;
+const AUTH_OIDC_VERIFYSETUP_SETTINGS = [
+    'idptype',
+    'microsoftcloud',
+    'clientid',
+    'clientauthmethod',
+    'clientsecret',
+    'clientcertsource',
+    'clientprivatekey',
+    'clientcert',
+    'clientprivatekeyfile',
+    'clientcertfile',
+    'clientcertpassphrase',
+    'authendpoint',
+    'tokenendpoint',
+    'oidcresource',
+    'oidcscope',
+];
+
+/**
+ * Check whether the site is connected to Microsoft Graph.
+ *
+ * The site is connected when local_o365 is installed, and either an application token is stored or the results of the
+ * "Verify setup" check are cached.
+ *
+ * @return bool
+ */
+function auth_oidc_is_graph_api_connected(): bool {
+    if (!auth_oidc_is_local_365_installed()) {
+        return false;
     }
 
-    if (auth_oidc_is_local_365_installed()) {
-        $idptype = get_config('auth_oidc', 'idptype');
-        if ($idptype && $idptype != AUTH_OIDC_IDP_TYPE_OTHER) {
-            // Use a static flag so only one notification is queued per request,
-            // even when multiple settings with this callback change in the same save.
-            static $notificationqueued = false;
-            if (!$notificationqueued) {
-                $localo365configurl = new \core\url('/admin/settings.php', ['section' => 'local_o365']);
-                \core\notification::warning(
-                    get_string('application_updated_microsoft_notify', 'auth_oidc', $localo365configurl->out())
-                );
-                $notificationqueued = true;
-            }
+    $apptokens = get_config('local_o365', 'apptokens');
+    $apptokens = $apptokens ? @unserialize($apptokens, ['allowed_classes' => false]) : [];
+    if (!empty($apptokens) && is_array($apptokens)) {
+        return true;
+    }
+
+    return !empty(get_config('local_o365', 'verifysetupresult'));
+}
+
+/**
+ * Get the URL of the page where the Microsoft 365 integration setup is verified.
+ *
+ * @return url
+ */
+function auth_oidc_get_verifysetup_url(): url {
+    return new url('/admin/settings.php', ['section' => 'local_o365']);
+}
+
+/**
+ * Check whether the current page is an admin page where settings are saved.
+ *
+ * @return bool
+ */
+function auth_oidc_is_admin_settings_page(): bool {
+    global $PAGE;
+
+    if (!$PAGE->has_set_url()) {
+        return false;
+    }
+
+    foreach (['/admin/settings.php', '/admin/search.php'] as $path) {
+        if ($PAGE->url->compare(new url($path), URL_MATCH_BASE)) {
+            return true;
         }
     }
+
+    return false;
+}
+
+/**
+ * Ask for the site admin to be sent to the page where the Microsoft 365 integration setup is verified.
+ *
+ * Called after an update of a setting made the verify setup results invalid. Only changes saved on an admin settings page
+ * need this, as the other pages that update these settings redirect by themselves. Nothing is done when the identity provider
+ * isn't a Microsoft one, because there is no setup to verify.
+ *
+ * The redirect isn't made straight away, because the other settings submitted together with the updated one wouldn't be
+ * saved. It's made by auth_oidc_redirect_to_verifysetup() when the admin settings are loaded again after saving.
+ *
+ * @return void
+ */
+function auth_oidc_request_verifysetup(): void {
+    global $SESSION;
+
+    if (!auth_oidc_is_admin_settings_page() || optional_param('action', '', PARAM_ALPHANUMEXT) !== 'save-settings') {
+        return;
+    }
+
+    $idptype = get_config('auth_oidc', 'idptype');
+    if (empty($idptype) || $idptype == AUTH_OIDC_IDP_TYPE_OTHER) {
+        return;
+    }
+
+    $SESSION->auth_oidc_verifysetuprequested = true;
+}
+
+/**
+ * Send the site admin to the page where the Microsoft 365 integration setup is verified, if it was requested.
+ *
+ * Called when the admin settings are loaded. Does nothing unless auth_oidc_request_verifysetup() was called before, and the
+ * current page is an admin settings page that isn't the verify setup page.
+ *
+ * @return void
+ */
+function auth_oidc_redirect_to_verifysetup(): void {
+    global $PAGE, $SESSION;
+
+    if (empty($SESSION->auth_oidc_verifysetuprequested) || !auth_oidc_is_admin_settings_page()) {
+        return;
+    }
+
+    unset($SESSION->auth_oidc_verifysetuprequested);
+
+    $verifysetupurl = auth_oidc_get_verifysetup_url();
+    if ($PAGE->url->compare($verifysetupurl, URL_MATCH_PARAMS)) {
+        // The site admin is on the page already.
+        return;
+    }
+
+    redirect(
+        $verifysetupurl,
+        get_string('settings_verifysetup_required', 'local_o365'),
+        null,
+        \core\output\notification::NOTIFY_WARNING
+    );
 }
 
 /**
