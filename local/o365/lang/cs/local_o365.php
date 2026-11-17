@@ -106,6 +106,7 @@ $string['settings_verifysetup_errorcheck'] = 'Při pokusu o kontrolu nastavení 
 $string['settings_verifysetup_noinfo'] = 'Zatím nemáme žádné informace o nastavení vaší aplikace Microsoft Entra ID. Klikněte prosím na tlačítko Aktualizovat a proveďte kontrolu.';
 $string['settings_verifysetup_strunifiedpermerror'] = 'Při kontrole oprávnění Microsoft Graph API došlo k chybě.';
 $string['settings_verifysetup_strtenanterror'] = 'Před aktualizací nastavení aplikace Microsoft Entra ID nastavte pomocí tlačítka Detekovat svého tenanta Microsoft Entra.';
+$string['settings_verifysetup_required'] = 'Byla aktualizována nastavení, která ovlivňují konfiguraci aplikace Microsoft Entra ID. Klikněte na tlačítko Aktualizovat a ověřte nastavení znovu.';
 $string['settings_verifysetup_unifiedheader'] = 'Microsoft Graph API';
 $string['settings_verifysetup_unifieddesc'] = 'Microsoft Graph API umožňuje komunikaci mezi Moodlem a Microsoft 365.';
 $string['settings_verifysetup_unifiederror'] = 'Při kontrole podpory Microsoft Graph API došlo k chybě.';

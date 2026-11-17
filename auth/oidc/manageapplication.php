@@ -132,8 +132,12 @@ if ($form->is_cancelled()) {
             break;
     }
 
+    // Check whether the site is connected to Microsoft Graph before saving, because saving the settings clears the application
+    // tokens and the verify setup results.
+    $isgraphapiconnected = auth_oidc_is_graph_api_connected();
+
     // Save config settings.
-    $updateapplicationtokenrequired = false;
+    $verifysetupinvalid = false;
     $settingschanged = false;
     foreach ($configstosave as $config) {
         $existingsetting = get_config('auth_oidc', $config);
@@ -169,33 +173,16 @@ if ($form->is_cancelled()) {
             }
             set_config($config, $newvalue, 'auth_oidc');
             $settingschanged = true;
-            if ($config != 'secretexpiryrecipients') {
-                $updateapplicationtokenrequired = true;
+            if (in_array($config, AUTH_OIDC_VERIFYSETUP_SETTINGS)) {
+                $verifysetupinvalid = true;
             }
         }
     }
 
-    // Redirect destination and message depend on IdP type.
-    $isgraphapiconnected = false;
-    if ($fromform->idptype != AUTH_OIDC_IDP_TYPE_OTHER) {
-        if (auth_oidc_is_local_365_installed()) {
-            $isgraphapiconnected = true;
-        }
-    }
-
-    if ($updateapplicationtokenrequired) {
-        if ($isgraphapiconnected) {
-            // First, delete the existing application token and purge cache.
-            unset_config('apptokens', 'local_o365');
-            unset_config('verifysetupresult', 'local_o365');
-            purge_all_caches();
-
-            // Then show the message to the user with instructions to update the application token.
-            $localo365configurl = new url('/admin/settings.php', ['section' => 'local_o365']);
-            redirect($localo365configurl, get_string('application_updated_microsoft', 'auth_oidc'));
-        } else {
-            redirect($url, get_string('application_updated', 'auth_oidc'));
-        }
+    // The application tokens and the verify setup results are cleared when the settings are saved. Send the site admin to verify
+    // the setup again only if the site was connected to Microsoft Graph, and the IdP type is a Microsoft one.
+    if ($verifysetupinvalid && $isgraphapiconnected && $fromform->idptype != AUTH_OIDC_IDP_TYPE_OTHER) {
+        redirect(auth_oidc_get_verifysetup_url(), get_string('application_updated_microsoft', 'auth_oidc'));
     } else if ($settingschanged) {
         redirect($url, get_string('application_updated', 'auth_oidc'));
     } else {
