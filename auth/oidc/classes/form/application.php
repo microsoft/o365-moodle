@@ -242,7 +242,10 @@ class application extends moodleform {
         // Scope.
         $mform->addElement('text', 'oidcscope', auth_oidc_config_name_in_form('oidcscope'), ['size' => 60]);
         $mform->setType('oidcscope', PARAM_TEXT);
-        $mform->setDefault('oidcscope', 'openid profile email');
+        $mform->setDefault(
+            'oidcscope',
+            auth_oidc_get_default_scope($this->_customdata['oidcconfig']->idptype ?? AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID)
+        );
         $mform->addElement('static', 'oidcscope_help', '', get_string('oidcscope_help', 'auth_oidc'));
 
         // Custom Claim.

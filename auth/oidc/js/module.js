@@ -2,6 +2,31 @@
 
 M.auth_oidc = {};
 
+/**
+ * Keep the scope field in line with the selected IdP type.
+ *
+ * The offline_access scope is added when the Microsoft identity platform (v2.0) is selected, and removed for other IdP types.
+ *
+ * @param {Object} Y YUI instance.
+ * @param {string} idptypeselector Selector of the IdP type field.
+ * @param {string} scopeselector Selector of the scope field.
+ * @param {number} idptype_ms Value of the Microsoft identity platform (v2.0) IdP type.
+ */
+M.auth_oidc.init_scope = function(Y, idptypeselector, scopeselector, idptype_ms) {
+    var $idptype = $(idptypeselector);
+    var $scope = $(scopeselector);
+
+    $idptype.change(function() {
+        var scopes = $.trim($scope.val()).split(/\s+/).filter(function(scope) {
+            return scope !== '' && scope !== 'offline_access';
+        });
+        if ($(this).val() == idptype_ms) {
+            scopes.push('offline_access');
+        }
+        $scope.val(scopes.join(' '));
+    });
+};
+
 M.auth_oidc.init = function(Y, idptype_ms, authmethodsecret, authmethodcertificate, authmethodcertificatetext) {
     var $idptype = $("#id_idptype");
     var $clientauthmethod = $("#id_clientauthmethod");
