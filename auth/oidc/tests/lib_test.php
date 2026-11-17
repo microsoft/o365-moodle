@@ -624,4 +624,34 @@ final class lib_test extends advanced_testcase {
         $this->assertSame('groups (token claim)', $remotefields[auth_oidc_get_custom_claim_prefixed_key('groups')]);
         $this->assertArrayNotHasKey(auth_oidc_get_custom_claim_prefixed_key('employee_type'), $remotefields);
     }
+
+    /**
+     * Data provider for test_auth_oidc_get_default_scope().
+     *
+     * @return array
+     */
+    public static function default_scope_provider(): array {
+        return [
+            'Microsoft Entra ID (v1.0)' => [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'openid profile email'],
+            'Microsoft identity platform (v2.0)' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM,
+                'openid profile email offline_access',
+            ],
+            'Microsoft identity platform (v2.0) as a string' => ['2', 'openid profile email offline_access'],
+            'Other' => [AUTH_OIDC_IDP_TYPE_OTHER, 'openid profile email'],
+            'Not set' => [false, 'openid profile email'],
+        ];
+    }
+
+    /**
+     * Test that offline_access is only part of the default scope of the Microsoft identity platform (v2.0).
+     *
+     * @dataProvider default_scope_provider
+     * @covers ::auth_oidc_get_default_scope
+     * @param mixed $idptype The IdP type.
+     * @param string $expected The expected default scope.
+     */
+    public function test_auth_oidc_get_default_scope($idptype, string $expected): void {
+        $this->assertSame($expected, auth_oidc_get_default_scope($idptype));
+    }
 }
