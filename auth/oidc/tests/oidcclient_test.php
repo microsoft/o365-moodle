@@ -73,6 +73,32 @@ final class oidcclient_test extends \advanced_testcase {
     }
 
     /**
+     * Test that the default scope is used when no scope is saved, and that it depends on the IdP type.
+     *
+     * @covers \auth_oidc\oidcclient::setcreds
+     */
+    public function test_setcreds_default_scope_by_idptype(): void {
+        $httpclient = new \auth_oidc\tests\mockhttpclient();
+        $client = new \auth_oidc\tests\mockoidcclient($httpclient);
+
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+        foreach ([null, ''] as $emptyscope) {
+            $client->setcreds('id', 'secret', 'redirecturi', 'resource', $emptyscope);
+            $this->assertEquals('openid profile email', $client->get_scope());
+        }
+
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_oidc');
+        foreach ([null, ''] as $emptyscope) {
+            $client->setcreds('id', 'secret', 'redirecturi', 'resource', $emptyscope);
+            $this->assertEquals('openid profile email offline_access', $client->get_scope());
+        }
+
+        // A configured scope is used as it is, also without offline_access.
+        $client->setcreds('id', 'secret', 'redirecturi', 'resource', 'openid profile');
+        $this->assertEquals('openid profile', $client->get_scope());
+    }
+
+    /**
      * Dataprovider returning IdP types and whether the 'resource' param is expected in the auth request.
      *
      * @return array Array of arrays of test parameters.
