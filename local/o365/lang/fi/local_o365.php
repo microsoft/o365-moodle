@@ -106,6 +106,7 @@ $string['settings_verifysetup_errorcheck'] = 'Määritysten tarkistamisen aikana
 $string['settings_verifysetup_noinfo'] = 'Microsoft Entra ID -sovelluksesi määrityksistä ei ole vielä tietoja. Tarkista ne valitsemalla Päivitä-painike.';
 $string['settings_verifysetup_strunifiedpermerror'] = 'Microsoft Graph API -käyttöoikeuksien tarkistamisessa tapahtui virhe.';
 $string['settings_verifysetup_strtenanterror'] = 'Määritä Microsoft Entra -vuokraaja Tunnista-painikkeella ennen kuin päivität Microsoft Entra ID -sovelluksen määritykset.';
+$string['settings_verifysetup_required'] = 'Microsoft Entra ID -sovelluksen määrityksiin vaikuttavia asetuksia on päivitetty. Tarkista määritykset uudelleen napsauttamalla Päivitä-painiketta.';
 $string['settings_verifysetup_unifiedheader'] = 'Microsoft Graph API';
 $string['settings_verifysetup_unifieddesc'] = 'Microsoft Graph API mahdollistaa tiedonvälityksen Moodlen ja Microsoft 365:n välillä.';
 $string['settings_verifysetup_unifiederror'] = 'Microsoft Graph API -tuen tarkistamisessa tapahtui virhe.';

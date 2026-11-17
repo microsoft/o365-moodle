@@ -73,6 +73,9 @@ require_once($CFG->dirroot . '/local/o365/lib.php');
  * Handles events.
  */
 class observers {
+    /** @var bool Whether the purge of all caches has already been scheduled for the end of this request. */
+    private static bool $cachepurgescheduled = false;
+
     /**
      * Handle an authentication-only OIDC event.
      *
@@ -845,8 +848,26 @@ class observers {
         $eventdata = $event->get_data();
 
         $cachespurgeneeded = false;
+        $clearapptokens = false;
+        $clearverifysetupresult = false;
 
         if ($eventdata['other']['plugin'] == 'auth_oidc') {
+            // Application tokens and verify setup results were obtained with the previous values of these settings.
+            if (in_array($eventdata['other']['name'], AUTH_OIDC_VERIFYSETUP_SETTINGS)) {
+                // Initialising a missing certificate source to the default of text doesn't change the credentials in use.
+                // auth_oidc_is_setup_complete() does this during login and connection checks, which are not requested by the
+                // site admin, so the application tokens must be kept, and there is no verify setup page to send the user to.
+                $isdefaultcertsourceinit = $eventdata['other']['name'] == 'clientcertsource' &&
+                    ($eventdata['other']['oldvalue'] === null || $eventdata['other']['oldvalue'] === false ||
+                    $eventdata['other']['oldvalue'] === '') &&
+                    (string) $eventdata['other']['value'] === (string) AUTH_OIDC_AUTH_CERT_SOURCE_TEXT;
+
+                if (!$isdefaultcertsourceinit) {
+                    $clearapptokens = true;
+                    $clearverifysetupresult = true;
+                }
+            }
+
             switch ($eventdata['other']['name']) {
                 case 'clientid':
                     // Clear local_o365_token table.
@@ -875,33 +896,79 @@ class observers {
                     // No call to "break;" on purpose.
                 case 'idptype':
                 case 'clientauthmethod':
-                    // If client ID, IdP type, or authentication method has changed, unset token and verify setup results.
-                    // Azure admin needs to provide consent again.
-                    unset_config('apptokens', 'local_o365');
+                    // If client ID, IdP type, or authentication method has changed, Azure admin needs to provide consent again.
                     unset_config('adminconsent', 'local_o365');
-                    unset_config('verifysetupresult', 'local_o365');
-
-                    $cachespurgeneeded = true;
             }
         }
 
-        // If Entra tenant is changed, user manual matching and connection records need to be deleted.
-        if ($eventdata['other']['plugin'] == 'local_o365' && $eventdata['other']['name'] == 'entratenant') {
-            // Clear local_o365_connections table.
-            $DB->delete_records('local_o365_connections');
+        if ($eventdata['other']['plugin'] == 'local_o365') {
+            switch ($eventdata['other']['name']) {
+                case 'entratenant':
+                    // If Entra tenant is changed, user manual matching and connection records need to be deleted.
+                    // Clear local_o365_connections table.
+                    $DB->delete_records('local_o365_connections');
 
-            // Clear user records in local_o365_objects table.
-            $DB->delete_records('local_o365_objects', ['type' => 'user']);
+                    // Clear user records in local_o365_objects table.
+                    $DB->delete_records('local_o365_objects', ['type' => 'user']);
 
-            $cachespurgeneeded = true;
+                    $cachespurgeneeded = true;
+
+                    // No call to "break;" on purpose.
+                case 'entratenantid':
+                    // The application tokens are cached by resource, not by tenant, so a token obtained from the previous tenant
+                    // would be reused if it is not expired yet.
+                    $clearapptokens = true;
+
+                    // No call to "break;" on purpose.
+                case 'coursesyncgroupchannels':
+                    // The verify setup results are for the previous tenant, or for the permissions required before the change.
+                    $clearverifysetupresult = true;
+            }
+        }
+
+        if ($clearapptokens || $clearverifysetupresult) {
+            // Check this before the tokens and results are cleared, to send the site admin to the verify setup page only if
+            // the site was connected to Microsoft Graph.
+            $wasconnected = auth_oidc_is_graph_api_connected();
+
+            if ($clearapptokens) {
+                unset_config('apptokens', 'local_o365');
+                $cachespurgeneeded = true;
+            }
+
+            if ($clearverifysetupresult) {
+                unset_config('verifysetupresult', 'local_o365');
+            }
+
+            if ($wasconnected) {
+                auth_oidc_request_verifysetup();
+            }
         }
 
         // Purge caches if needed.
         if ($cachespurgeneeded) {
-            purge_all_caches();
+            self::schedule_cache_purge();
         }
 
         return true;
+    }
+
+    /**
+     * Purge all caches once, after the request has finished saving.
+     *
+     * An event is fired for each changed setting, so purging in the event handler would clear the site-wide caches once per
+     * changed setting when a form with several settings is saved. The purge is deferred to the end of the request, and
+     * scheduled only once per request.
+     *
+     * @return void
+     */
+    private static function schedule_cache_purge(): void {
+        if (self::$cachepurgescheduled) {
+            return;
+        }
+
+        self::$cachepurgescheduled = true;
+        \core_shutdown_manager::register_function('purge_all_caches');
     }
 
     /**
