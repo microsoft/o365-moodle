@@ -71,6 +71,9 @@ if ($PAGE->has_set_url() && $PAGE->url->get_param('section') === 'local_o365_syn
     redirect($newurl);
 }
 
+// Send the site admin to the Setup page to verify the setup again, after saving a setting that made the previous results invalid.
+auth_oidc_redirect_to_verifysetup();
+
 if (!$PAGE->requires->is_head_done()) {
     $PAGE->requires->jquery();
 }
@@ -93,7 +96,7 @@ if ($hassiteconfig) {
 
     // SETUP PAGE
     // The section ID 'local_o365' is preserved for backward compatibility with
-    // existing links (e.g. from auth_oidc_reset_app_tokens callback).
+    // existing links (e.g. from auth_oidc_get_verifysetup_url()).
     $settings = new admin_settingpage('local_o365', get_string('settings_header_setup', 'local_o365'));
     $ADMIN->add('local_o365_folder', $settings);
 
