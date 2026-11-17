@@ -425,6 +425,23 @@ function auth_oidc_get_login_baseurl(): string {
 }
 
 /**
+ * Return the default OIDC scope for an IdP type.
+ *
+ * The Microsoft identity platform (v2.0) only issues refresh tokens when the offline_access scope is requested.
+ *
+ * @param int $idptype The IdP type, one of the AUTH_OIDC_IDP_TYPE_* constants.
+ * @return string
+ */
+function auth_oidc_get_default_scope($idptype): string {
+    $scope = 'openid profile email';
+    if ((int)$idptype === AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+        $scope .= ' offline_access';
+    }
+
+    return $scope;
+}
+
+/**
  * Return the Microsoft Graph resource URL of the Microsoft cloud in use.
  *
  * @return string

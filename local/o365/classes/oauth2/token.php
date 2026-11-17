@@ -25,6 +25,7 @@
 
 namespace local_o365\oauth2;
 
+use auth_oidc\oidcclient;
 use local_o365\httpclientinterface;
 use local_o365\utils;
 use moodle_exception;
@@ -174,7 +175,8 @@ class token {
                 $token['expiry'],
                 $token['refreshtoken'],
                 $token['scope'],
-                $token['tokenresource'],
+                // The Graph token of a user can be stored without a resource, e.g. by the Microsoft identity platform (v2.0).
+                !empty($token['tokenresource']) ? $token['tokenresource'] : $tokenresource,
                 $token['user_id'],
                 $clientdata,
                 $httpclient
@@ -204,6 +206,65 @@ class token {
     }
 
     /**
+     * Check whether the configured IdP type makes token requests with scopes instead of a resource.
+     *
+     * This is the case for the Microsoft identity platform (v2.0) IdP type.
+     *
+     * @return bool
+     */
+    protected static function uses_scope_based_requests(): bool {
+        return (int)get_config('auth_oidc', 'idptype') === AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM;
+    }
+
+    /**
+     * Get the parameters that authenticate the application in a token request.
+     *
+     * This is the client secret, or a client assertion signed with the configured certificate for the authentication method
+     * "certificate", which the Microsoft identity platform (v2.0) supports.
+     *
+     * @param clientdata $clientdata Client information.
+     * @return array The request parameters.
+     * @throws moodle_exception If the client assertion cannot be generated.
+     */
+    protected static function get_client_authentication_params(clientdata $clientdata): array {
+        if (get_config('auth_oidc', 'clientauthmethod') == AUTH_OIDC_AUTH_METHOD_CERTIFICATE) {
+            return [
+                'client_id' => $clientdata->get_clientid(),
+                'client_assertion_type' => 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+                'client_assertion' => oidcclient::generate_client_assertion(),
+            ];
+        }
+
+        return [
+            'client_id' => $clientdata->get_clientid(),
+            'client_secret' => $clientdata->get_clientsecret(),
+        ];
+    }
+
+    /**
+     * Get the parameters that identify the requested resource in a refresh token request.
+     *
+     * Microsoft Entra ID (v1.0) uses the "resource" parameter. The Microsoft identity platform (v2.0) does not support it,
+     * it uses scopes, and only returns a new refresh token when the "offline_access" scope is requested.
+     *
+     * @param string $tokenresource The resource to request a token for. The Graph resource of the Microsoft cloud in use is
+     *                              requested when this is empty.
+     * @return array The request parameters.
+     */
+    protected static function get_resource_request_params(string $tokenresource): array {
+        if (static::uses_scope_based_requests()) {
+            // The resource can be empty for a login token, the Microsoft identity platform (v2.0) does not return it.
+            if ($tokenresource === '') {
+                $tokenresource = auth_oidc_get_graph_resource();
+            }
+
+            return ['scope' => rtrim($tokenresource, '/') . '/.default offline_access'];
+        }
+
+        return ['resource' => $tokenresource];
+    }
+
+    /**
      * Given a token for one resource, attempt to get a token for a different resource.
      *
      * @param token $token The starting token.
@@ -219,13 +280,10 @@ class token {
         clientdata $clientdata,
         httpclientinterface $httpclient
     ) {
-        $params = [
-            'client_id' => $clientdata->get_clientid(),
-            'client_secret' => $clientdata->get_clientsecret(),
+        $params = static::get_client_authentication_params($clientdata) + [
             'grant_type' => 'refresh_token',
             'refresh_token' => $token->get_refreshtoken(),
-            'resource' => $newtokenresource,
-        ];
+        ] + static::get_resource_request_params($newtokenresource);
         $params = http_build_query($params, '', '&');
         $tokenendpoint = $clientdata->get_tokenendpoint();
 
@@ -242,10 +300,10 @@ class token {
             $userid = $token->get_userid();
             $newtoken = new token(
                 $tokenresult['access_token'],
-                $tokenresult['expires_on'],
-                $tokenresult['refresh_token'],
-                $tokenresult['scope'],
-                $tokenresult['resource'],
+                $tokenresult['expires_on'] ?? time() + $tokenresult['expires_in'],
+                $tokenresult['refresh_token'] ?? $token->get_refreshtoken(),
+                $tokenresult['scope'] ?? $token->get_scope(),
+                $tokenresult['resource'] ?? $newtokenresource,
                 $userid,
                 $clientdata,
                 $httpclient
@@ -282,13 +340,10 @@ class token {
     public static function get_for_new_resource($userid, $tokenresource, clientdata $clientdata, $httpclient) {
         $graphtoken = static::instance($userid, 'https://graph.microsoft.com', $clientdata, $httpclient);
         if (!empty($graphtoken)) {
-            $params = [
-                'client_id' => $clientdata->get_clientid(),
-                'client_secret' => $clientdata->get_clientsecret(),
+            $params = static::get_client_authentication_params($clientdata) + [
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $graphtoken->get_refreshtoken(),
-                'resource' => $tokenresource,
-            ];
+            ] + static::get_resource_request_params($tokenresource);
             $params = http_build_query($params, '', '&');
             $tokenendpoint = $clientdata->get_tokenendpoint();
 
@@ -306,9 +361,9 @@ class token {
 
             if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
                 $expiry = $tokenresult['expires_on'] ?? time() + $tokenresult['expires_in'];
-                if (get_config('auth_oidc', 'idptype') === AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+                if (static::uses_scope_based_requests()) {
                     $tokenresult['resource'] = $tokenresource;
-                    $tokenresult['scope'] = null;
+                    $tokenresult['scope'] = $tokenresult['scope'] ?? '';
                     $tokenresult['refresh_token'] = null;
                 }
 
@@ -409,11 +464,13 @@ class token {
             $record = $DB->get_record_sql($sql, $params);
             if (!empty($record)) {
                 $record->user_id = $userid;
+                $record->sourcetable = 'auth_oidc_token';
                 return (array)$record;
             }
         } else {
             $record = $DB->get_record('local_o365_token', ['user_id' => $userid, 'tokenresource' => $tokenresource]);
             if (!empty($record)) {
+                $record->sourcetable = 'local_o365_token';
                 return (array)$record;
             }
         }
@@ -422,9 +479,12 @@ class token {
     }
 
     /**
-     * Update the stored token.
+     * Update the stored token, in the table it was read from.
      *
-     * @param array $existingtoken Array of existing token data.
+     * The Graph token of a user is stored by auth_oidc in auth_oidc_token, tokens for other resources are stored in
+     * local_o365_token.
+     *
+     * @param array $existingtoken Array of existing token data, as returned by get_stored_token().
      * @param array $newtoken Array of new token data.
      * @return bool Success/Failure.
      */
@@ -436,7 +496,7 @@ class token {
                 $newtoken['refreshtoken'] = '';
             }
 
-            $DB->update_record('local_o365_token', (object)$newtoken);
+            $DB->update_record($existingtoken['sourcetable'] ?? 'local_o365_token', (object)$newtoken);
             return true;
         }
 
@@ -446,11 +506,18 @@ class token {
     /**
      * Delete a stored token.
      *
-     * @param array $existingtoken The existing token record.
+     * The Graph token of a user is stored by auth_oidc in auth_oidc_token. It is the login token that other tokens are
+     * created from, so it is not deleted here.
+     *
+     * @param array $existingtoken The existing token record, as returned by get_stored_token().
      * @return bool Success/Failure.
      */
     protected function delete_stored_token($existingtoken) {
         global $DB;
+        if (($existingtoken['sourcetable'] ?? 'local_o365_token') !== 'local_o365_token') {
+            return false;
+        }
+
         if (!empty($existingtoken['id'])) {
             $DB->delete_records('local_o365_token', ['id' => $existingtoken['id']]);
             return true;
@@ -498,13 +565,10 @@ class token {
     public function refresh() {
         $result = '';
         if (!empty($this->refreshtoken)) {
-            $params = [
-                'client_id' => $this->clientdata->get_clientid(),
-                'client_secret' => $this->clientdata->get_clientsecret(),
+            $params = static::get_client_authentication_params($this->clientdata) + [
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $this->refreshtoken,
-                'resource' => $this->tokenresource,
-            ];
+            ] + static::get_resource_request_params($this->tokenresource);
             $params = http_build_query($params, '', '&');
             $tokenendpoint = $this->clientdata->get_tokenendpoint();
 
@@ -524,9 +588,9 @@ class token {
 
             $this->token = $result['access_token'];
             $this->expiry = $result['expires_on'] ?? time() + $result['expires_in'];
-            $this->refreshtoken = $result['refresh_token'];
-            $this->scope = $result['scope'];
-            $this->tokenresource = $result['resource'];
+            $this->refreshtoken = $result['refresh_token'] ?? $this->refreshtoken;
+            $this->scope = $result['scope'] ?? $this->scope;
+            $this->tokenresource = $result['resource'] ?? $this->tokenresource;
 
             $existingtoken = $this->get_stored_token($this->userid, $originaltokenresource);
             if (!empty($existingtoken)) {
