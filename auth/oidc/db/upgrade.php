@@ -759,5 +759,23 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024100740.07, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2024100745.03) {
+        // The Microsoft identity platform (v2.0) only issues refresh tokens when the offline_access scope is requested.
+        $idptype = get_config('auth_oidc', 'idptype');
+        if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+            $scope = get_config('auth_oidc', 'oidcscope');
+            $scopes = ($scope === false || trim($scope) === '') ? [] : preg_split('/\s+/', trim($scope));
+            if (empty($scopes)) {
+                $scopes = explode(' ', auth_oidc_get_default_scope($idptype));
+            } else if (!in_array('offline_access', $scopes)) {
+                $scopes[] = 'offline_access';
+            }
+            set_config('oidcscope', implode(' ', $scopes), 'auth_oidc');
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2024100745.03, 'auth', 'oidc');
+    }
+
     return true;
 }

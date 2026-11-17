@@ -84,7 +84,7 @@ class oidcclient {
         } else {
             $this->tokenresource = auth_oidc_get_graph_resource();
         }
-        $this->scope = (!empty($scope)) ? $scope : 'openid profile email';
+        $this->scope = (!empty($scope)) ? $scope : auth_oidc_get_default_scope(get_config('auth_oidc', 'idptype'));
     }
 
     /**
