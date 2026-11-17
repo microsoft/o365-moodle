@@ -106,6 +106,7 @@ $string['settings_verifysetup_errorcheck'] = 'An error occurred trying to check 
 $string['settings_verifysetup_noinfo'] = 'We don\'t have any information about your Microsoft Entra ID app setup yet. Please click the Update button to check.';
 $string['settings_verifysetup_strunifiedpermerror'] = 'There was an error checking Microsoft Graph API permissions.';
 $string['settings_verifysetup_strtenanterror'] = 'Please use the Detect button to set your Microsoft Entra tenant before updating Microsoft Entra ID app setup.';
+$string['settings_verifysetup_required'] = 'Settings that affect your Microsoft Entra ID app setup were updated. Please click the Update button to verify your setup again.';
 $string['settings_verifysetup_unifiedheader'] = 'Microsoft Graph API';
 $string['settings_verifysetup_unifieddesc'] = 'The Microsoft Graph API allows communication between Moodle and Microsoft 365.';
 $string['settings_verifysetup_unifiederror'] = 'There was an error checking for Microsoft Graph API support.';
