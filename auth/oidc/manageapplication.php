@@ -47,7 +47,14 @@ $jsmodule = [
     'name' => 'auth_oidc',
     'fullpath' => '/auth/oidc/js/module.js',
 ];
+$PAGE->requires->jquery();
 $PAGE->requires->js_init_call('M.auth_oidc.init', $jsparams, true, $jsmodule);
+$PAGE->requires->js_init_call(
+    'M.auth_oidc.init_scope',
+    ['#id_idptype', '#id_oidcscope', AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM],
+    true,
+    $jsmodule
+);
 
 navigation_node::require_admin_tree();
 
