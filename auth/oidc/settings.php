@@ -102,7 +102,6 @@ if ($hassiteconfig) {
         AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID,
         $idptypeoptions
     );
-    $idptypesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $idptypesetting->set_updatedcallback('auth_oidc_validate_auth_settings');
     $applicationsettings->add($idptypesetting);
 
@@ -118,7 +117,6 @@ if ($hassiteconfig) {
         AUTH_OIDC_MICROSOFT_CLOUD_GLOBAL,
         $microsoftcloudoptions
     );
-    $microsoftcloudsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $applicationsettings->add($microsoftcloudsetting);
     $applicationsettings->hide_if('auth_oidc/microsoftcloud', 'auth_oidc/idptype', 'eq', AUTH_OIDC_IDP_TYPE_OTHER);
 
@@ -130,7 +128,6 @@ if ($hassiteconfig) {
         '',
         PARAM_TEXT
     );
-    $clientidsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $applicationsettings->add($clientidsetting);
 
     // Authentication heading.
@@ -152,7 +149,6 @@ if ($hassiteconfig) {
         AUTH_OIDC_AUTH_METHOD_SECRET,
         $clientauthmethoptions
     );
-    $clientauthmethodsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $clientauthmethodsetting->set_updatedcallback('auth_oidc_validate_auth_settings');
     $applicationsettings->add($clientauthmethodsetting);
 
@@ -163,7 +159,6 @@ if ($hassiteconfig) {
         get_string('clientsecret_help', 'auth_oidc'),
         ''
     );
-    $clientsecretsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $clientsecretsetting->set_updatedcallback('auth_oidc_validate_auth_settings');
     $applicationsettings->add($clientsecretsetting);
 
@@ -179,7 +174,6 @@ if ($hassiteconfig) {
         AUTH_OIDC_AUTH_CERT_SOURCE_TEXT,
         $certsourceoptions
     );
-    $clientcertsourcesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $clientcertsourcesetting->set_updatedcallback('auth_oidc_validate_auth_settings');
     $applicationsettings->add($clientcertsourcesetting);
 
@@ -191,7 +185,6 @@ if ($hassiteconfig) {
         '',
         PARAM_TEXT
     );
-    $clientprivatekeysetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $clientprivatekeysetting->set_updatedcallback('auth_oidc_validate_auth_settings');
     $applicationsettings->add($clientprivatekeysetting);
 
@@ -203,7 +196,6 @@ if ($hassiteconfig) {
         '',
         PARAM_TEXT
     );
-    $clientcertsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $clientcertsetting->set_updatedcallback('auth_oidc_validate_auth_settings');
     $applicationsettings->add($clientcertsetting);
 
@@ -215,7 +207,6 @@ if ($hassiteconfig) {
         '',
         PARAM_FILE
     );
-    $clientprivatekeyfilesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $clientprivatekeyfilesetting->set_updatedcallback('auth_oidc_validate_auth_settings');
     $applicationsettings->add($clientprivatekeyfilesetting);
 
@@ -227,7 +218,6 @@ if ($hassiteconfig) {
         '',
         PARAM_FILE
     );
-    $clientcertfilesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $clientcertfilesetting->set_updatedcallback('auth_oidc_validate_auth_settings');
     $applicationsettings->add($clientcertfilesetting);
 
@@ -238,7 +228,6 @@ if ($hassiteconfig) {
         get_string('clientcertpassphrase_help', 'auth_oidc'),
         ''
     );
-    $clientcertpassphrasesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $clientcertpassphrasesetting->set_updatedcallback('auth_oidc_validate_auth_settings');
     $applicationsettings->add($clientcertpassphrasesetting);
 
@@ -257,7 +246,6 @@ if ($hassiteconfig) {
         auth_oidc_get_login_baseurl() . '/organizations/oauth2/authorize',
         'auth'
     );
-    $authendpointsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $applicationsettings->add($authendpointsetting);
 
     // Token endpoint.
@@ -268,7 +256,6 @@ if ($hassiteconfig) {
         auth_oidc_get_login_baseurl() . '/organizations/oauth2/token',
         'token'
     );
-    $tokenendpointsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $applicationsettings->add($tokenendpointsetting);
 
     // Other parameters heading.
@@ -286,7 +273,6 @@ if ($hassiteconfig) {
         auth_oidc_get_graph_resource(),
         PARAM_TEXT
     );
-    $oidcresourcesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $applicationsettings->add($oidcresourcesetting);
 
     // Conditional display: OIDC resource is only sent for Microsoft Entra ID (v1.0).
@@ -305,7 +291,6 @@ if ($hassiteconfig) {
         'openid profile email',
         PARAM_TEXT
     );
-    $oidcscopesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
     $applicationsettings->add($oidcscopesetting);
 
     // Custom claims.
