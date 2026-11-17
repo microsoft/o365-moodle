@@ -45,6 +45,17 @@ if ($hassiteconfig) {
         redirect(new \core\url('/admin/settings.php', ['section' => 'authsettingoidc']));
     }
 
+    // Keep the scope in line with the selected IdP type on the application settings page.
+    if ($PAGE->has_set_url() && $PAGE->url->get_param('section') === 'authsettingoidc') {
+        $PAGE->requires->jquery();
+        $PAGE->requires->js_init_call(
+            'M.auth_oidc.init_scope',
+            ['#id_s_auth_oidc_idptype', '#id_s_auth_oidc_oidcscope', AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM],
+            true,
+            ['name' => 'auth_oidc', 'fullpath' => '/auth/oidc/js/module.js']
+        );
+    }
+
     // Add folder for OIDC settings.
     $oidcfolder = new admin_category('oidcfolder', get_string('pluginname', 'auth_oidc'));
     $ADMIN->add('authsettings', $oidcfolder);
@@ -302,7 +313,7 @@ if ($hassiteconfig) {
         'auth_oidc/oidcscope',
         get_string('oidcscope', 'auth_oidc'),
         get_string('oidcscope_help', 'auth_oidc'),
-        'openid profile email',
+        auth_oidc_get_default_scope(get_config('auth_oidc', 'idptype')),
         PARAM_TEXT
     );
     $oidcscopesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
