@@ -106,6 +106,7 @@ $string['settings_verifysetup_errorcheck'] = '設定の確認中にエラーが�
 $string['settings_verifysetup_noinfo'] = 'Microsoft Entra IDアプリの設定に関する情報はまだありません。確認するには「更新」ボタンをクリックしてください。';
 $string['settings_verifysetup_strunifiedpermerror'] = 'Microsoft Graph APIのアクセス権の確認中にエラーが発生しました。';
 $string['settings_verifysetup_strtenanterror'] = 'Microsoft Entra IDアプリの設定を更新する前に、「検出」ボタンを使用してMicrosoft Entraテナントを設定してください。';
+$string['settings_verifysetup_required'] = 'Microsoft Entra IDアプリの設定に影響する項目が更新されました。「更新」ボタンをクリックして、設定を再度確認してください。';
 $string['settings_verifysetup_unifiedheader'] = 'Microsoft Graph API';
 $string['settings_verifysetup_unifieddesc'] = 'Microsoft Graph APIにより、MoodleとMicrosoft 365間の通信が可能になります。';
 $string['settings_verifysetup_unifiederror'] = 'Microsoft Graph APIサポートの確認中にエラーが発生しました。';
