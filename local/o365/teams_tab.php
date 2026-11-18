@@ -72,7 +72,38 @@ echo html_writer::end_div();
 $SESSION->wantsurl = $coursepageurl;
 
 if ($USER->id) {
-    redirect($coursepageurl);
+    // Not a server redirect: the pages of the Teams tab only keep the Teams theme once this iframe is marked as the
+    // Teams tab, and that needs the Teams SDK handshake to have succeeded first, see
+    // local_o365_get_teams_frame_marker_js(). Go on to the course once the handshake has succeeded or failed, also
+    // when not embedded in Teams.
+    //
+    // There is deliberately no timer that goes on earlier: the course page is only themed as Teams if the marker is
+    // already stored when it is requested, and nothing sets the marker afterwards, so a handshake that is merely slow
+    // would leave the tab without the Teams theme from the first page on. The SDK always settles the promise: it
+    // rejects at once when there is no parent window (the page is opened directly), and after 60 seconds when a
+    // parent never answers.
+    $js = local_o365_get_teams_frame_marker_js() . "
+    var continued = false;
+
+    function continueToCourse() {
+        if (!continued) {
+            continued = true;
+            window.location.replace('" . $coursepageurl->out(false) . "');
+        }
+    }
+
+    // The handshake is started inside a promise callback: if MicrosoftTeams.min.js failed to load, evaluating
+    // microsoftTeams throws a ReferenceError, which has to reach continueToCourse() like any other failure instead of
+    // stopping the script before there is a promise chain, which would leave the user on this page.
+    Promise.resolve().then(function() {
+        return microsoftTeams.app.initialize();
+    }).then(function() {
+        // Go on only once the marker has been verified and stored, see the note above about not going on earlier.
+        return markTeamsFrame();
+    }).then(continueToCourse).catch(continueToCourse);
+    ";
+    echo html_writer::script($js);
+    exit;
 }
 
 $tenantid = get_config('local_o365', 'entratenantid');
@@ -80,9 +111,17 @@ if (!$tenantid) {
     $tenantid = 'common';
 }
 
-$js = "
-// Initialize Teams SDK - must wait for it to complete before using other Teams APIs
-microsoftTeams.app.initialize().then(function() {
+$js = local_o365_get_teams_frame_marker_js() . "
+// Initialize Teams SDK - must wait for it to complete before using other Teams APIs.
+// Started inside a promise callback so that a SDK that failed to load, which makes evaluating microsoftTeams throw,
+// also reaches the manual login fallback below.
+Promise.resolve().then(function() {
+    return microsoftTeams.app.initialize();
+}).then(function() {
+    // The handshake succeeded, so this page is embedded in Teams: mark this iframe as the Teams tab, and go on only
+    // once the marker has been verified and stored.
+    return markTeamsFrame();
+}).then(function() {
     if (!inIframe() && !isMobileApp()) {
         window.location.href = '" . $redirecturl->out(false) . "';
     }
