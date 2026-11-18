@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'Atto Teams Meeting-viðbótin sendir t
 $string['privacy:metadata:msteamsapp:userlang'] = 'Tungumálakóði notandans sem sendur er til Microsoft Teams-forritsins.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Eyða útrunnum Teams-fundargögnum';
+$string['teamsmeeting:add'] = 'Bæta við Teams-fundi';

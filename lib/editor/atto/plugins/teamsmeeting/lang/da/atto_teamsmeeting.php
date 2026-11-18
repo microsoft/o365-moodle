@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'Plugin’et Atto Teams Meeting sender 
 $string['privacy:metadata:msteamsapp:userlang'] = 'Brugerens sprogkode sendt til Microsoft Teams-appen.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Slet udløbne Teams-mødedata';
+$string['teamsmeeting:add'] = 'Tilføj Teams-møde';

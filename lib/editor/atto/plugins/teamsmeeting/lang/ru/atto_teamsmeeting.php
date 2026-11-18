@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'Плагин Atto Teams Meeting отп
 $string['privacy:metadata:msteamsapp:userlang'] = 'Код языка пользователя, отправляемый в приложение Microsoft Teams.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Удаление устаревших данных собраний Teams';
+$string['teamsmeeting:add'] = 'Добавить собрание Teams';

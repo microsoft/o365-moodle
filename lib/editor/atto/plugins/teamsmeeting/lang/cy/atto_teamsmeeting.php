@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'Mae’r ategyn Atto Teams Meeting yn a
 $string['privacy:metadata:msteamsapp:userlang'] = 'Cod iaith y defnyddiwr a anfonwyd i ap Microsoft Teams.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Dileu data cyfarfod Teams sydd wedi dod i ben';
+$string['teamsmeeting:add'] = 'Ychwanegu Cyfarfod Teams';

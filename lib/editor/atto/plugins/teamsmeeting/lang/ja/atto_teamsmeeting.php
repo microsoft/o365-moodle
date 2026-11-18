@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'Atto Teams Meeting プラグインは�
 $string['privacy:metadata:msteamsapp:userlang'] = 'Microsoft Teams アプリに送信されるユーザーの言語コード。';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = '期限切れの Teams 会議データを削除';
+$string['teamsmeeting:add'] = 'Teams 会議を追加';

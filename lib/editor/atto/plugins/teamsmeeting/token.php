@@ -45,6 +45,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 require_sesskey();
 
+// Only users who may add Teams meetings where the editor is used get a token.
+// The editor passes the context it was rendered in; a missing, unknown or
+// unauthorised context is refused the same way so nothing is revealed about
+// which contexts exist. Hiding the button (see lib.php) is only a convenience,
+// this is what actually stops a user without the capability from creating and
+// storing a meeting through the plugin.
+$editorcontext = \context::instance_by_id(optional_param('contextid', 0, PARAM_INT), IGNORE_MISSING);
+if (!$editorcontext || !has_capability('atto/teamsmeeting:add', $editorcontext)) {
+    http_response_code(403);
+    die();
+}
+
 // This endpoint runs via require_login() with no course, so $PAGE->course is
 // always the frontpage course and current_language() can never see a
 // course-forced language here. The caller resolved it correctly at page load

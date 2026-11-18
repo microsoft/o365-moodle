@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'Atto Teams Meeting 插件会将用户�
 $string['privacy:metadata:msteamsapp:userlang'] = '发送给 Microsoft Teams 应用的用户语言代码。';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = '删除过期的 Teams 会议数据';
+$string['teamsmeeting:add'] = '添加 Teams 会议';

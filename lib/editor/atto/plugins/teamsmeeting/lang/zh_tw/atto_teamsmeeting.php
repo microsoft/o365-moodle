@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'Atto Teams Meeting 外掛程式會將�
 $string['privacy:metadata:msteamsapp:userlang'] = '傳送給 Microsoft Teams 應用程式的使用者語言代碼。';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = '刪除已過期的 Teams 會議資料';
+$string['teamsmeeting:add'] = '新增 Teams 會議';

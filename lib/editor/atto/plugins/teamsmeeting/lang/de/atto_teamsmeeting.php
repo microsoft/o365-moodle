@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'Das Plugin Atto Teams Meeting sendet d
 $string['privacy:metadata:msteamsapp:userlang'] = 'An die Microsoft-Teams-App gesendeter Sprachcode des Benutzers.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Abgelaufene Teams-Besprechungsdaten löschen';
+$string['teamsmeeting:add'] = 'Teams-Besprechung hinzufügen';
