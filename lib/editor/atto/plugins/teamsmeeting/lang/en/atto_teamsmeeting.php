@@ -49,3 +49,4 @@ $string['privacy:metadata:msteamsapp'] = 'The Atto Teams Meeting plugin sends th
 $string['privacy:metadata:msteamsapp:userlang'] = 'User language code sent to the Microsoft Teams application.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Delete expired Teams meeting data';
+$string['teamsmeeting:add'] = 'Add Teams Meeting';

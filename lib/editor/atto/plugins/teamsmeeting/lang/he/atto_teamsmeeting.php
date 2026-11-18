@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'התוסף Atto Teams Meeting שולח
 $string['privacy:metadata:msteamsapp:userlang'] = 'קוד השפה של המשתמש שנשלח לאפליקציית Microsoft Teams.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'מחיקת נתוני פגישות Teams שפג תוקפם';
+$string['teamsmeeting:add'] = 'הוספת פגישת Teams';

@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'Приставката Atto Teams Meet
 $string['privacy:metadata:msteamsapp:userlang'] = 'Езиков код на потребителя, изпратен до приложението на Microsoft Teams.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Изтриване на изтекли данни за срещи в Teams';
+$string['teamsmeeting:add'] = 'Добавяне на среща в Teams';

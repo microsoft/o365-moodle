@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'El complemento Atto Teams Meeting env�
 $string['privacy:metadata:msteamsapp:userlang'] = 'Código de idioma del usuario enviado a la aplicación de Microsoft Teams.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Eliminar datos de reuniones de Teams caducados';
+$string['teamsmeeting:add'] = 'Añadir reunión de Teams';

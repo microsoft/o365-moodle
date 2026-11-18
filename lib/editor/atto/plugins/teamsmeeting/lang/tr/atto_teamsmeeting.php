@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'Atto Teams Meeting eklentisi, kullanı
 $string['privacy:metadata:msteamsapp:userlang'] = 'Microsoft Teams uygulamasına gönderilen kullanıcı dil kodu.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Süresi dolmuş Teams toplantı verilerini sil';
+$string['teamsmeeting:add'] = 'Teams toplantısı ekle';

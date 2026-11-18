@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'يرسل مكوّن Atto Teams Meeting
 $string['privacy:metadata:msteamsapp:userlang'] = 'رمز لغة المستخدم المرسل إلى تطبيق Microsoft Teams.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'حذف بيانات اجتماعات Teams منتهية الصلاحية';
+$string['teamsmeeting:add'] = 'إضافة اجتماع Teams';

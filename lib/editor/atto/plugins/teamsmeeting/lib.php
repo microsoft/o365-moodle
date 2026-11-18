@@ -26,11 +26,14 @@
  * Set params for this button.
  *
  * @param string $elementid
- * @param stdClass $options - the options for the editor, including the context.
- * @param stdClass $fpoptions - unused.
+ * @param array $options - the options for the editor, including the context.
+ * @param array $fpoptions - unused.
+ * @return array The parameters passed to the button's JavaScript.
  */
 function atto_teamsmeeting_params_for_js($elementid, $options, $fpoptions) {
     global $CFG;
+
+    $context = !empty($options['context']) ? $options['context'] : context_system::instance();
 
     // The token that authenticates the app's return trip to result.php is not
     // included here: it is single-use, so one generated at page load would
@@ -41,6 +44,10 @@ function atto_teamsmeeting_params_for_js($elementid, $options, $fpoptions) {
         'appurl' => get_config('atto_teamsmeeting', 'meetingapplink'),
         'locale' => current_language(),
         'editor' => 'atto',
+        // Whether the button is shown at all. token.php re-checks the capability
+        // in the same context, so hiding the button is not the only safeguard.
+        'canadd' => has_capability('atto/teamsmeeting:add', $context),
+        'contextid' => $context->id,
     ];
 
     return $params;

@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'Atto Teams Meeting -liitännäinen lä
 $string['privacy:metadata:msteamsapp:userlang'] = 'Microsoft Teams -sovellukselle lähetetty käyttäjän kielikoodi.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Poista vanhentuneet Teams-kokoustiedot';
+$string['teamsmeeting:add'] = 'Lisää Teams-kokous';

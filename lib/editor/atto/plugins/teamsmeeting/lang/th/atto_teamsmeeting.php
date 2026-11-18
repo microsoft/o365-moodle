@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'ปลั๊กอิน Atto Teams Me
 $string['privacy:metadata:msteamsapp:userlang'] = 'รหัสภาษาของผู้ใช้ที่ส่งไปยังแอป Microsoft Teams';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'ลบข้อมูลการประชุม Teams ที่หมดอายุ';
+$string['teamsmeeting:add'] = 'เพิ่มการประชุม Teams';

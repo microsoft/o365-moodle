@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'Plugin Atto Teams Meeting odesílá ja
 $string['privacy:metadata:msteamsapp:userlang'] = 'Jazykový kód uživatele odeslaný do aplikace Microsoft Teams.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Odstranit vypršelá data schůzek Teams';
+$string['teamsmeeting:add'] = 'Přidat schůzku Teams';

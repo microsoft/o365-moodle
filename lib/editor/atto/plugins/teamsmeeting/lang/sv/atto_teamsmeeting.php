@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'Tillägget Atto Teams Meeting skickar 
 $string['privacy:metadata:msteamsapp:userlang'] = 'Användarens språkkod som skickas till Microsoft Teams-appen.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Ta bort utgångna Teams-mötesdata';
+$string['teamsmeeting:add'] = 'Lägg till Teams-möte';

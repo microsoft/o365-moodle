@@ -10,6 +10,13 @@
 
 ![Screenshot of the settings](docs/settings.png)
 
+## Permissions
+The Teams Meeting button is only shown to users who have the "Add Teams Meeting" capability (`atto/teamsmeeting:add`) in the place where the editor is used, for example the course. By default it is allowed for the Manager and Teacher (editing teacher) roles, so students and non-editing teachers do not see the button. Moodle will also refuse to create a meeting through the plugin for a user without the capability.
+
+To change this, go to *Site administration > Users > Permissions > Define roles*, edit the role and search for "Add Teams Meeting".
+
+**NOTICE:** When you upgrade from a version without this capability, roles that do not have it by default (such as Student and Non-editing teacher) will no longer see the button until you allow the capability for them.
+
 ## Usage Guide
 1. When editing description using the Atto Editor type the text which you want to make as meeting link, select it and click on the Microsoft Teams icon.
 

@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'El plugin Atto Teams Meeting envía el
 $string['privacy:metadata:msteamsapp:userlang'] = 'Código de idioma del usuario enviado a la aplicación de Microsoft Teams.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Eliminar datos de reuniones de Teams vencidos';
+$string['teamsmeeting:add'] = 'Agregar reunión de Teams';

@@ -50,3 +50,4 @@ $string['privacy:metadata:msteamsapp'] = 'De plugin Atto Teams Meeting stuurt de
 $string['privacy:metadata:msteamsapp:userlang'] = 'Taalcode van de gebruiker die naar de Microsoft Teams-app wordt verzonden.';
 $string['settings'] = 'Teams Meeting';
 $string['task_purge_old_meetings'] = 'Verlopen Teams-vergadergegevens verwijderen';
+$string['teamsmeeting:add'] = 'Teams-vergadering toevoegen';
