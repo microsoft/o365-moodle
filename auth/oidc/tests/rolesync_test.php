@@ -306,13 +306,13 @@ final class rolesync_test extends advanced_testcase {
     }
 
     /**
-     * Build an encoded, unsigned ID token for the given claims.
+     * Build an encoded ID token with a dummy signature for the given claims (role sync does not verify the stored token).
      *
      * @param array $claims The claims.
      * @return string
      */
     private function build_idtoken(array $claims): string {
-        return base64_encode(json_encode(['alg' => 'none'])) . '.' . base64_encode(json_encode($claims)) . '.sig';
+        return base64_encode(json_encode(['alg' => 'RS256'])) . '.' . base64_encode(json_encode($claims)) . '.sig';
     }
 
     /**
