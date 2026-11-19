@@ -33,6 +33,7 @@ use local_o365\webservices\create_onenoteassignment;
 use local_o365\webservices\delete_onenoteassignment;
 use local_o365\webservices\read_onenoteassignment;
 use local_o365\webservices\update_onenoteassignment;
+use PHPUnit\Framework\AssertionFailedError;
 
 /**
  * Tests \local_o365\webservices\utils
@@ -57,6 +58,45 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
     protected function setUp(): void {
         parent::setUp();
         $this->resetAfterTest(true);
+    }
+
+    /**
+     * Run every test case, asserting the expected exception when the case defines one.
+     *
+     * Each case is executed independently, so a case that expects an exception does not stop the following cases.
+     *
+     * @param array $testcases Test cases, indexed by description. Each case uses the DBSTATE, PARAMS, EXPECTEDRETURN and
+     *                         EXPECTEDEXCEPTION indexes.
+     * @param callable $callback Callback receiving the test case, which calls the tested method and asserts its return.
+     */
+    private function run_testcases(array $testcases, callable $callback): void {
+        foreach ($testcases as $description => $data) {
+            if (!empty($data[self::DBSTATE])) {
+                $dataset = $this->createArrayDataSet($data[self::DBSTATE]);
+                $this->loadDataSet($dataset);
+            }
+
+            $this->setAdminUser();
+
+            $expectedexception = $data[self::EXPECTEDEXCEPTION];
+            $thrown = null;
+            try {
+                $callback($data);
+            } catch (\Throwable $e) {
+                if (empty($expectedexception) || $e instanceof AssertionFailedError) {
+                    throw $e;
+                }
+                $thrown = $e;
+            }
+
+            if (!empty($expectedexception)) {
+                $this->assertNotNull($thrown, $description . ': expected exception ' . $expectedexception[0] . ' was not thrown.');
+                $this->assertInstanceOf($expectedexception[0], $thrown, $description);
+                if (isset($expectedexception[1])) {
+                    $this->assertStringContainsString($expectedexception[1], $thrown->getMessage(), $description);
+                }
+            }
+        }
     }
 
     /**
@@ -174,14 +214,19 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
         global $DB;
 
         $course = static::getDataGenerator()->create_course();
+        // Assignment without OneNote submission enabled.
         $assign = static::getDataGenerator()->create_module('assign', ['course' => $course->id,
+            'section' => 1,
+            'name' => 'Assignment',
+            'intro' => 'This is a test assignment']);
+        $onenoteassign = static::getDataGenerator()->create_module('assign', ['course' => $course->id,
             'section' => 1,
             'name' => 'OneNote Assignment',
             'intro' => 'This is a test assignment']);
 
-        // Enable OneNote submission for this assignment.
+        // Enable OneNote submission for the OneNote assignment.
         $pluginconfigparams = [
-            'assignment' => $assign->id,
+            'assignment' => $onenoteassign->id,
             'plugin' => 'onenote',
             'subtype' => 'assignsubmission',
             'name' => 'enabled',
@@ -195,9 +240,38 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
             $DB->update_record('assign_plugin_config', $assignpluginconfig);
         }
 
+        // Explicitly disable OneNote submission for the plain assignment.
+        $disabledparams = [
+            'assignment' => $assign->id,
+            'plugin' => 'onenote',
+            'subtype' => 'assignsubmission',
+            'name' => 'enabled',
+        ];
+        $disabledconfig = $DB->get_record('assign_plugin_config', $disabledparams);
+        if (empty($disabledconfig)) {
+            $disabledparams['value'] = 0;
+            $DB->insert_record('assign_plugin_config', $disabledparams);
+        } else {
+            $disabledconfig->value = 0;
+            $DB->update_record('assign_plugin_config', $disabledconfig);
+        }
+
+        // Create course modules whose assignment record does not exist.
+        $assignmoduleid = $DB->get_field('modules', 'id', ['name' => 'assign'], MUST_EXIST);
+        $noinstancecmid = $DB->insert_record('course_modules', [
+            'course' => $course->id,
+            'module' => $assignmoduleid,
+            'instance' => 0,
+        ]);
+        $missinginstancecmid = $DB->insert_record('course_modules', [
+            'course' => $course->id,
+            'module' => $assignmoduleid,
+            'instance' => $onenoteassign->id + 1000,
+        ]);
+
         // Get assignment config.
         $fakecourseid = $course->id + 1;
-        $fakecmid = $assign->cmid + 1;
+        $fakecmid = $missinginstancecmid + 1;
 
         $invalidrecord = new lang_string('invalidrecord', 'error', 'course');
 
@@ -237,7 +311,7 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
             'Assignment record not found (no record)' => [
                 'dbstate' => [],
                 'params' => [
-                    'coursemodule' => $assign->cmid,
+                    'coursemodule' => $noinstancecmid,
                     'course' => $course->id,
                 ],
                 'expectedexception' => ['local_o365\webservices\exception\assignnotfound'],
@@ -245,7 +319,7 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
             'Assignment record not found (no record for that course_module record)' => [
                 'dbstate' => [],
                 'params' => [
-                    'coursemodule' => $fakecmid,
+                    'coursemodule' => $missinginstancecmid,
                     'course' => $course->id,
                 ],
                 'expectedexception' => ['local_o365\webservices\exception\assignnotfound'],
@@ -261,7 +335,7 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
             'All data correct, assignment is a OneNote assignment' => [
                 'dbstate' => [],
                 'params' => [
-                    'coursemodule' => $assign->cmid,
+                    'coursemodule' => $onenoteassign->cmid,
                     'course' => $course->id,
                 ],
                 'expectedexception' => null,
@@ -270,11 +344,11 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
     }
 
     /**
-     * Dataprovider for test_assignment_read.
+     * Get the test cases for test_assignment_read.
      *
      * @return array Array of test parameters.
      */
-    public static function dataprovider_assignment_read(): array {
+    public static function get_assignment_read_testcases(): array {
         global $DB;
 
         $generaltests = static::get_general_assignment_data_tests();
@@ -299,6 +373,12 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
                                     'section' => 1]
                                 ),
                                 'visible' => '1',
+                                'instance' => $DB->get_field(
+                                    'course_modules',
+                                    'instance',
+                                    ['id' => $parameters['params']['coursemodule']],
+                                    MUST_EXIST
+                                ),
                             ],
                         ],
                     ],
@@ -320,32 +400,15 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
     /**
      * Test \local_o365\webservices\read_onenoteassignment::assignment_read().
      *
-     * @dataProvider dataprovider_assignment_read
      * @covers \local_o365\webservices\read_onenoteassignment::assignment_read
      */
     public function test_assignment_read(): void {
-        $dataarr = $this->dataprovider_assignment_read();
-        foreach ($dataarr as $data) {
-            if (!empty($data[self::DBSTATE])) {
-                $dataset = $this->createArrayDataSet($data[self::DBSTATE]);
-                $this->loadDataSet($dataset);
-            }
-
-            if (!empty($data[self::EXPECTEDEXCEPTION])) {
-                if (isset($data[self::EXPECTEDEXCEPTION][1])) {
-                    $this->expectException($data[self::EXPECTEDEXCEPTION][0]);
-                    $this->expectExceptionMessage($data[self::EXPECTEDEXCEPTION][1]);
-                } else {
-                    $this->expectException($data[self::EXPECTEDEXCEPTION][0]);
-                }
-            }
-
-            $this->setAdminUser();
-
+        $dataarr = $this->get_assignment_read_testcases();
+        $this->run_testcases($dataarr, function (array $data): void {
             $actualreturn = read_onenoteassignment::assignment_read($data[self::PARAMS]);
 
             $this->assertEquals($data[self::EXPECTEDRETURN], $actualreturn);
-        }
+        });
     }
 
     /**
@@ -371,11 +434,11 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
     }
 
     /**
-     * Dataprovider for test_assignment_update.
+     * Get the test cases for test_assignment_update.
      *
      * @return array Array of test parameters.
      */
-    public static function dataprovider_assignment_update(): array {
+    public static function get_assignment_update_testcases(): array {
         global $DB;
         $generaltests = static::get_general_assignment_data_tests();
         $return = [];
@@ -498,35 +561,18 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
     /**
      * Test \local_o365\webservices\update_onenoteassignment::assignment_update().
      *
-     * @dataProvider dataprovider_assignment_update
      * @covers \local_o365\webservices\update_onenoteassignment::assignment_update
      */
     public function test_assignment_update(): void {
-        $dataarr = $this->dataprovider_assignment_update();
-        foreach ($dataarr as $data) {
-            if (!empty($data[self::DBSTATE])) {
-                $dataset = $this->createArrayDataSet($data[self::DBSTATE]);
-                $this->loadDataSet($dataset);
-            }
-
-            if (!empty($data[self::EXPECTEDEXCEPTION])) {
-                if (isset($data[self::EXPECTEDEXCEPTION][1])) {
-                    $this->expectException($data[self::EXPECTEDEXCEPTION][0]);
-                    $this->expectExceptionMessage($data[self::EXPECTEDEXCEPTION][1]);
-                } else {
-                    $this->expectException($data[self::EXPECTEDEXCEPTION][0]);
-                }
-            }
-
-            $this->setAdminUser();
-
+        $dataarr = $this->get_assignment_update_testcases();
+        $this->run_testcases($dataarr, function (array $data): void {
             $actualreturn = update_onenoteassignment::assignment_update($data[self::PARAMS]);
 
             $this->assertEquals($data[self::EXPECTEDRETURN]['data'][0]['name'], $actualreturn['data'][0]['name']);
             $this->assertEquals($data[self::EXPECTEDRETURN]['data'][0]['intro'], $actualreturn['data'][0]['intro']);
             $this->assertEquals($data[self::EXPECTEDRETURN]['data'][0]['visible'], $actualreturn['data'][0]['visible']);
             $this->assertEquals($data[self::EXPECTEDRETURN]['data'][0]['section'], $actualreturn['data'][0]['section']);
-        }
+        });
     }
 
     /**
@@ -552,11 +598,11 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
     }
 
     /**
-     * Dataprovider for test_assignment_delete.
+     * Get the test cases for test_assignment_delete.
      *
      * @return array Array of test parameters.
      */
-    public static function dataprovider_assignment_delete(): array {
+    public static function get_assignment_delete_testcases(): array {
         $generaltests = static::get_general_assignment_data_tests();
         $return = [];
 
@@ -581,28 +627,12 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
      * @covers \local_o365\webservices\delete_onenoteassignment::assignment_delete
      */
     public function test_assignment_delete(): void {
-        $dataarr = $this->dataprovider_assignment_delete();
-        foreach ($dataarr as $data) {
-            if (!empty($data[self::DBSTATE])) {
-                $dataset = $this->createArrayDataSet($data[self::DBSTATE]);
-                $this->loadDataSet($dataset);
-            }
-
-            if (!empty($data[self::EXPECTEDEXCEPTION])) {
-                if (isset($data[self::EXPECTEDEXCEPTION][1])) {
-                    $this->expectException($data[self::EXPECTEDEXCEPTION][0]);
-                    $this->expectExceptionMessage($data[self::EXPECTEDEXCEPTION][1]);
-                } else {
-                    $this->expectException($data[self::EXPECTEDEXCEPTION][0]);
-                }
-            }
-
-            $this->setAdminUser();
-
+        $dataarr = $this->get_assignment_delete_testcases();
+        $this->run_testcases($dataarr, function (array $data): void {
             $actualreturn = delete_onenoteassignment::assignment_delete($data[self::PARAMS]);
 
             $this->assertEquals($data[self::EXPECTEDRETURN], $actualreturn);
-        }
+        });
     }
 
     /**
