@@ -143,7 +143,9 @@ class update_onenoteassignment extends external_api {
                 throw new exception\sectionnotfound();
             }
 
-            moveto_module($module, $section);
+            // Newer Moodle versions require the module name, which the plain course_modules record does not have.
+            $cm = get_coursemodule_from_id('assign', $module->id, $course->id, false, MUST_EXIST);
+            moveto_module($cm, $section);
         }
 
         $modinfo = utils::get_assignment_return_info($module->id, $course->id);
