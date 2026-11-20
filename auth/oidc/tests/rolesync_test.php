@@ -464,4 +464,96 @@ final class rolesync_test extends advanced_testcase {
         observers::handle_user_updated($event);
         $this->assertFalse($DB->record_exists('role_assignments', ['userid' => $user->id, 'component' => rolesync::COMPONENT]));
     }
+
+    /**
+     * Test that remove_roles removes the given roles from every user, but only the role sync assignments.
+     */
+    public function test_remove_roles(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+        $managerid = (int) $DB->get_field('role', 'id', ['shortname' => 'manager']);
+        $creatorid = (int) $DB->get_field('role', 'id', ['shortname' => 'coursecreator']);
+        $contextid = context_system::instance()->id;
+
+        rolesync::apply_roles($user1->id, [$managerid, $creatorid], false);
+        rolesync::apply_roles($user2->id, [$managerid], false);
+        role_assign($managerid, $user2->id, $contextid);
+        role_assign($managerid, $user1->id, $contextid, 'local_o365', 1);
+
+        $this->assertSame(0, rolesync::remove_roles([]));
+        $this->assertSame(2, rolesync::remove_roles([$managerid]));
+
+        // The creator assignment, the manual assignment and the other component's assignment are untouched.
+        $this->assertTrue($DB->record_exists('role_assignments', ['userid' => $user1->id, 'roleid' => $creatorid]));
+        $this->assertTrue($DB->record_exists('role_assignments', ['userid' => $user2->id, 'component' => '']));
+        $this->assertTrue($DB->record_exists('role_assignments', ['userid' => $user1->id, 'component' => 'local_o365']));
+        $this->assertFalse($DB->record_exists('role_assignments', [
+            'roleid' => $managerid,
+            'component' => rolesync::COMPONENT,
+        ]));
+    }
+
+    /**
+     * Test that saving the mapping removes the roles it no longer uses from the users who received them.
+     */
+    public function test_setting_write_removes_unmapped_roles(): void {
+        global $CFG, $DB;
+        require_once($CFG->libdir . '/adminlib.php');
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // The removal does not depend on the setting that removes roles at login.
+        set_config('rolesync_revoke', 0, 'auth_oidc');
+        set_config('rolesync_claimmap', "groups|a=manager\nroles|b=coursecreator", 'auth_oidc');
+
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+        $managerid = (int) $DB->get_field('role', 'id', ['shortname' => 'manager']);
+        $creatorid = (int) $DB->get_field('role', 'id', ['shortname' => 'coursecreator']);
+        rolesync::apply_roles($user1->id, [$managerid], false);
+        rolesync::apply_roles($user2->id, [$creatorid], false);
+        role_assign($creatorid, $user1->id, context_system::instance()->id);
+
+        $setting = new auth_oidc_admin_setting_rolesyncmapping('auth_oidc/rolesync_claimmap', 'name', 'description');
+
+        // An invalid mapping is rejected, and nothing is removed.
+        $this->assertNotSame('', $setting->write_setting('groups|a=nosuchrole'));
+        $this->assertSame("groups|a=manager\nroles|b=coursecreator", get_config('auth_oidc', 'rolesync_claimmap'));
+        $this->assertTrue($DB->record_exists('role_assignments', [
+            'userid' => $user2->id,
+            'component' => rolesync::COMPONENT,
+        ]));
+
+        // A mapping that is saved unchanged removes nothing.
+        $this->assertSame('', $setting->write_setting("groups|a=manager\nroles|b=coursecreator"));
+        $this->assertTrue($DB->record_exists('role_assignments', ['userid' => $user1->id, 'roleid' => $managerid]));
+        $this->assertTrue($DB->record_exists('role_assignments', ['userid' => $user2->id, 'roleid' => $creatorid]));
+
+        // Deleting the line that maps the Course creator role removes that role from the users who received it.
+        $this->assertSame('', $setting->write_setting('groups|a=manager'));
+        $this->assertFalse($DB->record_exists('role_assignments', [
+            'userid' => $user2->id,
+            'component' => rolesync::COMPONENT,
+        ]));
+        $this->assertTrue($DB->record_exists('role_assignments', ['userid' => $user1->id, 'roleid' => $managerid]));
+        // The manual Course creator assignment stays.
+        $this->assertTrue($DB->record_exists('role_assignments', [
+            'userid' => $user1->id,
+            'roleid' => $creatorid,
+            'component' => '',
+        ]));
+
+        // Deleting the whole mapping removes everything role sync assigned.
+        $this->assertSame('', $setting->write_setting(''));
+        $this->assertFalse($DB->record_exists('role_assignments', ['component' => rolesync::COMPONENT]));
+        $this->assertTrue($DB->record_exists('role_assignments', [
+            'userid' => $user1->id,
+            'roleid' => $creatorid,
+            'component' => '',
+        ]));
+    }
 }

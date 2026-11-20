@@ -251,6 +251,50 @@ class rolesync {
     }
 
     /**
+     * Get the IDs of the roles used by the configured claim mapping.
+     *
+     * @return array Unique role IDs.
+     */
+    public static function get_mapped_roleids(): array {
+        $roleids = [];
+        foreach (self::get_mapping() as $valuemapping) {
+            foreach ($valuemapping as $mappedroleids) {
+                $roleids = array_merge($roleids, $mappedroleids);
+            }
+        }
+
+        return array_values(array_unique($roleids));
+    }
+
+    /**
+     * Remove the given roles from all users who received them through role sync.
+     *
+     * This is used when roles are no longer used by the mapping, so nothing is left to justify the assignments.
+     * Manually assigned roles, and roles assigned by other components, are never touched.
+     *
+     * @param array $roleids The role IDs.
+     * @return int The number of removed role assignments.
+     */
+    public static function remove_roles(array $roleids): int {
+        global $DB;
+
+        $contextid = context_system::instance()->id;
+        $removed = 0;
+        foreach (array_unique(array_map('intval', $roleids)) as $roleid) {
+            $assignment = [
+                'roleid' => $roleid,
+                'contextid' => $contextid,
+                'component' => self::COMPONENT,
+                'itemid' => self::ITEMID,
+            ];
+            $removed += $DB->count_records('role_assignments', $assignment);
+            role_unassign_all($assignment);
+        }
+
+        return $removed;
+    }
+
+    /**
      * Convert a token claim value to a list of strings to match against the claim mapping.
      *
      * A scalar claim value is kept as one exact value, as it may contain spaces or commas (for example "Human Resources"),
