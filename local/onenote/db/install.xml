@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/onenote/db" VERSION="20141105" COMMENT="XMLDB file for Moodle local/onenote plugin"
+<XMLDB PATH="local/onenote/db" VERSION="20261109" COMMENT="XMLDB file for Moodle local/onenote plugin"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -29,6 +29,19 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="local_onenote_user_notebooks" COMMENT="Stores the id of the OneNote notebook used for Moodle in each user's OneNote account">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="The id of the Moodle user"/>
+        <FIELD NAME="notebookid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="The id of the user's OneNote notebook used for Moodle"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="The time the record was created"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="The time the record was last modified"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign-unique" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>
