@@ -1168,5 +1168,19 @@ $string['error_template_id_not_found'] = '✗ Mallin tunnusta "{$a}" ei löytyny
 $string['error_template_validation_failed'] = '✗ Mallin tarkistus epäonnistui: {$a}';
 $string['error_template_validation_error'] = '✗ Mallin tarkistuksessa tapahtui virhe. Yritä uudelleen tai ota yhteyttä ylläpitäjään.';
 
+// Role sync feature.
+$string['settings_header_rolesync'] = 'Roolien synkronointi';
+$string['task_rolesync'] = 'Synkronoi järjestelmäroolit Microsoft 365 -ryhmistä';
+$string['settings_rolesync_intro'] = 'Määrittää käyttäjille automaattisesti Moodlen järjestelmärooleja (esimerkiksi Hallinnoija tai Kurssin luoja) heidän Microsoft 365 -ryhmäjäsenyytensä perusteella. Tämä ominaisuus poistaa vain itse määrittämänsä roolit; manuaalisesti määritettyjä rooleja ei koskaan muuteta. Jos haluat määrittää roolit OIDC-tunnistetokenin väitteen perusteella, mikä toimii minkä tahansa identiteettipalveluntarjoajan kanssa, käytä <a href="{$a}">OpenID Connect -todennuslaajennuksen Roolien synkronointi -sivua</a>.';
+$string['settings_rolesync_groupheading'] = 'Roolien synkronointi Microsoft 365 -ryhmistä';
+$string['settings_rolesync_groupheading_desc'] = 'Suoritetaan ajastettuna tehtävänä "Synkronoi järjestelmäroolit Microsoft 365 -ryhmistä" (oletuksena 15 minuutin välein) käyttäjien synkronoinnista riippumatta. Sitä ei suoriteta kirjautumisen yhteydessä, joten ryhmäjäsenyyden muutos tulee voimaan tehtävän seuraavalla suorituskerralla. Käsitellään vain käyttäjät, jotka on jo yhdistetty Microsoft 365:een.';
+$string['settings_rolesync_groupmap'] = 'Ryhmien ja roolien yhdistäminen';
+$string['settings_rolesync_groupmap_details'] = 'Yksi yhdistäminen riviä kohden muodossa <code>ryhmän objektitunnus=roolin lyhyt nimi</code>. Useita rooleja voi erottaa pilkuilla, esimerkiksi <code>550e8400-e29b-41d4-a716-446655440000=manager,coursecreator</code>. Ryhmän jäsenet ja omistajat, mukaan lukien sisäkkäisten ryhmien jäsenet, saavat roolit järjestelmäkontekstissa. Vaikutus koskee vain Microsoft 365:een yhdistettyjä käyttäjiä. #-merkillä alkavat rivit ohitetaan.';
+$string['settings_rolesync_revoke'] = 'Poista roolit, jotka eivät enää täsmää';
+$string['settings_rolesync_revoke_details'] = 'Kun asetus on käytössä, ryhmien roolien synkronoinnin aiemmin määrittämät roolit poistetaan käyttäjältä ajastetun tehtävän seuraavalla suorituskerralla, kun hän ei enää kuulu yhdistettyyn ryhmään. Manuaalisesti tai muutoin määritettyjä rooleja ei koskaan poisteta.';
+$string['settings_rolesync_error_format'] = 'Virheellinen yhdistämisrivi "{$a}". Käytä muotoa lähde=lyhytnimi[,lyhytnimi].';
+$string['settings_rolesync_error_group'] = 'Virheellinen ryhmän objektitunnus "{$a}". Sen on oltava GUID.';
+$string['settings_rolesync_error_role'] = 'Tuntematon tai ei-tuettu roolin lyhyt nimi "{$a}". Vain järjestelmäkontekstissa määritettävissä olevia rooleja voi käyttää.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

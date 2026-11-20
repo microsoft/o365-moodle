@@ -1168,5 +1168,19 @@ $string['error_template_id_not_found'] = '✗ L’ID de modèle « {$a} » est i
 $string['error_template_validation_failed'] = '✗ Échec de la validation du modèle : {$a}';
 $string['error_template_validation_error'] = '✗ Une erreur est survenue lors de la validation du modèle. Veuillez réessayer ou contacter votre administrateur.';
 
+// Role sync feature.
+$string['settings_header_rolesync'] = 'Synchronisation des rôles';
+$string['task_rolesync'] = 'Synchroniser les rôles système depuis les groupes Microsoft 365';
+$string['settings_rolesync_intro'] = 'Attribue automatiquement des rôles système Moodle (par exemple Gestionnaire ou Créateur de cours) aux utilisateurs en fonction de leur appartenance à un groupe Microsoft 365. Cette fonctionnalité ne supprime que les rôles qu\'elle a elle-même attribués ; les rôles attribués manuellement ne sont jamais modifiés. Pour attribuer des rôles à partir d\'une revendication du jeton d\'ID OIDC, ce qui fonctionne avec tout fournisseur d\'identité, utilisez la <a href="{$a}">page Synchronisation des rôles du plugin d\'authentification OpenID Connect</a>.';
+$string['settings_rolesync_groupheading'] = 'Synchronisation des rôles depuis les groupes Microsoft 365';
+$string['settings_rolesync_groupheading_desc'] = 'S\'exécute via la tâche planifiée « Synchroniser les rôles système depuis les groupes Microsoft 365 » (toutes les 15 minutes par défaut), indépendamment de la synchronisation des utilisateurs. Elle ne s\'exécute pas à la connexion : une modification de l\'appartenance à un groupe prend effet à la prochaine exécution de la tâche. Seuls les utilisateurs déjà connectés à Microsoft 365 sont traités.';
+$string['settings_rolesync_groupmap'] = 'Correspondance groupe-rôle';
+$string['settings_rolesync_groupmap_details'] = 'Une correspondance par ligne, au format <code>ID d\'objet du groupe=nom abrégé du rôle</code>. Plusieurs rôles peuvent être séparés par des virgules, par exemple <code>550e8400-e29b-41d4-a716-446655440000=manager,coursecreator</code>. Les membres et les propriétaires du groupe, y compris les membres des groupes imbriqués, reçoivent les rôles dans le contexte système. Seuls les utilisateurs connectés à Microsoft 365 sont concernés. Les lignes commençant par # sont ignorées.';
+$string['settings_rolesync_revoke'] = 'Supprimer les rôles qui ne correspondent plus';
+$string['settings_rolesync_revoke_details'] = 'Si cette option est activée, les rôles précédemment attribués par la synchronisation des rôles par groupe sont retirés d\'un utilisateur lors de la prochaine exécution de la tâche planifiée, lorsqu\'il n\'appartient plus à un groupe associé. Les rôles attribués manuellement ou autrement ne sont jamais supprimés.';
+$string['settings_rolesync_error_format'] = 'Ligne de correspondance non valide « {$a} ». Utilisez le format source=nomabrégé[,nomabrégé].';
+$string['settings_rolesync_error_group'] = 'ID d\'objet de groupe non valide « {$a} ». Il doit s\'agir d\'un GUID.';
+$string['settings_rolesync_error_role'] = 'Nom abrégé de rôle inconnu ou non pris en charge « {$a} ». Seuls les rôles pouvant être attribués dans le contexte système peuvent être utilisés.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
