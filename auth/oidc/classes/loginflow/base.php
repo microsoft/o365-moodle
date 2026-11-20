@@ -468,6 +468,7 @@ class base {
         if ($justremovetokens === true) {
             // Delete token data.
             $DB->delete_records('auth_oidc_token', ['userid' => $userrec->id]);
+            \auth_oidc\rolesync::remove_user_roles((int) $userrec->id);
             $eventdata = ['objectid' => $userrec->id, 'userid' => $userrec->id];
             $event = \auth_oidc\event\user_disconnected::create($eventdata);
             $event->trigger();
@@ -566,6 +567,9 @@ class base {
                 } catch (moodle_exception $e) {
                     throw new moodle_exception($e->errorcode, '', $selfurl);
                 }
+
+                // The user's roles are no longer synced from the ID token, so remove the roles role sync assigned.
+                \auth_oidc\rolesync::remove_user_roles((int) $userrec->id);
 
                 // Delete token data.
                 if (empty($fromform->donotremovetokens)) {

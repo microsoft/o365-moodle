@@ -1583,6 +1583,7 @@ function auth_oidc_get_settings_nav_html(string $currentpage, ?string $subtitle 
         'auth_oidc_other_settings' => get_string('settings_page_other_settings', 'auth_oidc'),
         'auth_oidc_clear_user_tokens' => get_string('settings_page_clear_user_tokens', 'auth_oidc'),
         'auth_oidc_field_mapping' => get_string('settings_page_field_mapping', 'auth_oidc'),
+        'auth_oidc_role_sync' => get_string('settings_page_role_sync', 'auth_oidc'),
     ];
 
     // Tabs for admin_externalpage pages, which can't be opened through /admin/settings.php?section=.
