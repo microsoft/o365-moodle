@@ -304,6 +304,9 @@ class auth_plugin_oidc extends \auth_plugin_base {
                 }
             }
 
+            // Sync system roles from the ID token claim, if role sync is configured.
+            \auth_oidc\rolesync::sync_user_from_stored_token((int) $user->id);
+
             $eventdata = [
                 'objectid' => $user->id,
                 'userid' => $user->id,
