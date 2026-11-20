@@ -44,6 +44,23 @@ class auth_oidc_admin_setting_rolesyncmapping extends admin_setting_configtextar
     }
 
     /**
+     * Save the mapping, and remove the roles that it no longer uses from the users who received them through role sync.
+     *
+     * @param string $data The submitted value.
+     * @return string Empty string if saved, an error message otherwise.
+     */
+    public function write_setting($data) {
+        $oldroleids = rolesync::get_mapped_roleids();
+
+        $result = parent::write_setting($data);
+        if ($result === '') {
+            rolesync::remove_roles(array_diff($oldroleids, rolesync::get_mapped_roleids()));
+        }
+
+        return $result;
+    }
+
+    /**
      * Validate the mapping.
      *
      * @param string $data The submitted value.
