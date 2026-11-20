@@ -880,7 +880,7 @@ abstract class base {
      * @throws moodle_exception If the current user is not allowed or the identifiers do not match the student and assignment.
      */
     protected function require_page_access($cm, $assign, $context, $student, $isteacher, $submissionid, $gradeid): void {
-        global $DB, $USER;
+        global $CFG, $DB, $USER;
 
         if ($isteacher) {
             require_capability('mod/assign:grade', $context);
@@ -889,6 +889,7 @@ abstract class base {
         if ($student->id != $USER->id) {
             // Viewing another user's work requires grading rights (including group access restrictions).
             require_capability('mod/assign:grade', $context);
+            require_once($CFG->dirroot . '/mod/assign/locallib.php');
             $course = get_course($cm->course);
             $assignment = new \assign($context, $cm, $course);
             if (!$assignment->can_view_submission($student->id)) {
