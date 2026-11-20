@@ -46,9 +46,6 @@ $string['linkconnection'] = 'Microsoft 365接続設定';
 $string['microsoft'] = 'Microsoft';
 $string['microsoft:addinstance'] = '新しいMicrosoftブロックを追加する';
 $string['microsoft:myaddinstance'] = 'マイページに新しいMicrosoftブロックを追加する';
-// Do not change this value. It is the title of the notebook in the user's OneNote account and is used to find that notebook,
-// so changing it makes existing notebooks unrecognisable and creates duplicate notebooks.
-$string['notebookname'] = 'Moodleノートブック';
 $string['workonthis'] = 'これに取り組む';
 $string['o365matched_title'] = 'Microsoft 365に<span style="color: #960">ほぼ</span>接続されています';
 $string['o365matched_desc'] = 'Microsoft 365ユーザ<b>「{$a}」</b>と照合されました';

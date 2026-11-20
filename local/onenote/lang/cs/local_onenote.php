@@ -31,9 +31,11 @@ $string['feedbacktitle'] = 'Zpětná vazba: {$a->assign_name} [{$a->student_firs
 $string['connction_error'] = 'Nelze se připojit k OneNote. Chvilku počkejte a zkuste to znovu.';
 $string['onenote_page_error'] = 'Nelze otevřít stránku OneNote pro toto řešení nebo zpětnou vazbu.';
 $string['error_noapiavailable'] = 'Není k dispozici žádné rozhraní OneNote API. Připojení k OneNote mohou používat pouze uživatelé připojení k Microsoft 365.';
-// Do not change this value. It is the title of the notebook in the user's OneNote account and is used to find that notebook,
-// so changing it makes existing notebooks unrecognisable and creates duplicate notebooks.
+// The default title of the notebook created in the user's OneNote account. It is also used to find notebooks created before the
+// notebook id was stored, so do not change an existing translation, or those users will get a second notebook.
 $string['notebookname'] = 'Poznámkový blok Moodle';
+$string['settings_notebookname'] = 'Název poznámkového bloku';
+$string['settings_notebookname_desc'] = 'Název poznámkového bloku, který se pro Moodle vytvoří v účtu OneNote každého uživatele. Ponechte prázdné, chcete-li použít výchozí název v jazyce uživatele. Změna názvu nemá vliv na již existující poznámkové bloky, protože se hledají podle svého ID.<br />Název nesmí být delší než 128 znaků a nesmí obsahovat žádný z těchto znaků: <code>? * \\ / : &lt; &gt; | &amp; # &quot; \' % ~</code>';
 $string['erroronenoteapibadcall'] = 'Chyba při volání API.';
 $string['erroronenoteapibadcall_message'] = 'Chyba při volání API: {$a}';
 $string['errornosection'] = 'Nepodařilo se získat ani vytvořit oddíl ve vašem poznámkovém bloku OneNote.';
@@ -47,6 +49,11 @@ $string['privacy:metadata:local_onenote_user_sections'] = 'Oddíly OneNote pro k
 $string['privacy:metadata:local_onenote_user_sections:user_id'] = 'ID uživatele Moodle';
 $string['privacy:metadata:local_onenote_user_sections:course_id'] = 'ID kurzu Moodle';
 $string['privacy:metadata:local_onenote_user_sections:section_id'] = 'ID oddílu OneNote.';
+$string['privacy:metadata:local_onenote_user_notebooks'] = 'Poznámkové bloky OneNote používané pro Moodle';
+$string['privacy:metadata:local_onenote_user_notebooks:userid'] = 'ID uživatele Moodle';
+$string['privacy:metadata:local_onenote_user_notebooks:notebookid'] = 'ID poznámkového bloku OneNote.';
+$string['privacy:metadata:local_onenote_user_notebooks:timecreated'] = 'Čas vytvoření záznamu.';
+$string['privacy:metadata:local_onenote_user_notebooks:timemodified'] = 'Čas úpravy záznamu.';
 $string['privacy:metadata:local_onenote_assign_pages'] = 'Stránky OneNote pro řešení a zpětnou vazbu k úkolům';
 $string['privacy:metadata:local_onenote_assign_pages:user_id'] = 'ID uživatele Moodle';
 $string['privacy:metadata:local_onenote_assign_pages:assign_id'] = 'ID úkolu';
