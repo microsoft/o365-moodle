@@ -46,9 +46,6 @@ $string['linkconnection'] = 'Verbindingsinstellingen voor Microsoft 365';
 $string['microsoft'] = 'Microsoft';
 $string['microsoft:addinstance'] = 'Een nieuw Microsoft-blok toevoegen';
 $string['microsoft:myaddinstance'] = 'Een nieuw Microsoft-blok toevoegen aan de pagina Mijn Moodle';
-// Do not change this value. It is the title of the notebook in the user's OneNote account and is used to find that notebook,
-// so changing it makes existing notebooks unrecognisable and creates duplicate notebooks.
-$string['notebookname'] = 'Moodle Notebook';
 $string['workonthis'] = 'Hieraan werken';
 $string['o365matched_title'] = 'Je bent <span style="color: #960">bijna</span> verbonden met Microsoft 365';
 $string['o365matched_desc'] = 'Je bent gekoppeld aan de Microsoft 365-gebruiker <b>"{$a}"</b>';

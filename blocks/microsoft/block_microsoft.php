@@ -741,15 +741,11 @@ class block_microsoft extends block_base {
     protected function get_onenote_notebook(base $onenoteapi) {
         $moodlenotebook = null;
         for ($i = 0; $i < 2; $i++) {
-            $notebooks = $onenoteapi->get_items_list('');
-            if (!empty($notebooks)) {
-                $notebookname = get_string('notebookname', 'block_microsoft');
-                foreach ($notebooks as $notebook) {
-                    if ($notebook['title'] == $notebookname) {
-                        $moodlenotebook = $notebook;
-                        break;
-                    }
-                }
+            if (method_exists($onenoteapi, 'find_moodle_notebook')) {
+                $moodlenotebook = $onenoteapi->find_moodle_notebook();
+            } else {
+                // The block does not require a version of local_onenote that can find the notebook by its id.
+                $moodlenotebook = $this->find_onenote_notebook_by_title($onenoteapi);
             }
             if (empty($moodlenotebook)) {
                 $onenoteapi->sync_notebook_data();
@@ -759,6 +755,28 @@ class block_microsoft extends block_base {
         }
 
         return $moodlenotebook;
+    }
+
+    /**
+     * Find the notebook used for Moodle in the OneNote account of the user by its title.
+     *
+     * This is how older versions of local_onenote find the notebook, so the title is the one they give to the notebook they create.
+     *
+     * @param base $onenoteapi A constructed OneNote API to use.
+     * @return array|null Array of information about the user's OneNote notebook used for Moodle, or null if it was not found.
+     */
+    protected function find_onenote_notebook_by_title(base $onenoteapi): ?array {
+        $notebooks = $onenoteapi->get_items_list('');
+        if (!empty($notebooks)) {
+            $notebookname = get_string('notebookname', 'local_onenote');
+            foreach ($notebooks as $notebook) {
+                if ($notebook['title'] == $notebookname) {
+                    return $notebook;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

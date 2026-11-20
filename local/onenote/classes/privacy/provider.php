@@ -51,6 +51,7 @@ class provider implements
     public static function get_metadata(collection $collection): collection {
 
         $tables = ['local_onenote_user_sections' => ['user_id', 'course_id', 'section_id'],
+                'local_onenote_user_notebooks' => ['userid', 'notebookid', 'timecreated', 'timemodified'],
                 'local_onenote_assign_pages' => ['user_id', 'assign_id', 'submission_student_page_id', 'feedback_student_page_id',
                         'submission_teacher_page_id', 'feedback_teacher_page_id', 'teacher_lastviewed', 'student_lastmodified']];
 
@@ -196,8 +197,11 @@ class provider implements
      * @return array The table user map.
      */
     protected static function get_table_user_map(int $userid): array {
-        $tables =
-            ['local_onenote_user_sections' => ['user_id' => $userid], 'local_onenote_assign_pages' => ['user_id' => $userid]];
+        $tables = [
+            'local_onenote_user_sections' => ['user_id' => $userid],
+            'local_onenote_user_notebooks' => ['userid' => $userid],
+            'local_onenote_assign_pages' => ['user_id' => $userid],
+        ];
         return $tables;
     }
 }

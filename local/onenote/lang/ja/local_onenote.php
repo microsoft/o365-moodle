@@ -31,9 +31,11 @@ $string['feedbacktitle'] = 'フィードバック: {$a->assign_name} [{$a->stude
 $string['connction_error'] = 'OneNoteに接続できません。しばらくしてから再度お試しください。';
 $string['onenote_page_error'] = 'この提出またはフィードバックのOneNoteページを開けませんでした。';
 $string['error_noapiavailable'] = '利用可能なOneNote APIがありません。OneNoteへの接続は、Microsoft 365に接続しているユーザのみが使用できます。';
-// Do not change this value. It is the title of the notebook in the user's OneNote account and is used to find that notebook,
-// so changing it makes existing notebooks unrecognisable and creates duplicate notebooks.
+// The default title of the notebook created in the user's OneNote account. It is also used to find notebooks created before the
+// notebook id was stored, so do not change an existing translation, or those users will get a second notebook.
 $string['notebookname'] = 'Moodleノートブック';
+$string['settings_notebookname'] = 'ノートブックのタイトル';
+$string['settings_notebookname_desc'] = 'Moodle用に各ユーザのOneNoteアカウントに作成されるノートブックのタイトルです。空のままにすると、ユーザの言語の既定のタイトルが使用されます。タイトルを変更しても、既存のノートブックには影響しません。ノートブックはIDで検索されるためです。<br />タイトルは128文字以内で、次の文字を含めることはできません: <code>? * \\ / : &lt; &gt; | &amp; # &quot; \' % ~</code>';
 $string['erroronenoteapibadcall'] = 'API呼び出しでエラーが発生しました。';
 $string['erroronenoteapibadcall_message'] = 'API呼び出しでエラーが発生しました: {$a}';
 $string['errornosection'] = 'OneNoteノートブック内のセクションを取得または作成できませんでした。';
@@ -47,6 +49,11 @@ $string['privacy:metadata:local_onenote_user_sections'] = 'Moodleコースに対
 $string['privacy:metadata:local_onenote_user_sections:user_id'] = 'MoodleユーザのID';
 $string['privacy:metadata:local_onenote_user_sections:course_id'] = 'MoodleコースのID';
 $string['privacy:metadata:local_onenote_user_sections:section_id'] = 'OneNoteセクションのID';
+$string['privacy:metadata:local_onenote_user_notebooks'] = 'Moodleに使用されるOneNoteノートブック';
+$string['privacy:metadata:local_onenote_user_notebooks:userid'] = 'MoodleユーザのID';
+$string['privacy:metadata:local_onenote_user_notebooks:notebookid'] = 'OneNoteノートブックのID';
+$string['privacy:metadata:local_onenote_user_notebooks:timecreated'] = 'レコードが作成された時刻です。';
+$string['privacy:metadata:local_onenote_user_notebooks:timemodified'] = 'レコードが変更された時刻です。';
 $string['privacy:metadata:local_onenote_assign_pages'] = '課題の提出とフィードバック用のOneNoteページ';
 $string['privacy:metadata:local_onenote_assign_pages:user_id'] = 'MoodleユーザのID';
 $string['privacy:metadata:local_onenote_assign_pages:assign_id'] = '課題のID';

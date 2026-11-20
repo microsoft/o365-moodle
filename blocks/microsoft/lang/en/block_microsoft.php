@@ -46,9 +46,6 @@ $string['linkconnection'] = 'Microsoft 365 connection settings';
 $string['microsoft'] = 'Microsoft';
 $string['microsoft:addinstance'] = 'Add a new Microsoft block';
 $string['microsoft:myaddinstance'] = 'Add a new Microsoft block to the My Moodle page';
-// Do not change this value. It is the title of the notebook in the user's OneNote account and is used to find that notebook,
-// so changing it makes existing notebooks unrecognisable and creates duplicate notebooks.
-$string['notebookname'] = 'Moodle Notebook';
 $string['workonthis'] = 'Work on this';
 $string['o365matched_title'] = 'You are <span style="color: #960">almost</span> connected to Microsoft 365';
 $string['o365matched_desc'] = 'You have been matched with the Microsoft 365 user <b>"{$a}"</b>';
