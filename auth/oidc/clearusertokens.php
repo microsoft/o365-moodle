@@ -48,11 +48,14 @@ $PAGE->set_title(get_string('clear_user_tokens', 'auth_oidc'));
 
 $confirm = optional_param('confirm', 0, PARAM_BOOL);
 $scope = optional_param('scope', 'selected', PARAM_ALPHA);
-$userids = optional_param_array('userids', [], PARAM_INT);
 
 // Step 3: clear the tokens, after the admin has confirmed.
 if ($confirm) {
     require_sesskey();
+
+    // The ids are passed as a comma-separated list in the confirmation URL, as URL parameters cannot be arrays.
+    $userids = optional_param('userids', '', PARAM_SEQUENCE);
+    $userids = ($userids === '') ? [] : array_map('intval', explode(',', $userids));
 
     if ($scope === 'all') {
         $count = auth_oidc_clear_user_tokens();
@@ -76,7 +79,7 @@ if ($formdata = $form->get_data()) {
         $params = ['confirm' => 1, 'scope' => 'all'];
         $message = get_string('clear_user_tokens_confirm_all', 'auth_oidc', auth_oidc_count_users_with_tokens());
     } else {
-        $params = ['confirm' => 1, 'scope' => 'selected', 'userids' => $formdata->userids];
+        $params = ['confirm' => 1, 'scope' => 'selected', 'userids' => implode(',', $formdata->userids)];
         $message = get_string(
             'clear_user_tokens_confirm_selected',
             'auth_oidc',
