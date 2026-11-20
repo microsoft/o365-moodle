@@ -99,6 +99,15 @@ $tasks = [
         'month' => '*',
     ],
     [
+        'classname' => 'local_o365\task\rolesync',
+        'blocking' => 0,
+        'minute' => '*/15',
+        'hour' => '*',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*',
+    ],
+    [
         'classname' => 'local_o365\task\cohortsync',
         'blocking' => 0,
         'minute' => '*/5',
