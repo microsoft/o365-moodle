@@ -617,6 +617,11 @@ final class lib_test extends advanced_testcase {
             $js
         );
 
+        // Deleting the probe is housekeeping: Chrome rejects it in a cross-site frame, which is where the Teams tab runs, and
+        // that must not stop the marker from being created, so a failed delete is handled before the marker is set.
+        $this->assertStringContainsString('return store.delete(deleteoptions).catch(function() {', $js);
+        $this->assertGreaterThan(strpos($js, 'store.delete(deleteoptions).catch('), strpos($js, 'if (partitioned) {'));
+
         // When the probe or the marker cannot be created the fallback expires both as ordinary and partitioned cookies.
         $this->assertStringContainsString(
             'var expired = ' . json_encode(local_o365_get_teams_frame_cookie_expiry_headers(), JSON_UNESCAPED_SLASHES),
