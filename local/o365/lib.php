@@ -656,7 +656,14 @@ function markTeamsFrame() {
             // CookieStore.delete() only finds a partitioned cookie if it is told to look for one.
             var deleteoptions = partitioned ? __PROBE_DELETE_PARTITIONED_OPTIONS__ : __PROBE_DELETE_OPTIONS__;
 
-            return store.delete(deleteoptions).then(function() {
+            // Removing the probe is housekeeping only: it expires by itself after a minute and the server does not
+            // recognise it. A delete that fails must not stop the marker from being created: Chrome rejects deleting a
+            // partitioned cookie with a TypeError in a cross-site frame, which is where the Teams tab runs.
+            return store.delete(deleteoptions).catch(function() {
+                probeexpired.forEach(function(header) {
+                    document.cookie = header;
+                });
+            }).then(function() {
                 return partitioned;
             });
         }).then(function(partitioned) {
