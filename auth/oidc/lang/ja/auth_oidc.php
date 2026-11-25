@@ -508,9 +508,8 @@ $string['binding_username_claim_help_external_id'] = 'Microsoft Entra External I
 <li><b>自動的に選択</b>: <b>oid</b>、<b>sub</b>の順に使用します。</li>
 <li><b>oid</b>: テナント内のユーザーの一意で安定したオブジェクトID（推奨）。</li>
 <li><b>sub</b></li>
-<li><b>email</b>: ユーザーのメールアドレス。変更される可能性があり、変更されるとMoodleアカウントとのリンクが切れます。</li>
 <li><b>preferred_username</b>: ユーザーのサインイン名。変更される可能性があり、変更されるとMoodleアカウントとのリンクが切れます。</li>
-<li><b>custom</b>: カスタムクレーム。</li>
+<li><b>custom</b>: カスタムクレーム。たとえば<b>email</b>を入力できますが、IDトークンにオプションクレームとして追加されている場合に限ります。</li>
 </ul>
 External IDのトークンには、upnやsamaccountnameなどの職場向けクレームは含まれません。選択するクレームが一意で安定していることを確認してください。';
 $string['warning_binding_username_claim_custom_unsupported'] = '「バインディングユーザ名クレーム」設定が現在「カスタム」に設定されていますが、これはユーザ同期が有効な状態の設定済みIdPタイプではサポートされていません。<a href="{$a}">バインディングユーザ名クレーム</a>の設定を確認してください。';

@@ -508,9 +508,8 @@ $string['binding_username_claim_help_external_id'] = 'Le opzioni per Microsoft E
 <li><b>Scegli automaticamente</b>: Usa <b>oid</b>, poi <b>sub</b>.</li>
 <li><b>oid</b>: ID oggetto univoco e stabile dell\'utente nel tenant (consigliato).</li>
 <li><b>sub</b></li>
-<li><b>email</b>: L\'indirizzo e-mail dell\'utente. Può cambiare, interrompendo il collegamento con l\'account Moodle.</li>
 <li><b>preferred_username</b>: Il nome di accesso dell\'utente. Può cambiare, interrompendo il collegamento con l\'account Moodle.</li>
-<li><b>custom</b>: Claim personalizzato.</li>
+<li><b>custom</b>: Claim personalizzato. Ad esempio, è possibile inserire <b>email</b>, ma solo se è stato aggiunto come claim facoltativo al token ID.</li>
 </ul>
 I token External ID non contengono claim aziendali come upn o samaccountname. Assicurarsi che il claim scelto sia univoco e stabile.';
 $string['warning_binding_username_claim_custom_unsupported'] = 'L\'impostazione "Claim del nome utente di collegamento" è attualmente impostata su "Personalizzato", che non è supportato per il tipo di IdP configurato con la sincronizzazione degli utenti abilitata. Verificare le impostazioni <a href="{$a}">Claim del nome utente di collegamento</a>.';

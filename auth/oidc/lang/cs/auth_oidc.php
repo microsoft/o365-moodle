@@ -508,9 +508,8 @@ $string['binding_username_claim_help_external_id'] = 'Možnosti pro Microsoft En
 <li><b>Vybrat automaticky</b>: Použije <b>oid</b>, poté <b>sub</b>.</li>
 <li><b>oid</b>: Jedinečné a stabilní ID objektu uživatele v tenantovi (doporučeno).</li>
 <li><b>sub</b></li>
-<li><b>email</b>: E-mailová adresa uživatele. Může se změnit, čímž se přeruší propojení s účtem Moodle.</li>
 <li><b>preferred_username</b>: Přihlašovací jméno uživatele. Může se změnit, čímž se přeruší propojení s účtem Moodle.</li>
-<li><b>vlastní</b>: Vlastní deklarace.</li>
+<li><b>vlastní</b>: Vlastní deklarace. Lze zadat například <b>email</b>, ale pouze pokud byla deklarace <b>email</b> přidána jako volitelná deklarace do ID tokenu.</li>
 </ul>
 Tokeny External ID neobsahují deklarace pro zaměstnance, například upn nebo samaccountname. Zajistěte, aby zvolená deklarace byla jedinečná a stabilní.';
 $string['warning_binding_username_claim_custom_unsupported'] = 'Nastavení „Deklarace pro vazbu uživatelského jména“ je aktuálně nastaveno na „Vlastní“, což u nakonfigurovaného typu IdP s povolenou synchronizací uživatelů není podporováno. Zkontrolujte nastavení <a href="{$a}">Deklarace pro vazbu uživatelského jména</a>.';

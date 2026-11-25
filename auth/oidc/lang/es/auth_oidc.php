@@ -508,9 +508,8 @@ $string['binding_username_claim_help_external_id'] = 'Las opciones para Microsof
 <li><b>Elegir automáticamente</b>: Usa <b>oid</b>, luego <b>sub</b>.</li>
 <li><b>oid</b>: ID de objeto único y estable del usuario en el inquilino (recomendado).</li>
 <li><b>sub</b></li>
-<li><b>email</b>: La dirección de correo electrónico del usuario. Puede cambiar, lo que rompe el vínculo con la cuenta de Moodle.</li>
 <li><b>preferred_username</b>: El nombre de inicio de sesión del usuario. Puede cambiar, lo que rompe el vínculo con la cuenta de Moodle.</li>
-<li><b>custom</b>: Notificación personalizada.</li>
+<li><b>custom</b>: Notificación personalizada. Por ejemplo, se puede introducir <b>email</b>, pero solo si se ha añadido como notificación opcional al token de ID.</li>
 </ul>
 Los tokens de External ID no incluyen notificaciones de personal como upn o samaccountname. Asegúrese de que la notificación elegida sea única y estable.';
 $string['warning_binding_username_claim_custom_unsupported'] = 'El ajuste "Reclamación de nombre de usuario de vinculación" está establecido actualmente en "Personalizado", lo que no se admite para el tipo de IdP configurado con la sincronización de usuarios activada. Revise los ajustes de <a href="{$a}">Reclamación de nombre de usuario de vinculación</a>.';
