@@ -508,9 +508,8 @@ $string['binding_username_claim_help_external_id'] = 'Opcje dla Microsoft Entra 
 <li><b>Wybierz automatycznie</b>: Używa <b>oid</b>, a następnie <b>sub</b>.</li>
 <li><b>oid</b>: Unikalny i stabilny identyfikator obiektu użytkownika w dzierżawie (zalecane).</li>
 <li><b>sub</b></li>
-<li><b>email</b>: Adres e-mail użytkownika. Może się zmienić, co zrywa powiązanie z kontem Moodle.</li>
 <li><b>preferred_username</b>: Nazwa logowania użytkownika. Może się zmienić, co zrywa powiązanie z kontem Moodle.</li>
-<li><b>custom</b>: Niestandardowe oświadczenie.</li>
+<li><b>custom</b>: Niestandardowe oświadczenie. Można tu wpisać na przykład <b>email</b>, ale tylko wtedy, gdy zostało dodane jako opcjonalne oświadczenie do tokenu ID.</li>
 </ul>
 Tokeny External ID nie zawierają oświadczeń pracowniczych, takich jak upn lub samaccountname. Upewnij się, że wybrane oświadczenie jest unikalne i stabilne.';
 $string['warning_binding_username_claim_custom_unsupported'] = 'Ustawienie „Powiązanie z oświadczeniem nazwy użytkownika” ma obecnie wartość „Niestandardowe”, która nie jest obsługiwana dla skonfigurowanego typu IdP z włączoną synchronizacją użytkowników. Sprawdź ustawienia <a href="{$a}">Powiązania z oświadczeniem nazwy użytkownika</a>.';

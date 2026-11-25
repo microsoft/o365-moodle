@@ -519,7 +519,6 @@ if ($hassiteconfig) {
                 'auto' => get_string('binding_username_auto', 'auth_oidc'),
                 'oid' => 'oid',
                 'sub' => 'sub',
-                'email' => 'email',
                 'preferred_username' => 'preferred_username',
                 'custom' => get_string('binding_username_custom', 'auth_oidc'),
             ];
