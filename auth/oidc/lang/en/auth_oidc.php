@@ -508,9 +508,8 @@ $string['binding_username_claim_help_external_id'] = 'The options for Microsoft 
 <li><b>Choose automatically</b>: Uses <b>oid</b>, then <b>sub</b>.</li>
 <li><b>oid</b>: Unique and stable object ID of the user in the tenant (recommended).</li>
 <li><b>sub</b></li>
-<li><b>email</b>: The email address of the user. It can change, which breaks the link to the Moodle account.</li>
 <li><b>preferred_username</b>: The sign-in name of the user. It can change, which breaks the link to the Moodle account.</li>
-<li><b>custom</b>: Custom claim.</li>
+<li><b>custom</b>: Custom claim. For example, <b>email</b> can be entered here, but only if it has been added as an optional claim to the ID token.</li>
 </ul>
 External ID tokens do not carry workforce claims such as upn or samaccountname. Make sure the chosen claim is unique and stable.';
 $string['warning_binding_username_claim_custom_unsupported'] = 'The "Binding username claim" setting is currently set to "Custom", which is not supported for the configured IdP type with user sync enabled. Review the <a href="{$a}">Binding username claim</a> settings.';
