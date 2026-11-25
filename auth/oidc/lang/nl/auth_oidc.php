@@ -508,9 +508,8 @@ $string['binding_username_claim_help_external_id'] = 'De opties voor Microsoft E
 <li><b>Automatisch kiezen</b>: Gebruikt <b>oid</b>, daarna <b>sub</b>.</li>
 <li><b>oid</b>: Unieke en stabiele object-ID van de gebruiker in de tenant (aanbevolen).</li>
 <li><b>sub</b></li>
-<li><b>email</b>: Het e-mailadres van de gebruiker. Dit kan veranderen, waardoor de koppeling met het Moodle-account verbroken wordt.</li>
 <li><b>preferred_username</b>: De inlognaam van de gebruiker. Deze kan veranderen, waardoor de koppeling met het Moodle-account verbroken wordt.</li>
-<li><b>custom</b>: Aangepaste claim.</li>
+<li><b>custom</b>: Aangepaste claim. Hier kan bijvoorbeeld <b>email</b> worden ingevoerd, maar alleen als deze als optionele claim aan het ID-token is toegevoegd.</li>
 </ul>
 External ID-tokens bevatten geen werknemersclaims zoals upn of samaccountname. Zorg ervoor dat de gekozen claim uniek en stabiel is.';
 $string['warning_binding_username_claim_custom_unsupported'] = 'De instelling "Claim voor koppeling van gebruikersnaam" staat momenteel op "Aangepast", wat niet wordt ondersteund voor het geconfigureerde IdP-type met ingeschakelde gebruikerssynchronisatie. Controleer de instellingen voor de <a href="{$a}">claim voor koppeling van gebruikersnaam</a>.';

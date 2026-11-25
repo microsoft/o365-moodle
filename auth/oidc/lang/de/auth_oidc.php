@@ -508,9 +508,8 @@ $string['binding_username_claim_help_external_id'] = 'Die Optionen für Microsof
 <li><b>Automatisch auswählen</b>: Verwendet <b>oid</b>, dann <b>sub</b>.</li>
 <li><b>oid</b>: Eindeutige und stabile Objekt-ID des Benutzers im Mandanten (empfohlen).</li>
 <li><b>sub</b></li>
-<li><b>email</b>: Die E-Mail-Adresse des Benutzers. Sie kann sich ändern, wodurch die Verknüpfung mit dem Moodle-Konto verloren geht.</li>
 <li><b>preferred_username</b>: Der Anmeldename des Benutzers. Er kann sich ändern, wodurch die Verknüpfung mit dem Moodle-Konto verloren geht.</li>
-<li><b>custom</b>: Benutzerdefinierter Claim.</li>
+<li><b>custom</b>: Benutzerdefinierter Claim. Hier kann zum Beispiel <b>email</b> angegeben werden, jedoch nur, wenn <b>email</b> als optionaler Claim zum ID-Token hinzugefügt wurde.</li>
 </ul>
 External-ID-Token enthalten keine Mitarbeiter-Claims wie upn oder samaccountname. Stellen Sie sicher, dass der gewählte Claim eindeutig und stabil ist.';
 $string['warning_binding_username_claim_custom_unsupported'] = 'Die Einstellung "Claim für den verknüpften Anmeldenamen" ist derzeit auf "Benutzerdefiniert" gesetzt. Dies wird für den konfigurierten IdP-Typ bei aktivierter Nutzersynchronisierung nicht unterstützt. Überprüfen Sie die Einstellungen unter <a href="{$a}">Claim für den verknüpften Anmeldenamen</a>.';

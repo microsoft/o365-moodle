@@ -508,9 +508,8 @@ $string['binding_username_claim_help_external_id'] = 'Les options disponibles po
 <li><b>Choisir automatiquement</b>: Utilise <b>oid</b>, puis <b>sub</b>.</li>
 <li><b>oid</b>: Identifiant d’objet unique et stable de l’utilisateur dans le locataire (recommandé).</li>
 <li><b>sub</b></li>
-<li><b>email</b>: L’adresse e-mail de l’utilisateur. Elle peut changer, ce qui rompt le lien avec le compte Moodle.</li>
 <li><b>preferred_username</b>: Le nom de connexion de l’utilisateur. Il peut changer, ce qui rompt le lien avec le compte Moodle.</li>
-<li><b>custom</b>: Revendication personnalisée.</li>
+<li><b>custom</b>: Revendication personnalisée. Par exemple, <b>email</b> peut être saisi ici, mais uniquement s’il a été ajouté comme revendication facultative au jeton d’ID.</li>
 </ul>
 Les jetons External ID ne contiennent pas de revendications d’entreprise telles que upn ou samaccountname. Veillez à ce que la revendication choisie soit unique et stable.';
 $string['warning_binding_username_claim_custom_unsupported'] = 'Le réglage « Revendication de nom d’utilisateur de liaison » est actuellement défini sur « Personnalisé », ce qui n’est pas pris en charge pour le type d’IdP configuré lorsque la synchronisation des utilisateurs est activée. Vérifiez les réglages de la <a href="{$a}">Revendication de nom d’utilisateur de liaison</a>.';
