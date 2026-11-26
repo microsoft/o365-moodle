@@ -558,6 +558,17 @@ function local_o365_apply_teams_theme() {
 function local_o365_after_require_login($courseorid, $autologinguest, $cm, $setwantsurltome, $preventredirect) {
     global $SESSION;
 
+    if (\local_o365\utils::is_disabled_for_idp_type()) {
+        // The Teams theme is not applied any more, so clear an override that this plugin itself set earlier, from before
+        // the IdP type was changed, but never touch an unrelated theme override.
+        if (!empty($SESSION->local_o365_teamstheme)) {
+            unset($SESSION->theme);
+            unset($SESSION->local_o365_teamstheme);
+        }
+
+        return;
+    }
+
     if (!isset($_SERVER['HTTP_SEC_FETCH_MODE']) || $_SERVER['HTTP_SEC_FETCH_MODE'] !== 'navigate') {
         return;
     }

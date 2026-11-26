@@ -24,6 +24,9 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
+
+\local_o365\utils::require_features_enabled();
+
 require_login();
 $action = optional_param('action', null, PARAM_TEXT);
 $ucptitle = get_string('ucp_title', 'local_o365');

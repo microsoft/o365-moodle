@@ -50,6 +50,9 @@ class coursesync extends scheduled_task {
      * @return bool|void
      */
     public function execute() {
+        if (\local_o365\utils::skip_task_for_idp_type()) {
+            return true;
+        }
         // Raise memory and time limits to handle large numbers of teams/groups.
         raise_memory_limit(MEMORY_HUGE);
         @set_time_limit(0);

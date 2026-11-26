@@ -32,6 +32,8 @@ use core\context\system;
 define('AJAX_SCRIPT', true);
 require_once(__DIR__ . '/../../config.php');
 
+// This is not guarded by the IdP type: it only removes the Teams theme override, which is also needed after the IdP type has
+// been changed to one that disables the features of the plugin.
 require_login();
 require_sesskey();
 

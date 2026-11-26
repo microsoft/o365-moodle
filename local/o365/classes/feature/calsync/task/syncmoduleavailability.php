@@ -38,6 +38,10 @@ class syncmoduleavailability extends \core\task\adhoc_task {
      * Do the job.
      */
     public function execute() {
+        if (\local_o365\utils::skip_task_for_idp_type()) {
+            return true;
+        }
+
         global $DB;
 
         if (utils::is_connected() !== true) {

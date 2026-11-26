@@ -79,6 +79,9 @@ class read_courseusers extends external_api {
      */
     public static function courseusers_read($courseid, $limitfrom = 0, $limitnumber = 0, $userids = []) {
         global $CFG, $DB;
+
+        \local_o365\utils::require_features_enabled();
+
         require_once($CFG->dirroot . '/user/lib.php');
 
         $params = self::validate_parameters(
