@@ -508,7 +508,7 @@ $string['binding_username_claim_help_external_id'] = 'As opções para o Microso
 <li><b>Escolher automaticamente</b>: Usa <b>oid</b>, depois <b>sub</b>.</li>
 <li><b>oid</b>: ID de objeto exclusivo e estável do usuário no locatário (recomendado).</li>
 <li><b>sub</b></li>
-<li><b>preferred_username</b>: O nome de login do usuário. Ele pode mudar, o que rompe o vínculo com a conta do Moodle.</li>
+<li><b>preferred_username</b>: Normalmente o e-mail com o qual o usuário faz login. Pode mudar, o que afeta o SSO. Para corrigir, atualize o nome de usuário do Moodle e remova o registro de token antigo do usuário.</li>
 <li><b>custom</b>: Declaração personalizada. Por exemplo, <b>email</b> pode ser informado aqui, mas somente se tiver sido adicionado como declaração opcional ao token de ID.</li>
 </ul>
 Os tokens do External ID não contêm declarações corporativas como upn ou samaccountname. Verifique se a declaração escolhida é exclusiva e estável.';

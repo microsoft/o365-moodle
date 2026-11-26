@@ -508,7 +508,7 @@ $string['binding_username_claim_help_external_id'] = 'Les options disponibles po
 <li><b>Choisir automatiquement</b>: Utilise <b>oid</b>, puis <b>sub</b>.</li>
 <li><b>oid</b>: Identifiant d’objet unique et stable de l’utilisateur dans le locataire (recommandé).</li>
 <li><b>sub</b></li>
-<li><b>preferred_username</b>: Le nom de connexion de l’utilisateur. Il peut changer, ce qui rompt le lien avec le compte Moodle.</li>
+<li><b>preferred_username</b>: Normalement l’adresse e-mail avec laquelle l’utilisateur se connecte. Elle peut changer, ce qui affecte le SSO. Pour corriger, mettez à jour le nom d’utilisateur Moodle et supprimez l’ancien enregistrement de jeton de l’utilisateur.</li>
 <li><b>custom</b>: Revendication personnalisée. Par exemple, <b>email</b> peut être saisi ici, mais uniquement s’il a été ajouté comme revendication facultative au jeton d’ID.</li>
 </ul>
 Les jetons External ID ne contiennent pas de revendications d’entreprise telles que upn ou samaccountname. Veillez à ce que la revendication choisie soit unique et stable.';

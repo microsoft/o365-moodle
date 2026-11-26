@@ -508,7 +508,7 @@ $string['binding_username_claim_help_external_id'] = 'Die Optionen für Microsof
 <li><b>Automatisch auswählen</b>: Verwendet <b>oid</b>, dann <b>sub</b>.</li>
 <li><b>oid</b>: Eindeutige und stabile Objekt-ID des Benutzers im Mandanten (empfohlen).</li>
 <li><b>sub</b></li>
-<li><b>preferred_username</b>: Der Anmeldename des Benutzers. Er kann sich ändern, wodurch die Verknüpfung mit dem Moodle-Konto verloren geht.</li>
+<li><b>preferred_username</b>: Normalerweise die E-Mail-Adresse, mit der sich der Benutzer anmeldet. Sie kann sich ändern, was SSO beeinträchtigt. Behebung: Moodle-Benutzernamen aktualisieren und den alten Token-Eintrag des Benutzers entfernen.</li>
 <li><b>custom</b>: Benutzerdefinierter Claim. Hier kann zum Beispiel <b>email</b> angegeben werden, jedoch nur, wenn <b>email</b> als optionaler Claim zum ID-Token hinzugefügt wurde.</li>
 </ul>
 External-ID-Token enthalten keine Mitarbeiter-Claims wie upn oder samaccountname. Stellen Sie sicher, dass der gewählte Claim eindeutig und stabil ist.';
