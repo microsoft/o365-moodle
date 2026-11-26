@@ -68,6 +68,8 @@ class coursesync_search_teams extends \external_api {
     public static function search_teams($query, $courseid, $offset = 0, $limit = 20) {
         global $DB;
 
+        \local_o365\utils::require_features_enabled();
+
         $params = self::validate_parameters(self::search_teams_parameters(), [
             'query' => $query,
             'courseid' => $courseid,

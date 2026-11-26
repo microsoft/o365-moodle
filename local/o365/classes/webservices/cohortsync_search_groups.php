@@ -66,6 +66,8 @@ class cohortsync_search_groups extends \external_api {
     public static function search_groups($query, $offset = 0, $limit = 20) {
         global $DB;
 
+        \local_o365\utils::require_features_enabled();
+
         $params = self::validate_parameters(self::search_groups_parameters(), [
             'query' => $query,
             'offset' => $offset,

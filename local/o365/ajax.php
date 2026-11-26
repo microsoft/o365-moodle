@@ -27,6 +27,8 @@ use core\context\system;
 
 define('AJAX_SCRIPT', true);
 require_once(__DIR__ . '/../../config.php');
+
+\local_o365\utils::require_features_enabled();
 require_login();
 $mode = required_param('mode', PARAM_TEXT);
 require_capability('moodle/site:config', system::instance());

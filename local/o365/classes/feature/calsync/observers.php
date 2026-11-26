@@ -57,6 +57,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_enrolment_created(\core\event\user_enrolment_created $event) {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $DB;
 
         if (!autosubscribe::is_optout_mode() || \local_o365\utils::is_connected() !== true) {
@@ -91,6 +94,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_enrolment_deleted(\core\event\user_enrolment_deleted $event) {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $DB;
         if (\local_o365\utils::is_connected() !== true) {
             return false;
@@ -140,6 +146,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_course_deleted(\core\event\course_deleted $event) {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $DB;
         $courseid = $event->objectid;
         $DB->delete_records('local_o365_calsub', ['caltype' => 'course', 'caltypeid' => $courseid]);
@@ -153,6 +162,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_calendar_event_created(\core\event\calendar_event_created $event) {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
@@ -174,6 +186,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_calendar_event_updated(\core\event\calendar_event_updated $event) {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
@@ -191,6 +206,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_calendar_event_deleted(\core\event\calendar_event_deleted $event) {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
@@ -227,6 +245,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_course_module_updated(\core\event\course_module_updated $event) {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
@@ -259,6 +280,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_group_member_added(\core\event\group_member_added $event) {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         return static::queue_user_availability_sync($event->courseid, $event->relateduserid);
     }
 
@@ -269,6 +293,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_group_member_removed(\core\event\group_member_removed $event) {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         return static::queue_user_availability_sync($event->courseid, $event->relateduserid);
     }
 
@@ -305,6 +332,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_calendar_subscribed(\local_o365\event\calendar_subscribed $event) {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
@@ -329,6 +359,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_calendar_unsubscribed(\local_o365\event\calendar_unsubscribed $event) {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
@@ -372,6 +405,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_assign_extension_granted(\mod_assign\event\extension_granted $event) {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $DB;
 
         if (\local_o365\utils::is_connected() !== true) {
@@ -424,6 +460,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_deleted(\core\event\user_deleted $event) {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $DB;
         $userid = $event->objectid;
         $DB->delete_records('local_o365_calsub', ['user_id' => $userid]);

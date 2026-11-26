@@ -47,6 +47,9 @@ class observers {
      * @return bool
      */
     public static function handle_course_reset_started(course_reset_started $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $CFG, $DB;
 
         if (!\local_o365\utils::is_connected()) {
@@ -166,6 +169,9 @@ class observers {
      * @return bool
      */
     public static function handle_group_created(\core\event\group_created $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         return groupchannels::queue_group_sync((int)$event->objectid);
     }
 
@@ -176,6 +182,9 @@ class observers {
      * @return bool
      */
     public static function handle_group_member_added(\core\event\group_member_added $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         return groupchannels::queue_group_sync((int)$event->objectid);
     }
 
@@ -186,6 +195,9 @@ class observers {
      * @return bool
      */
     public static function handle_group_member_removed(\core\event\group_member_removed $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         return groupchannels::queue_group_sync((int)$event->objectid);
     }
 
@@ -198,6 +210,9 @@ class observers {
      * @return bool
      */
     public static function handle_group_deleted(\core\event\group_deleted $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         groupchannels::forget_group((int)$event->objectid);
 
         return true;

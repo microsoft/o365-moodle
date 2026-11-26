@@ -101,6 +101,20 @@ if ($hassiteconfig) {
     $settings = new admin_settingpage('local_o365', get_string('settings_header_setup', 'local_o365'));
     $ADMIN->add('local_o365_folder', $settings);
 
+    // Microsoft Entra External ID tenants have no Microsoft 365 services, so only an explanation is shown.
+    if (auth_oidc_is_entra_external_id()) {
+        $settings->add(new admin_setting_heading(
+            'local_o365_features_disabled_external_id',
+            '',
+            html_writer::div(get_string('features_disabled_external_id', 'local_o365'), 'alert alert-info')
+        ));
+
+        // The page is already added to the folder above, so Moodle must not register it again, as it does with $settings.
+        $settings = null;
+
+        return;
+    }
+
     if (empty($install)) {
         $settings->add(new admin_setting_heading('local_o365_nav', '', local_o365_get_settings_nav_html('local_o365')));
     }

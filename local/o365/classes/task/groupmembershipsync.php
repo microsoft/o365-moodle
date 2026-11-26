@@ -77,6 +77,9 @@ class groupmembershipsync extends adhoc_task {
      * @return false|void
      */
     public function execute() {
+        if (\local_o365\utils::skip_task_for_idp_type()) {
+            return true;
+        }
         // If the sync direction is Teams to Moodle, we don't want to sync the course membership. Exiting.
         $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
         if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
