@@ -508,7 +508,7 @@ $string['binding_username_claim_help_external_id'] = 'Le opzioni per Microsoft E
 <li><b>Scegli automaticamente</b>: Usa <b>oid</b>, poi <b>sub</b>.</li>
 <li><b>oid</b>: ID oggetto univoco e stabile dell\'utente nel tenant (consigliato).</li>
 <li><b>sub</b></li>
-<li><b>preferred_username</b>: Il nome di accesso dell\'utente. Può cambiare, interrompendo il collegamento con l\'account Moodle.</li>
+<li><b>preferred_username</b>: Normalmente l\'indirizzo e-mail con cui l\'utente accede. Può cambiare, con effetti sul SSO. Per risolvere, aggiornare il nome utente Moodle e rimuovere il vecchio record del token dell\'utente.</li>
 <li><b>custom</b>: Claim personalizzato. Ad esempio, è possibile inserire <b>email</b>, ma solo se è stato aggiunto come claim facoltativo al token ID.</li>
 </ul>
 I token External ID non contengono claim aziendali come upn o samaccountname. Assicurarsi che il claim scelto sia univoco e stabile.';
