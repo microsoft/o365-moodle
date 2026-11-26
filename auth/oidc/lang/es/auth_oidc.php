@@ -508,7 +508,7 @@ $string['binding_username_claim_help_external_id'] = 'Las opciones para Microsof
 <li><b>Elegir automáticamente</b>: Usa <b>oid</b>, luego <b>sub</b>.</li>
 <li><b>oid</b>: ID de objeto único y estable del usuario en el inquilino (recomendado).</li>
 <li><b>sub</b></li>
-<li><b>preferred_username</b>: El nombre de inicio de sesión del usuario. Puede cambiar, lo que rompe el vínculo con la cuenta de Moodle.</li>
+<li><b>preferred_username</b>: Normalmente el correo electrónico con el que el usuario inicia sesión. Puede cambiar, lo que afecta a SSO. Solución: actualice el nombre de usuario de Moodle y elimine el registro de token antiguo del usuario.</li>
 <li><b>custom</b>: Notificación personalizada. Por ejemplo, se puede introducir <b>email</b>, pero solo si se ha añadido como notificación opcional al token de ID.</li>
 </ul>
 Los tokens de External ID no incluyen notificaciones de personal como upn o samaccountname. Asegúrese de que la notificación elegida sea única y estable.';

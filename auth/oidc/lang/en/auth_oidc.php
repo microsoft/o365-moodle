@@ -508,7 +508,7 @@ $string['binding_username_claim_help_external_id'] = 'The options for Microsoft 
 <li><b>Choose automatically</b>: Uses <b>oid</b>, then <b>sub</b>.</li>
 <li><b>oid</b>: Unique and stable object ID of the user in the tenant (recommended).</li>
 <li><b>sub</b></li>
-<li><b>preferred_username</b>: The sign-in name of the user. It can change, which breaks the link to the Moodle account.</li>
+<li><b>preferred_username</b>: Normally the email address the user logs in with. It can change, which affects SSO. To fix, update the Moodle username and remove the old token record of the user.</li>
 <li><b>custom</b>: Custom claim. For example, <b>email</b> can be entered here, but only if it has been added as an optional claim to the ID token.</li>
 </ul>
 External ID tokens do not carry workforce claims such as upn or samaccountname. Make sure the chosen claim is unique and stable.';

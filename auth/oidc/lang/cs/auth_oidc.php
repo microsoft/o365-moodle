@@ -508,7 +508,7 @@ $string['binding_username_claim_help_external_id'] = 'Možnosti pro Microsoft En
 <li><b>Vybrat automaticky</b>: Použije <b>oid</b>, poté <b>sub</b>.</li>
 <li><b>oid</b>: Jedinečné a stabilní ID objektu uživatele v tenantovi (doporučeno).</li>
 <li><b>sub</b></li>
-<li><b>preferred_username</b>: Přihlašovací jméno uživatele. Může se změnit, čímž se přeruší propojení s účtem Moodle.</li>
+<li><b>preferred_username</b>: Obvykle e-mailová adresa, kterou se uživatel přihlašuje. Může se změnit, což ovlivní SSO. Oprava: aktualizujte uživatelské jméno v Moodle a odstraňte starý záznam tokenu uživatele.</li>
 <li><b>vlastní</b>: Vlastní deklarace. Lze zadat například <b>email</b>, ale pouze pokud byla deklarace <b>email</b> přidána jako volitelná deklarace do ID tokenu.</li>
 </ul>
 Tokeny External ID neobsahují deklarace pro zaměstnance, například upn nebo samaccountname. Zajistěte, aby zvolená deklarace byla jedinečná a stabilní.';

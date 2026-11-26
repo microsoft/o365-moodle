@@ -508,7 +508,7 @@ $string['binding_username_claim_help_external_id'] = 'Opcje dla Microsoft Entra 
 <li><b>Wybierz automatycznie</b>: Używa <b>oid</b>, a następnie <b>sub</b>.</li>
 <li><b>oid</b>: Unikalny i stabilny identyfikator obiektu użytkownika w dzierżawie (zalecane).</li>
 <li><b>sub</b></li>
-<li><b>preferred_username</b>: Nazwa logowania użytkownika. Może się zmienić, co zrywa powiązanie z kontem Moodle.</li>
+<li><b>preferred_username</b>: Zwykle adres e-mail, którym użytkownik się loguje. Może się zmienić, co wpływa na SSO. Naprawa: zaktualizuj nazwę użytkownika w Moodle i usuń stary rekord tokenu użytkownika.</li>
 <li><b>custom</b>: Niestandardowe oświadczenie. Można tu wpisać na przykład <b>email</b>, ale tylko wtedy, gdy zostało dodane jako opcjonalne oświadczenie do tokenu ID.</li>
 </ul>
 Tokeny External ID nie zawierają oświadczeń pracowniczych, takich jak upn lub samaccountname. Upewnij się, że wybrane oświadczenie jest unikalne i stabilne.';

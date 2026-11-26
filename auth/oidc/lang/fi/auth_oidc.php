@@ -508,7 +508,7 @@ $string['binding_username_claim_help_external_id'] = 'Microsoft Entra External I
 <li><b>Valitse automaattisesti</b>: Käyttää <b>oid</b>-arvoa, sitten <b>sub</b>-arvoa.</li>
 <li><b>oid</b>: Käyttäjän yksilöllinen ja pysyvä objektitunnus vuokraajassa (suositus).</li>
 <li><b>sub</b></li>
-<li><b>preferred_username</b>: Käyttäjän kirjautumisnimi. Se voi muuttua, mikä katkaisee yhteyden Moodle-tiliin.</li>
+<li><b>preferred_username</b>: Yleensä sähköpostiosoite, jolla käyttäjä kirjautuu. Se voi muuttua, mikä vaikuttaa SSO:hon. Korjaus: päivitä Moodlen käyttäjätunnus ja poista käyttäjän vanha tunnisteen tietue.</li>
 <li><b>custom</b>: Mukautettu väite. Tähän voi syöttää esimerkiksi <b>email</b>, mutta vain jos se on lisätty valinnaisena väitteenä ID-tunnisteeseen.</li>
 </ul>
 External ID -tunnisteet eivät sisällä työntekijöiden väitteitä, kuten upn tai samaccountname. Varmista, että valittu väite on yksilöllinen ja pysyvä.';

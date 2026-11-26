@@ -508,7 +508,7 @@ $string['binding_username_claim_help_external_id'] = 'De opties voor Microsoft E
 <li><b>Automatisch kiezen</b>: Gebruikt <b>oid</b>, daarna <b>sub</b>.</li>
 <li><b>oid</b>: Unieke en stabiele object-ID van de gebruiker in de tenant (aanbevolen).</li>
 <li><b>sub</b></li>
-<li><b>preferred_username</b>: De inlognaam van de gebruiker. Deze kan veranderen, waardoor de koppeling met het Moodle-account verbroken wordt.</li>
+<li><b>preferred_username</b>: Normaal gesproken het e-mailadres waarmee de gebruiker inlogt. Het kan veranderen, wat SSO beïnvloedt. Oplossing: werk de Moodle-gebruikersnaam bij en verwijder het oude tokenrecord van de gebruiker.</li>
 <li><b>custom</b>: Aangepaste claim. Hier kan bijvoorbeeld <b>email</b> worden ingevoerd, maar alleen als deze als optionele claim aan het ID-token is toegevoegd.</li>
 </ul>
 External ID-tokens bevatten geen werknemersclaims zoals upn of samaccountname. Zorg ervoor dat de gekozen claim uniek en stabiel is.';
