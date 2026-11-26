@@ -70,6 +70,8 @@ class read_teachercourses extends external_api {
     public static function teachercourses_read($courseids = []) {
         global $USER;
 
+        \local_o365\utils::require_features_enabled();
+
         // Validate params.
         $params = self::validate_parameters(
             self::teachercourses_read_parameters(),

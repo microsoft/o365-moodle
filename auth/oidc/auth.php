@@ -104,14 +104,13 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * Hook for overriding behaviour of logout page.
      */
     public function logoutpage_hook() {
-        global $redirect;
+        global $CFG, $redirect;
 
         // No need for custom logic if we don't force the redirect on login.
         if (!isset($this->config->forceredirect) || !$this->config->forceredirect) {
             return;
         }
 
-        // When we log out and are redirecting to the login page, add the noredirect to prevent our own redirect.
         if (empty($redirect)) {
             return;
         }
@@ -122,8 +121,16 @@ class auth_plugin_oidc extends \auth_plugin_base {
         }
 
         if ($redirecturl->compare(new url('/login/index.php'), URL_MATCH_BASE)) {
+            // When we log out and are redirecting to the login page, add the noredirect to prevent our own redirect.
             $redirecturl->param('noredirect', 1);
+            $redirecturl->param('oidcloggedout', 1);
             $redirect = $redirecturl->out(false);
+        } else if (!empty($CFG->forcelogin) && $redirecturl->compare(new url('/'), URL_MATCH_BASE)) {
+            // The site requires login, so the front page would send the user to the login page without the noredirect
+            // parameter, and the forced redirect (and silent login) would immediately log the user back in.
+            // Send the user to the login page directly instead.
+            $loginurl = new url('/login/index.php', ['noredirect' => 1, 'oidcloggedout' => 1]);
+            $redirect = $loginurl->out(false);
         }
     }
 
@@ -134,10 +141,84 @@ class auth_plugin_oidc extends \auth_plugin_base {
     public function loginpage_hook() {
         global $frm;  // Can be used to override submitted login form.
         global $user; // Can be used to replace authenticate_user_login().
-        if ($this->should_login_redirect()) {
+        // The user was just logged out, and is back from the IdP logout. The cookie is removed here rather than earlier, as
+        // the login page is where the user is sent to after the site front page, and the redirect is skipped for this visit.
+        $returnedfromlogout = $this->has_logout_suppression_cookie();
+        if ($returnedfromlogout) {
+            $this->clear_logout_suppression_cookie();
+        }
+        if (!$returnedfromlogout && $this->should_login_redirect()) {
             $this->loginflow->handleredirect();
         }
         return $this->loginflow->loginpage_hook($frm, $user);
+    }
+
+    /**
+     * Return the name of the cookie that remembers that the user has just been logged out of Moodle and sent to the IdP.
+     *
+     * @return string
+     */
+    protected function get_logout_suppression_cookie_name(): string {
+        global $CFG;
+
+        return 'MOODLEOIDCLOGOUT' . ($CFG->sessioncookie ?? '');
+    }
+
+    /**
+     * Check whether the user has just been logged out of Moodle and sent to the IdP logout endpoint.
+     *
+     * @return bool
+     */
+    protected function has_logout_suppression_cookie(): bool {
+        return !empty($_COOKIE[$this->get_logout_suppression_cookie_name()]);
+    }
+
+    /**
+     * Remember for a few minutes that the user has been logged out of Moodle and sent to the IdP logout endpoint.
+     *
+     * The IdP sends the user back to the site URL, which has to be exactly the redirect URI registered for the app, so
+     * parameters cannot be added to it to stop the forced redirect (and silent login) from starting a new login. The
+     * cookie is sent with the return to the site, as it is a top level navigation, and is removed on the login page.
+     *
+     * @return void
+     */
+    protected function set_logout_suppression_cookie(): void {
+        $this->send_cookie($this->get_logout_suppression_cookie_name(), '1', time() + 5 * MINSECS);
+    }
+
+    /**
+     * Remove the cookie that remembers that the user has just been logged out of Moodle.
+     *
+     * @return void
+     */
+    protected function clear_logout_suppression_cookie(): void {
+        unset($_COOKIE[$this->get_logout_suppression_cookie_name()]);
+        $this->send_cookie($this->get_logout_suppression_cookie_name(), '', time() - HOURSECS);
+    }
+
+    /**
+     * Send a cookie to the browser.
+     *
+     * @param string $name The cookie name.
+     * @param string $value The cookie value.
+     * @param int $expires The time the cookie expires.
+     * @return void
+     */
+    protected function send_cookie(string $name, string $value, int $expires): void {
+        global $CFG;
+
+        if (headers_sent()) {
+            return;
+        }
+
+        setcookie($name, $value, [
+            'expires' => $expires,
+            'path' => $CFG->sessioncookiepath ?: '/',
+            'domain' => $CFG->sessioncookiedomain ?? '',
+            'secure' => is_moodle_cookie_secure(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
     }
 
     /**
@@ -176,7 +257,11 @@ class auth_plugin_oidc extends \auth_plugin_base {
 
         // Never redirect if requested so.
         if ($oidc === 0) {
-            $SESSION->oidc = $oidc;
+            // Remember the choice for the rest of the session, except right after logging out, so that the next visit to the
+            // site is redirected to the IdP again.
+            if (!optional_param('oidcloggedout', 0, PARAM_BOOL)) {
+                $SESSION->oidc = $oidc;
+            }
             return false;
         }
         // We are off to OIDC land so reset the force in SESSION.
@@ -191,7 +276,8 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * Will check if we have to redirect before going to login page
      */
     public function pre_loginpage_hook() {
-        if ($this->should_login_redirect()) {
+        // Right after being logged out and sent back from the IdP, the user is taken to the login page instead.
+        if (!$this->has_logout_suppression_cookie() && $this->should_login_redirect()) {
             $this->loginflow->handleredirect();
         }
     }
@@ -342,6 +428,31 @@ class auth_plugin_oidc extends \auth_plugin_base {
                 $url = new url($logouturl, $params);
                 return $url->out(false);
 
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID:
+                if (!$logouturl || !auth_oidc_is_external_id_host($logouturl)) {
+                    // The logout endpoint of an External ID tenant is next to its authorization endpoint.
+                    $authendpoint = (string) get_config('auth_oidc', 'authendpoint');
+                    if (!auth_oidc_is_external_id_endpoint($authendpoint)) {
+                        return null;
+                    }
+                    $logouturl = preg_replace('#/authorize(?=$|\?)#', '/logout', $authendpoint);
+                }
+                // The login_hint claim of the ID token identifies the session to sign out of, so that the user is not asked
+                // to pick an account. The claim is only present when it is added as an optional claim in the app registration.
+                $token = $DB->get_record('auth_oidc_token', ['userid' => $user->id]);
+                if ($token && !empty($token->idtoken)) {
+                    try {
+                        $loginhint = \auth_oidc\jwt::instance_from_encoded($token->idtoken)->claim('login_hint');
+                    } catch (\Throwable $e) {
+                        $loginhint = null;
+                    }
+                    if (!empty($loginhint)) {
+                        $params['logout_hint'] = $loginhint;
+                    }
+                }
+                $url = new url($logouturl, $params);
+                return $url->out(false);
+
             case AUTH_OIDC_IDP_TYPE_OTHER:
                 if (!$logouturl) {
                     return null;
@@ -359,7 +470,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
     }
 
     /**
-     * Log out user from Microsoft 365 if single sign off integration is enabled.
+     * Log out user from Microsoft 365 if single logout (SLO) integration is enabled.
      *
      * @param stdClass $user
      *
@@ -368,9 +479,9 @@ class auth_plugin_oidc extends \auth_plugin_base {
     public function postlogout_hook($user) {
         global $CFG, $DB;
 
-        $singlesignoutsetting = get_config('auth_oidc', 'single_sign_off');
+        $singlelogoutsetting = get_config('auth_oidc', 'single_logout');
 
-        if ($singlesignoutsetting) {
+        if ($singlelogoutsetting) {
             $redirect = false;
 
             if ($user->auth == 'oidc') {
@@ -392,6 +503,11 @@ class auth_plugin_oidc extends \auth_plugin_base {
 
                 $redirecturl = $this->build_logout_url($logouturl, $idptype, $user);
                 if ($redirecturl) {
+                    if (!empty($this->config->forceredirect) && !empty($CFG->forcelogin)) {
+                        // The IdP sends the user back to the site, where the forced redirect and silent login would start
+                        // a new login, so remember the logout across the round trip.
+                        $this->set_logout_suppression_cookie();
+                    }
                     redirect($redirecturl);
                 }
             }

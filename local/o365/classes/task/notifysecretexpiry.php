@@ -59,6 +59,9 @@ class notifysecretexpiry extends scheduled_task {
      * @return bool
      */
     public function execute(): bool {
+        if (\local_o365\utils::skip_task_for_idp_type()) {
+            return true;
+        }
         if (!utils::is_configured()) {
             // The site is not configured with a Microsoft IdP; nothing to do.
             mtrace('The site is not configured with a Microsoft identity provider. Skipping.');

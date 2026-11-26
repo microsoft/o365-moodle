@@ -70,6 +70,8 @@ class update_onenoteassignment extends external_api {
     public static function assignment_update($data) {
         global $DB;
 
+        \local_o365\utils::require_features_enabled();
+
         $params = self::validate_parameters(self::assignment_update_parameters(), ['data' => $data]);
         $params = $params['data'];
 

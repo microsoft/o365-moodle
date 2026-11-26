@@ -62,7 +62,8 @@ class auth_oidc_admin_setting_endpoint extends \admin_setting_configtext {
         string $defaultsetting,
         string $endpointtype = 'auth'
     ) {
-        parent::__construct($name, $visiblename, $description, $defaultsetting, PARAM_URL);
+        // The fields are wide enough to show a complete endpoint, including a tenant ID.
+        parent::__construct($name, $visiblename, $description, $defaultsetting, PARAM_URL, 100);
         $this->endpointtype = $endpointtype;
     }
 
@@ -78,11 +79,6 @@ class auth_oidc_admin_setting_endpoint extends \admin_setting_configtext {
      * @return string|true True when valid; a translatable error string otherwise.
      */
     public function validate($data) {
-        $result = parent::validate($data);
-        if ($result !== true) {
-            return $result;
-        }
-
         // Read the IdP type and auth method from the current form submission,
         // falling back to the saved configuration when the values are absent.
         $idptype = (int) optional_param(
@@ -96,9 +92,46 @@ class auth_oidc_admin_setting_endpoint extends \admin_setting_configtext {
             PARAM_INT
         );
 
+        if ($idptype === AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID) {
+            // External ID endpoints must use the ciamlogin.com authority host and the v2.0 endpoint style. This is checked
+            // before the generic URL validation, so the placeholders of the default template get a specific message.
+            $kind = $this->endpointtype === 'token' ? 'token' : 'authorize';
+            $error = auth_oidc_validate_external_id_endpoint((string) $data, $kind);
+            if ($error !== null) {
+                return $error;
+            }
+
+            // Both endpoints have to belong to the same tenant.
+            if ($this->endpointtype === 'token') {
+                $authendpoint = (string) optional_param(
+                    's_auth_oidc_authendpoint',
+                    get_config('auth_oidc', 'authendpoint'),
+                    PARAM_RAW
+                );
+                if (
+                    auth_oidc_validate_external_id_endpoint($authendpoint, 'authorize') === null &&
+                    !auth_oidc_is_same_external_id_tenant($authendpoint, (string) $data)
+                ) {
+                    return get_string('error_endpoint_external_id_mismatch', 'auth_oidc');
+                }
+            }
+
+            return parent::validate($data);
+        }
+
+        $result = parent::validate($data);
+        if ($result !== true) {
+            return $result;
+        }
+
         if (!in_array($idptype, [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM])) {
             // Non-Microsoft IdP types have no endpoint version requirements.
             return true;
+        }
+
+        // A Microsoft Entra External ID endpoint does not work with the workforce IdP types.
+        if (auth_oidc_is_external_id_host((string) $data)) {
+            return get_string('error_endpoint_is_external_id', 'auth_oidc');
         }
 
         // The endpoint URL version must match the configured IdP type.
@@ -125,5 +158,35 @@ class auth_oidc_admin_setting_endpoint extends \admin_setting_configtext {
         }
 
         return true;
+    }
+
+    /**
+     * Return the HTML of the setting, with the script that updates the endpoints when the IdP type is changed.
+     *
+     * @param mixed $data The current value.
+     * @param string $query Search query being highlighted.
+     * @return string
+     */
+    public function output_html($data, $query = '') {
+        auth_oidc_require_endpoint_autoupdate_js(
+            'id_s_auth_oidc_idptype',
+            'id_s_auth_oidc_authendpoint',
+            'id_s_auth_oidc_tokenendpoint',
+            true
+        );
+
+        // The default shown next to the field follows the IdP type, as the default of the type is what the field is
+        // updated to when the type is changed. Without it, the generic default would show a Microsoft Entra ID endpoint
+        // for the other IdP types. The type is only known to differ from "Not connected" once it has been configured.
+        $idptype = (int) get_config('auth_oidc', 'idptype');
+        $originaldefault = $this->defaultsetting;
+        if ($idptype !== AUTH_OIDC_IDP_TYPE_NOT_CONNECTED) {
+            $defaults = auth_oidc_get_default_endpoints($idptype);
+            $this->defaultsetting = $defaults[$this->endpointtype === 'token' ? 'token' : 'authorize'];
+        }
+        $html = parent::output_html($data, $query);
+        $this->defaultsetting = $originaldefault;
+
+        return $html;
     }
 }

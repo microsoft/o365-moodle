@@ -107,6 +107,102 @@ final class authcode_test extends advanced_testcase {
     }
 
     /**
+     * Data provider for test_has_username_changed().
+     *
+     * @return array
+     */
+    public static function has_username_changed_provider(): array {
+        $oid = 'a1b2c3d4-0000-4000-8000-000000000001';
+
+        return [
+            'External ID, the selected claim was removed from the token' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID,
+                'jdoe@contoso.com',
+                $oid,
+                ['oid' => $oid, 'sub' => 'subject'],
+                false,
+            ],
+            'External ID, the selected claim was added to the token' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID,
+                $oid,
+                'jdoe@contoso.com',
+                ['oid' => $oid, 'sub' => 'subject'],
+                false,
+            ],
+            'External ID, the subject is the stable identifier without oid' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID, 'subject', 'jdoe@contoso.com', ['sub' => 'subject'], false,
+            ],
+            'External ID, the identifier is the same, in a different case' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID, 'JDoe@contoso.com', 'jdoe@contoso.com', ['oid' => $oid], false,
+            ],
+            'External ID, the selected claim has another value' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID, 'jdoe@contoso.com', 'john@contoso.com', ['oid' => $oid], true,
+            ],
+            'identity platform, the claim was removed from the token' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'jdoe@contoso.com', $oid, ['oid' => $oid], true,
+            ],
+            'identity platform, the claim has another value' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'jdoe@contoso.com', 'john@contoso.com', ['oid' => $oid], true,
+            ],
+            'no username in the token' => [
+                AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID, 'jdoe@contoso.com', '', ['oid' => $oid], false,
+            ],
+        ];
+    }
+
+    /**
+     * The username of a connected user is only considered changed when the identity changes, and not when the selected
+     * binding claim of a Microsoft Entra External ID user is added to, or removed from, the ID token between two logins.
+     *
+     * @dataProvider has_username_changed_provider
+     * @param int $idptype The IdP type.
+     * @param string $storedidentifier The identifier saved in the token record.
+     * @param string $currentidentifier The identifier of the current login, based on the binding claim.
+     * @param array $claims The claims of the ID token.
+     * @param bool $expected Whether the username is considered changed.
+     * @return void
+     * @covers ::has_username_changed
+     */
+    public function test_has_username_changed(
+        int $idptype,
+        string $storedidentifier,
+        string $currentidentifier,
+        array $claims,
+        bool $expected
+    ): void {
+        set_config('idptype', $idptype, 'auth_oidc');
+        $idtoken = new jwt();
+        $idtoken->set_claims($claims);
+        $tokenrec = (object) ['useridentifier' => $storedidentifier];
+
+        $this->assertSame($expected, phpunit_util::call_internal_method(
+            new authcode(),
+            'has_username_changed',
+            [$idtoken, $tokenrec, $currentidentifier],
+            authcode::class
+        ));
+    }
+
+    /**
+     * Without a token record, there is no change of username.
+     *
+     * @return void
+     * @covers ::has_username_changed
+     */
+    public function test_has_username_changed_without_token_record(): void {
+        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID, 'auth_oidc');
+        $idtoken = new jwt();
+        $idtoken->set_claims(['oid' => 'a1b2c3d4-0000-4000-8000-000000000001']);
+
+        $this->assertFalse(phpunit_util::call_internal_method(
+            new authcode(),
+            'has_username_changed',
+            [$idtoken, false, 'jdoe@contoso.com'],
+            authcode::class
+        ));
+    }
+
+    /**
      * Data provider for test_handlelogin_rejects_new_user_with_duplicate_email().
      *
      * @return array

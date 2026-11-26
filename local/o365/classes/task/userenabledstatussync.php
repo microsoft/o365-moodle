@@ -80,6 +80,9 @@ class userenabledstatussync extends scheduled_task {
      * Do the job.
      */
     public function execute() {
+        if (\local_o365\utils::skip_task_for_idp_type()) {
+            return true;
+        }
         if (utils::is_connected() !== true) {
             $this->mtrace('Microsoft 365 not configured');
             return false;

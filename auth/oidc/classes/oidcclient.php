@@ -215,7 +215,12 @@ class oidcclient {
         }
 
         $idptype = get_config('auth_oidc', 'idptype');
-        if (!in_array($idptype, [AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, AUTH_OIDC_IDP_TYPE_OTHER])) {
+        $noresourceidptypes = [
+            AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM,
+            AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID,
+            AUTH_OIDC_IDP_TYPE_OTHER,
+        ];
+        if (!in_array($idptype, $noresourceidptypes)) {
             $params['resource'] = $this->tokenresource;
         }
 

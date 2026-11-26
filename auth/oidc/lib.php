@@ -53,6 +53,11 @@ const AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM = 2;
  */
 const AUTH_OIDC_IDP_TYPE_OTHER = 3;
 
+/**
+ * Microsoft Entra External ID identity provider type.
+ */
+const AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID = 4;
+
 // Microsoft Entra ID / Microsoft endpoint version.
 /**
  * Unknown Microsoft endpoint version.
@@ -156,7 +161,7 @@ function auth_oidc_reset_app_tokens($settingname) {
 
     if (auth_oidc_is_local_365_installed()) {
         $idptype = get_config('auth_oidc', 'idptype');
-        if ($idptype && $idptype != AUTH_OIDC_IDP_TYPE_OTHER) {
+        if ($idptype && !in_array($idptype, [AUTH_OIDC_IDP_TYPE_OTHER, AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID])) {
             // Use a static flag so only one notification is queued per request,
             // even when multiple settings with this callback change in the same save.
             static $notificationqueued = false;
@@ -186,6 +191,21 @@ function auth_oidc_auth_settings_updated($settingname) {
 }
 
 /**
+ * Return the value of an auth_oidc setting, preferring the value submitted in the current settings form.
+ *
+ * Moodle runs the updated callback of a setting right after that setting is written, so settings that are saved later
+ * in the same form submission still hold their old value. Reading the submitted value avoids validating stale data.
+ *
+ * @param string $name The setting name, without the plugin name.
+ * @return mixed The submitted value when present in the request, otherwise the saved value.
+ */
+function auth_oidc_get_submitted_or_saved_config(string $name) {
+    $submitted = optional_param('s_auth_oidc_' . $name, null, PARAM_RAW);
+
+    return $submitted ?? get_config('auth_oidc', $name);
+}
+
+/**
  * Validate authentication settings for invalid combinations.
  *
  * Checks for invalid combinations that could break authentication:
@@ -199,8 +219,8 @@ function auth_oidc_auth_settings_updated($settingname) {
 function auth_oidc_validate_auth_settings(string $settingname) {
     auth_oidc_validate_binding_username_claim();
 
-    $idptype = get_config('auth_oidc', 'idptype');
-    $clientauthmethod = get_config('auth_oidc', 'clientauthmethod');
+    $idptype = auth_oidc_get_submitted_or_saved_config('idptype');
+    $clientauthmethod = auth_oidc_get_submitted_or_saved_config('clientauthmethod');
 
     if (empty($idptype) || empty($clientauthmethod)) {
         return;
@@ -209,7 +229,13 @@ function auth_oidc_validate_auth_settings(string $settingname) {
     $errors = [];
 
     // Validate clientauthmethod according to idptype.
-    if (in_array($idptype, [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_OTHER])) {
+    if (
+        in_array($idptype, [
+            AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID,
+            AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID,
+            AUTH_OIDC_IDP_TYPE_OTHER,
+        ])
+    ) {
         if ($clientauthmethod != AUTH_OIDC_AUTH_METHOD_SECRET) {
             $errors[] = get_string('error_invalid_client_authentication_method', 'auth_oidc');
         }
@@ -221,16 +247,16 @@ function auth_oidc_validate_auth_settings(string $settingname) {
 
     // Validate authentication-method-specific requirements.
     if ($clientauthmethod == AUTH_OIDC_AUTH_METHOD_SECRET) {
-        $clientsecret = get_config('auth_oidc', 'clientsecret');
+        $clientsecret = auth_oidc_get_submitted_or_saved_config('clientsecret');
         if (empty($clientsecret)) {
             $errors[] = get_string('error_empty_client_secret', 'auth_oidc');
         }
     } else if ($clientauthmethod == AUTH_OIDC_AUTH_METHOD_CERTIFICATE) {
-        $clientcertsource = get_config('auth_oidc', 'clientcertsource');
+        $clientcertsource = auth_oidc_get_submitted_or_saved_config('clientcertsource');
 
         if ($clientcertsource == AUTH_OIDC_AUTH_CERT_SOURCE_TEXT) {
-            $clientprivatekey = get_config('auth_oidc', 'clientprivatekey');
-            $clientcert = get_config('auth_oidc', 'clientcert');
+            $clientprivatekey = auth_oidc_get_submitted_or_saved_config('clientprivatekey');
+            $clientcert = auth_oidc_get_submitted_or_saved_config('clientcert');
 
             if (empty($clientprivatekey)) {
                 $errors[] = get_string('error_empty_client_private_key', 'auth_oidc');
@@ -239,8 +265,8 @@ function auth_oidc_validate_auth_settings(string $settingname) {
                 $errors[] = get_string('error_empty_client_cert', 'auth_oidc');
             }
         } else if ($clientcertsource == AUTH_OIDC_AUTH_CERT_SOURCE_FILE) {
-            $clientprivatekeyfile = get_config('auth_oidc', 'clientprivatekeyfile');
-            $clientcertfile = get_config('auth_oidc', 'clientcertfile');
+            $clientprivatekeyfile = auth_oidc_get_submitted_or_saved_config('clientprivatekeyfile');
+            $clientcertfile = auth_oidc_get_submitted_or_saved_config('clientcertfile');
 
             if (empty($clientprivatekeyfile)) {
                 $errors[] = get_string('error_empty_client_private_key_file', 'auth_oidc');
@@ -805,12 +831,64 @@ function auth_oidc_process_custom_claims($remotefields) {
 }
 
 /**
+ * Return the description of the tool that changes the binding username claim of users.
+ *
+ * The parts about the Microsoft 365 connection records, which are marked with comments in the language string, are only
+ * included when the local_o365 plugin is installed and the IdP type is a Microsoft one that it works with.
+ *
+ * @return string
+ */
+function auth_oidc_get_change_binding_username_claim_tool_description(): string {
+    $description = get_string('change_binding_username_claim_tool_description', 'auth_oidc');
+
+    $idptype = (int) get_config('auth_oidc', 'idptype');
+    $showmicrosoft365 = auth_oidc_is_local_365_installed() &&
+        !in_array($idptype, [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID, AUTH_OIDC_IDP_TYPE_OTHER]);
+
+    if ($showmicrosoft365) {
+        return str_replace(['<!--o365-start-->', '<!--o365-end-->'], '', $description);
+    }
+
+    // The list item before the removed one is the last of its list, so it has to end the sentence instead.
+    $description = preg_replace_callback(
+        '/([,;\x{3001}\x{FF0C}])(<\/li>\s*)<!--o365-start-->\s*<li>/u',
+        function ($matches) {
+            return ($matches[1] === "\u{3001}" ? "\u{3002}" : '.') . $matches[2] . '<!--o365-start--><li>';
+        },
+        $description
+    );
+
+    return preg_replace('/<!--o365-start-->.*?<!--o365-end-->\s*/s', '', $description);
+}
+
+/**
+ * Return the help text shown at the top of the field mapping settings page, for the configured IdP type.
+ *
+ * Microsoft specific content is only included for the Microsoft IdP types.
+ *
+ * @return string
+ */
+function auth_oidc_get_field_mapping_description(): string {
+    switch ((int) get_config('auth_oidc', 'idptype')) {
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
+            return get_string('cfg_field_mapping_desc', 'auth_oidc');
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID:
+            return get_string('cfg_field_mapping_desc_external_id', 'auth_oidc', get_string('customclaims', 'auth_oidc'));
+        default:
+            return get_string('cfg_field_mapping_desc_generic', 'auth_oidc', get_string('customclaims', 'auth_oidc'));
+    }
+}
+
+/**
  * Return the list of remote field options in field mapping.
  *
  * @return array
  */
 function auth_oidc_get_remote_fields() {
-    if (auth_oidc_is_local_365_installed()) {
+    // Microsoft Graph fields are only available with local_o365, and not for Microsoft Entra External ID tenants, so
+    // only the fields that come from the token claims are offered for them.
+    if (auth_oidc_is_local_365_installed() && !auth_oidc_is_entra_external_id()) {
         $remotefields = [
             '' => get_string('settings_fieldmap_feild_not_mapped', 'auth_oidc'),
             'bindingusernameclaim' => get_string('settings_fieldmap_field_bindingusernameclaim', 'auth_oidc'),
@@ -1132,7 +1210,9 @@ function auth_oidc_display_auth_lock_options(
         'locked' => get_string('locked', 'auth'),
     ];
 
-    if (auth_oidc_is_local_365_installed()) {
+    // The user sync of local_o365 is not available for Microsoft Entra External ID.
+    $usersyncavailable = auth_oidc_is_local_365_installed() && !auth_oidc_is_entra_external_id();
+    if ($usersyncavailable) {
         $alwaystext = get_string('update_oncreate_and_onlogin_and_usersync', 'auth_oidc');
         $onlogintext = get_string('update_onlogin_and_usersync', 'auth_oidc');
     } else {
@@ -1144,7 +1224,7 @@ function auth_oidc_display_auth_lock_options(
         'oncreate' => get_string('update_oncreate', 'auth'),
         'onlogin' => $onlogintext,
     ];
-    if (auth_oidc_is_local_365_installed()) {
+    if ($usersyncavailable) {
         $updatelocaloptions['oncreate_usersync'] = get_string('update_oncreate_and_usersync', 'auth_oidc');
     }
 
@@ -1301,6 +1381,402 @@ function auth_oidc_determine_endpoint_version(string $endpoint) {
 }
 
 /**
+ * Check whether the configured IdP type is Microsoft Entra External ID.
+ *
+ * @return bool
+ */
+function auth_oidc_is_entra_external_id(): bool {
+    return (int) get_config('auth_oidc', 'idptype') === AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID;
+}
+
+/**
+ * Check whether the configured IdP type issues v2.0 style tokens and uses scope based requests.
+ *
+ * This is the case for the Microsoft identity platform (v2.0) and Microsoft Entra External ID IdP types.
+ *
+ * @return bool
+ */
+function auth_oidc_uses_v2_endpoints(): bool {
+    return in_array(
+        (int) get_config('auth_oidc', 'idptype'),
+        [AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID]
+    );
+}
+
+/**
+ * Check whether an endpoint is a Microsoft Entra External ID (v2.0) endpoint.
+ *
+ * External ID tenants use the ciamlogin.com authority host, in the form
+ * https://[tenant-name].ciamlogin.com/[tenant-id]/oauth2/v2.0/[authorize|token].
+ *
+ * @param string $endpoint The endpoint URL.
+ * @return bool
+ */
+function auth_oidc_is_external_id_endpoint(string $endpoint): bool {
+    $parts = parse_url($endpoint);
+    if (empty($parts['scheme']) || strtolower($parts['scheme']) !== 'https' || empty($parts['host'])) {
+        return false;
+    }
+
+    if (!preg_match('/^[a-z0-9-]+\.ciamlogin\.com$/i', $parts['host'])) {
+        return false;
+    }
+
+    $path = $parts['path'] ?? '';
+
+    return strpos($path, '/oauth2/v2.0/') !== false &&
+        !preg_match('#^/(common|organizations|consumers)/#i', $path);
+}
+
+/**
+ * Check whether an endpoint uses the ciamlogin.com authority host of Microsoft Entra External ID.
+ *
+ * @param string $endpoint The endpoint URL.
+ * @return bool
+ */
+function auth_oidc_is_external_id_host(string $endpoint): bool {
+    $host = parse_url($endpoint, PHP_URL_HOST);
+
+    return is_string($host) && preg_match('/^[a-z0-9-]+\.ciamlogin\.com$/i', $host) === 1;
+}
+
+/**
+ * Find what is wrong with an endpoint for the Microsoft Entra External ID IdP type.
+ *
+ * @param string $endpoint The endpoint URL.
+ * @param string $kind Either "authorize", "token" or "logout".
+ * @return string|null The identifier of the language string that describes what is wrong with the endpoint, or null when it
+ *     is valid.
+ */
+function auth_oidc_get_external_id_endpoint_error(string $endpoint, string $kind): ?string {
+    $endpoint = trim($endpoint);
+
+    if (strpos($endpoint, '<') !== false || strpos($endpoint, '>') !== false) {
+        return 'error_endpoint_external_id_placeholder';
+    }
+
+    if (!auth_oidc_is_external_id_endpoint($endpoint)) {
+        $path = (string) parse_url($endpoint, PHP_URL_PATH);
+        if (!auth_oidc_is_external_id_host($endpoint) || strtolower((string) parse_url($endpoint, PHP_URL_SCHEME)) !== 'https') {
+            return 'error_endpoint_external_id';
+        }
+        if (preg_match('#^/(common|organizations|consumers)/#i', $path)) {
+            return 'error_endpoint_external_id_tenant';
+        }
+        if (preg_match('#/oauth2/(authorize|token|logout)$#', $path)) {
+            return 'error_endpoint_external_id_v1';
+        }
+
+        return 'error_endpoint_external_id';
+    }
+
+    $path = (string) parse_url($endpoint, PHP_URL_PATH);
+    if (substr($path, -strlen('/' . $kind)) !== '/' . $kind) {
+        return 'error_endpoint_external_id_kind';
+    }
+
+    return null;
+}
+
+/**
+ * Validate an endpoint for the Microsoft Entra External ID IdP type.
+ *
+ * @param string $endpoint The endpoint URL.
+ * @param string $kind Either "authorize", "token" or "logout".
+ * @return string|null The error message describing what is wrong with the endpoint, or null when it is valid.
+ */
+function auth_oidc_validate_external_id_endpoint(string $endpoint, string $kind): ?string {
+    $errorid = auth_oidc_get_external_id_endpoint_error($endpoint, $kind);
+    if ($errorid === null) {
+        return null;
+    }
+
+    return get_string($errorid, 'auth_oidc', $errorid === 'error_endpoint_external_id_kind' ? $kind : null);
+}
+
+/**
+ * Check whether two Microsoft Entra External ID endpoints belong to the same tenant.
+ *
+ * @param string $endpoint1 The first endpoint URL.
+ * @param string $endpoint2 The second endpoint URL.
+ * @return bool
+ */
+function auth_oidc_is_same_external_id_tenant(string $endpoint1, string $endpoint2): bool {
+    $tenant = function (string $endpoint): string {
+        $parts = parse_url(trim($endpoint));
+        $segments = explode('/', ltrim($parts['path'] ?? '', '/'));
+
+        return strtolower(($parts['host'] ?? '') . '/' . $segments[0]);
+    };
+
+    return $tenant($endpoint1) === $tenant($endpoint2);
+}
+
+/**
+ * Return the default authorization and token endpoints of an IdP type.
+ *
+ * The Microsoft Entra External ID endpoints depend on the tenant, so a template with placeholders is returned for them,
+ * which the administrator has to replace. The Microsoft cloud in China is not offered for Microsoft Entra External ID,
+ * and the global cloud is used for the other Microsoft IdP types.
+ *
+ * @param int $idptype One of the AUTH_OIDC_IDP_TYPE_* constants.
+ * @return string[] The default endpoints, indexed by "authorize" and "token". Empty strings when there is no default.
+ */
+function auth_oidc_get_default_endpoints(int $idptype): array {
+    switch ($idptype) {
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
+            $base = AUTH_OIDC_MICROSOFT_LOGIN_URL . '/organizations/oauth2/';
+            break;
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
+            $base = AUTH_OIDC_MICROSOFT_LOGIN_URL . '/organizations/oauth2/v2.0/';
+            break;
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID:
+            $base = 'https://<tenant-name>.ciamlogin.com/<tenant-id>/oauth2/v2.0/';
+            break;
+        default:
+            return ['authorize' => '', 'token' => ''];
+    }
+
+    return ['authorize' => $base . 'authorize', 'token' => $base . 'token'];
+}
+
+/**
+ * Return the default logout endpoint of an IdP type.
+ *
+ * The Microsoft Entra External ID logout endpoint is next to the authorization endpoint of the tenant, so it is derived
+ * from the saved authorization endpoint, or is a template with placeholders when that is not a valid endpoint yet.
+ * There is no default for other IdPs, as their logout endpoint is provided by the IdP.
+ *
+ * @param int $idptype One of the AUTH_OIDC_IDP_TYPE_* constants.
+ * @param string|null $authendpoint The authorization endpoint to derive the logout endpoint from, the saved one by default.
+ * @param int|null $microsoftcloud The Microsoft cloud, one of the AUTH_OIDC_MICROSOFT_CLOUD_* constants, the saved one by
+ *     default. It is only used for the Microsoft Entra ID and Microsoft identity platform IdP types.
+ * @return string The default logout endpoint, or an empty string when there is no default.
+ */
+function auth_oidc_get_default_logout_endpoint(int $idptype, ?string $authendpoint = null, ?int $microsoftcloud = null): string {
+    switch ($idptype) {
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID:
+            $authendpoint = trim($authendpoint ?? (string) get_config('auth_oidc', 'authendpoint'));
+            if (auth_oidc_get_external_id_endpoint_error($authendpoint, 'authorize') === null) {
+                return preg_replace('#/authorize(?=$|\?)#', '/logout', $authendpoint);
+            }
+            return 'https://<tenant-name>.ciamlogin.com/<tenant-id>/oauth2/v2.0/logout';
+        case AUTH_OIDC_IDP_TYPE_OTHER:
+            return '';
+        default:
+            $microsofttypes = [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM];
+            if ($microsoftcloud !== null && in_array($idptype, $microsofttypes)) {
+                $loginurl = $microsoftcloud === AUTH_OIDC_MICROSOFT_CLOUD_CHINA
+                    ? AUTH_OIDC_MICROSOFT_LOGIN_URL_CHINA
+                    : AUTH_OIDC_MICROSOFT_LOGIN_URL;
+            } else {
+                $loginurl = auth_oidc_get_login_baseurl();
+            }
+
+            return $loginurl . '/organizations/oauth2/logout';
+    }
+}
+
+/**
+ * Update the saved logout endpoint when the IdP type is changed.
+ *
+ * Only a logout endpoint that still has the standard format of the previous IdP type is replaced, so a value that was
+ * entered by the administrator is kept. The rules are the same as the ones used for the authorization and token endpoints.
+ * When the endpoint of the new IdP type cannot be determined yet, the endpoint is emptied, which makes
+ * Microsoft Entra External ID derive it from the authorization endpoint.
+ *
+ * @param int $previous The previous IdP type, one of the AUTH_OIDC_IDP_TYPE_* constants.
+ * @param int $next The new IdP type, one of the AUTH_OIDC_IDP_TYPE_* constants.
+ * @param string|null $authendpoint The authorization endpoint of the new IdP type, the saved one by default.
+ * @param int|null $microsoftcloud The Microsoft cloud of the new IdP type, the saved one by default. It has to be passed
+ *     when the cloud is changed in the same request as the IdP type, and is not saved yet.
+ * @return void
+ */
+function auth_oidc_convert_logout_endpoint(
+    int $previous,
+    int $next,
+    ?string $authendpoint = null,
+    ?int $microsoftcloud = null
+): void {
+    $current = get_config('auth_oidc', 'logouturi');
+    if ($previous === $next || $next === AUTH_OIDC_IDP_TYPE_NOT_CONNECTED || $current === false) {
+        return;
+    }
+
+    $current = trim((string) $current);
+    $isexternalid = preg_match('#^https://[^/]+\.ciamlogin\.com/[^/]+/oauth2/v2\.0/logout$#i', $current) === 1;
+    $isworkforce = preg_match(
+        '#^(' . preg_quote(AUTH_OIDC_MICROSOFT_LOGIN_URL, '#') . '|' . preg_quote(AUTH_OIDC_MICROSOFT_LOGIN_URL_CHINA, '#') .
+        '|https://login\.chinacloudapi\.cn)/[^/]+/oauth2/logout$#',
+        $current
+    ) === 1;
+
+    $newvalue = $current;
+    if ($previous === AUTH_OIDC_IDP_TYPE_NOT_CONNECTED || $previous === AUTH_OIDC_IDP_TYPE_OTHER) {
+        $newvalue = auth_oidc_get_default_logout_endpoint($next, $authendpoint, $microsoftcloud);
+    } else if ($next === AUTH_OIDC_IDP_TYPE_OTHER) {
+        // The Microsoft endpoints are of no use to another IdP.
+        $newvalue = ($isexternalid || $isworkforce) ? '' : $current;
+    } else if ($next === AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID) {
+        $newvalue = $isworkforce ? auth_oidc_get_default_logout_endpoint($next, $authendpoint, $microsoftcloud) : $current;
+    } else if ($previous === AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID) {
+        $newvalue = $isexternalid ? auth_oidc_get_default_logout_endpoint($next, null, $microsoftcloud) : $current;
+    }
+
+    // A template with placeholders is not a value to save.
+    if (strpos($newvalue, '<') !== false) {
+        $newvalue = '';
+    }
+
+    if ($newvalue !== $current) {
+        add_to_config_log('logouturi', $current, $newvalue, 'auth_oidc');
+        set_config('logouturi', $newvalue, 'auth_oidc');
+    }
+}
+
+/**
+ * Add the script that updates the authorization and token endpoint fields when the IdP type is changed.
+ *
+ * Only values that still have the standard format of the previous IdP type are replaced, so values that were edited by
+ * the administrator are never overwritten. The change only happens in the browser, nothing is saved until the form is.
+ *
+ * @param string $idptypeid HTML id of the IdP type field.
+ * @param string $authendpointid HTML id of the authorization endpoint field.
+ * @param string $tokenendpointid HTML id of the token endpoint field.
+ * @param bool $updatedefaultinfo Whether to also update the "Default" text shown next to the fields on admin settings pages.
+ * @return void
+ */
+function auth_oidc_require_endpoint_autoupdate_js(
+    string $idptypeid,
+    string $authendpointid,
+    string $tokenendpointid,
+    bool $updatedefaultinfo = false
+): void {
+    global $PAGE;
+
+    // The script is added once per page, as it is requested by each of the endpoint fields.
+    static $added = false;
+    if ($added) {
+        return;
+    }
+    $added = true;
+
+    $config = [
+        'ids' => ['idptype' => $idptypeid, 'authorize' => $authendpointid, 'token' => $tokenendpointid],
+        'types' => [
+            'notconnected' => AUTH_OIDC_IDP_TYPE_NOT_CONNECTED,
+            'v1' => AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID,
+            'v2' => AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM,
+            'other' => AUTH_OIDC_IDP_TYPE_OTHER,
+            'external' => AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID,
+        ],
+        'hosts' => [
+            AUTH_OIDC_MICROSOFT_LOGIN_URL,
+            AUTH_OIDC_MICROSOFT_LOGIN_URL_CHINA,
+            'https://login.chinacloudapi.cn',
+        ],
+        'defaults' => [],
+        'defaultinfo' => $updatedefaultinfo ? [
+            'format' => get_string('defaultsettinginfo', 'admin', '__VALUE__'),
+            'empty' => get_string('emptysettingvalue', 'admin'),
+        ] : null,
+    ];
+    foreach ($config['types'] as $idptype) {
+        $config['defaults'][$idptype] = auth_oidc_get_default_endpoints($idptype);
+    }
+
+    $js = <<<'JS'
+require(['jquery'], function($) {
+    var config = __CONFIG__;
+    var types = config.types;
+    var fields = {authorize: $('#' + config.ids.authorize), token: $('#' + config.ids.token)};
+    var idptype = $('#' + config.ids.idptype);
+    if (!idptype.length) {
+        return;
+    }
+
+    // Show the parts of the help texts that are marked for the selected IdP type only.
+    var toggleNotes = function() {
+        var current = String(parseInt(idptype.val(), 10));
+        $('[data-auth-oidc-idptypes]').each(function() {
+            $(this).toggle(String($(this).attr('data-auth-oidc-idptypes')).split(',').indexOf(current) !== -1);
+        });
+    };
+    toggleNotes();
+    idptype.on('change', toggleNotes);
+
+    if (!fields.authorize.length || !fields.token.length) {
+        return;
+    }
+
+    var escape = function(text) {
+        return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    };
+    var hosts = config.hosts.map(escape).join('|');
+
+    // Return the IdP type whose standard format the endpoint has, with the parts of a Microsoft endpoint, or null.
+    var classify = function(value, kind) {
+        value = $.trim(value);
+        if (new RegExp('^https://[^/]+\\.ciamlogin\\.com/[^/]+/oauth2/v2\\.0/' + kind + '$', 'i').test(value)) {
+            return {type: types.external};
+        }
+        var match = new RegExp('^(' + hosts + ')/([^/]+)/oauth2/(v2\\.0/)?' + kind + '$').exec(value);
+        if (match) {
+            return {type: match[3] ? types.v2 : types.v1, host: match[1], tenant: match[2]};
+        }
+        return null;
+    };
+
+    var defaultFor = function(type, kind) {
+        return config.defaults[type] ? config.defaults[type][kind] : '';
+    };
+
+    var convert = function(previous, next, value, kind) {
+        if (next == types.notconnected) {
+            return value;
+        }
+        if (previous == types.notconnected || previous == types.other) {
+            return defaultFor(next, kind);
+        }
+        var current = classify(value, kind);
+        if (next == types.other) {
+            // The Microsoft endpoints are of no use to another IdP, but custom values are kept.
+            return current ? '' : value;
+        }
+        if (!current || current.type != previous) {
+            return value;
+        }
+        if ((previous == types.v1 || previous == types.v2) && (next == types.v1 || next == types.v2)) {
+            // Keep the host and the path part (common, organizations, tenant name or ID).
+            return current.host + '/' + current.tenant + '/oauth2/' + (next == types.v2 ? 'v2.0/' : '') + kind;
+        }
+        return defaultFor(next, kind);
+    };
+
+    var previous = parseInt(idptype.val(), 10);
+    idptype.on('change', function() {
+        var next = parseInt(idptype.val(), 10);
+        if (next == previous) {
+            return;
+        }
+        $.each(fields, function(kind, field) {
+            field.val(convert(previous, next, field.val(), kind));
+            // Keep the "Default" text next to the field in line with the IdP type.
+            var info = field.closest('.form-item').find('.form-defaultinfo');
+            if (config.defaultinfo && info.length && next != types.notconnected) {
+                var defaultvalue = defaultFor(next, kind);
+                info.text(config.defaultinfo.format.replace('__VALUE__', defaultvalue || config.defaultinfo.empty));
+            }
+        });
+        previous = next;
+    });
+});
+JS;
+
+    $PAGE->requires->js_amd_inline(str_replace('__CONFIG__', json_encode($config), $js));
+}
+
+/**
  * Return formatted form element name to be used by configuration variables in custom forms.
  *
  * @param string $stringid
@@ -1389,6 +1865,9 @@ function auth_oidc_get_idp_type_name() {
             break;
         case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
             $idptypename = get_string('idp_type_microsoft_identity_platform', 'auth_oidc');
+            break;
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_EXTERNAL_ID:
+            $idptypename = get_string('idp_type_microsoft_entra_external_id', 'auth_oidc');
             break;
         case AUTH_OIDC_IDP_TYPE_OTHER:
             $idptypename = get_string('idp_type_other', 'auth_oidc');
