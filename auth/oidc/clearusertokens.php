@@ -94,7 +94,10 @@ if ($formdata = $form->get_data()) {
 // Step 1: choose whose tokens to clear.
 echo $OUTPUT->header();
 echo auth_oidc_get_settings_nav_html('auth_oidc_clear_user_tokens');
-echo html_writer::div(get_string('clear_user_tokens_desc', 'auth_oidc'), 'mb-3');
+// The Microsoft 365 tokens only exist when local_o365 is installed, and not for Microsoft Entra External ID.
+$descriptionstring = auth_oidc_is_local_365_installed() && !auth_oidc_is_entra_external_id() ?
+    'clear_user_tokens_desc' : 'clear_user_tokens_desc_generic';
+echo html_writer::div(get_string($descriptionstring, 'auth_oidc'), 'mb-3');
 
 // The core user selector prints the full name of a user without a first name and last name as a blank space, which
 // leaves an empty option in the list. Mark such users with a "(no name)" label, as the options and the tags of the

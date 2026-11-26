@@ -51,6 +51,46 @@ class utils {
     const RESOURCE_NOT_EXIST_ERROR = 'does not exist or one of its queried reference-property objects are not present';
 
     /**
+     * Check whether the features of the plugin are disabled by the configured IdP type.
+     *
+     * Microsoft Entra External ID tenants are customer tenants without Microsoft 365 services, so none of the features of
+     * this plugin can work for them.
+     *
+     * @return bool
+     */
+    public static function is_disabled_for_idp_type(): bool {
+        return auth_oidc_is_entra_external_id();
+    }
+
+    /**
+     * Check, for a task, whether the features of the plugin are disabled by the configured IdP type, and explain in the
+     * task output why the task is skipped if so.
+     *
+     * @return bool True when the task has to be skipped.
+     */
+    public static function skip_task_for_idp_type(): bool {
+        if (!static::is_disabled_for_idp_type()) {
+            return false;
+        }
+
+        static::mtrace(get_string('task_skipped_external_id', 'local_o365'));
+
+        return true;
+    }
+
+    /**
+     * Stop the request if the features of the plugin are disabled by the configured IdP type.
+     *
+     * @return void
+     * @throws moodle_exception If the features are disabled.
+     */
+    public static function require_features_enabled(): void {
+        if (static::is_disabled_for_idp_type()) {
+            throw new moodle_exception('features_disabled_external_id', 'local_o365');
+        }
+    }
+
+    /**
      * Determine whether essential configuration has been completed.
      *
      * @return bool Whether the plugins are configured.
@@ -60,6 +100,7 @@ class utils {
 
         if ($authoidcsetupcomplete) {
             $idptype = get_config('auth_oidc', 'idptype');
+            // Microsoft Entra External ID is deliberately not included, as it has no Microsoft 365 services.
             if (in_array($idptype, [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM])) {
                 return true;
             }

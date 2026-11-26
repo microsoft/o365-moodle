@@ -68,6 +68,8 @@ class create_onenoteassignment extends external_api {
     public static function assignment_create($data) {
         global $CFG;
 
+        \local_o365\utils::require_features_enabled();
+
         $params = self::validate_parameters(self::assignment_create_parameters(), ['data' => $data]);
         $params = $params['data'];
 

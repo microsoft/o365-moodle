@@ -63,6 +63,9 @@ class usergroupmembershipsync extends adhoc_task {
      * @return bool
      */
     public function execute(): bool {
+        if (\local_o365\utils::skip_task_for_idp_type()) {
+            return true;
+        }
         $data = $this->get_custom_data();
 
         if (empty($data->userid)) {

@@ -83,6 +83,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_oidc_user_authed(user_authed $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         require_login();
         require_capability('moodle/site:config', system::instance());
 
@@ -175,6 +178,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_oidc_user_connected(user_connected $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $DB;
 
         if (utils::is_connected() !== true) {
@@ -277,6 +283,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_created(user_created $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $DB;
 
         if (utils::is_connected() !== true) {
@@ -306,6 +315,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_oidc_user_disconnected(user_disconnected $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $DB;
 
         $eventdata = $event->get_data();
@@ -330,6 +342,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_oidc_user_loggedin(user_loggedin $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         if (utils::is_connected() !== true) {
             return false;
         }
@@ -435,6 +450,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_enrolment_updated(user_enrolment_updated $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         // Do nothing if sync direction is Teams to Moodle.
         $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
         if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
@@ -465,6 +483,9 @@ class observers {
      * @return bool
      */
     public static function handle_enrol_instance_updated(enrol_instance_updated $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $DB;
 
         // Do nothing if sync direction is Teams to Moodle.
@@ -533,6 +554,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_course_created(course_created $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $DB;
 
         if (utils::is_connected() !== true) {
@@ -590,6 +614,9 @@ class observers {
      * @return bool
      */
     public static function handle_course_restored(course_restored $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         if (utils::is_connected() !== true) {
             return false;
         }
@@ -621,6 +648,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_course_updated(course_updated $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         if (utils::is_connected() !== true) {
             return false;
         }
@@ -656,6 +686,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_course_deleted(course_deleted $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $DB;
 
         if (utils::is_connected() !== true) {
@@ -693,6 +726,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_assigned(role_assigned $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         // Do nothing if sync direction is Teams to Moodle.
         $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
         if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
@@ -727,6 +763,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_unassigned(role_unassigned $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         // Do nothing if sync direction is Teams to Moodle.
         $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
         if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
@@ -767,6 +806,9 @@ class observers {
      * @return bool
      */
     public static function handle_capability_change($event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         $roleid = $event->objectid;
 
         // Resync owners and members in the groups connected to enabled Moodle courses.
@@ -800,6 +842,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_deleted(role_deleted $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         if (utils::is_connected() !== true) {
             return false;
         }
@@ -823,6 +868,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_deleted(user_deleted $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $DB;
         $userid = $event->objectid;
         $DB->delete_records('local_o365_token', ['user_id' => $userid]);
@@ -920,6 +968,9 @@ class observers {
      * @return bool
      */
     public static function handle_cohort_deleted(cohort_deleted $event): bool {
+        if (\local_o365\utils::is_disabled_for_idp_type()) {
+            return true;
+        }
         global $DB;
 
         $cohortid = $event->objectid;

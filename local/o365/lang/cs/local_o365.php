@@ -52,6 +52,8 @@ $string['settings_setup_step1_desc'] = 'Zaregistrujte novou aplikaci Microsoft E
 $string['settings_setup_step1clientcreds'] = '<br />Po úspěšném provedení skriptu zkopírujte ID aplikace a tajný klíč vrácené skriptem na <a href="{$a}">stránku konfigurace ověřovacího modulu OpenID Connect</a>.';
 $string['settings_setup_step1_credentials_end'] = 'Pokud nemůžete nastavit aplikaci Microsoft Entra ID pomocí PowerShellu, <a href="{$a}" target="_blank">klikněte sem</a> pro pokyny k ručnímu nastavení.';
 $string['settings_setup_step1_continue'] = '<b>Po zadání ID aplikace a tajného klíče pokračujte kliknutím na „Uložit změny“ v dolní části stránky.</b><br /><br /><br /><br /><br />';
+$string['features_disabled_external_id'] = 'Funkce Microsoft 365 nejsou dostupné, pokud je typ poskytovatele identity (IdP) pluginu pro ověřování OpenID Connect nastaven na Microsoft Entra External ID. Tenanti Microsoft Entra External ID jsou zákaznické tenanty bez služeb Microsoft 365 (Exchange Online, Microsoft Teams, SharePoint/OneDrive nebo School Data Sync), proto jsou všechny funkce tohoto pluginu zakázány.';
+$string['task_skipped_external_id'] = 'Úloha byla přeskočena: funkce Microsoft 365 tohoto pluginu jsou zakázány, protože typ IdP pluginu pro ověřování OpenID Connect je Microsoft Entra External ID.';
 $string['settings_setup_step1_existing_settings'] = '<h5>Stávající nastavení</h5>';
 $string['settings_setup_step2'] = 'Krok 2/2: Souhlas správce a další informace';
 $string['settings_setup_step2_desc'] = 'Tento poslední krok vám umožní udělit souhlas správce s použitím některých oprávnění Microsoft Entra ID a shromáždí některé další informace o vašem prostředí Microsoft 365.<br /><br />';

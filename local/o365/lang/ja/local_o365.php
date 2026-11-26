@@ -52,6 +52,8 @@ $string['settings_setup_step1_desc'] = 'PowerShellを使用して、Moodle統合
 $string['settings_setup_step1clientcreds'] = '<br />スクリプトが正常に実行された後、スクリプトが返したアプリケーションIDとシークレットを<a href="{$a}">OpenID Connect認証プラグイン設定ページ</a>にコピーしてください。';
 $string['settings_setup_step1_credentials_end'] = 'PowerShellでMicrosoft Entra IDアプリを設定できない場合、手動設定の手順について<a href="{$a}" target="_blank">こちらをクリック</a>してください。';
 $string['settings_setup_step1_continue'] = '<b>アプリケーションIDとシークレットを入力した後、続けるにはページ下部の「変更を保存する」をクリックしてください。</b><br /><br /><br /><br /><br />';
+$string['features_disabled_external_id'] = 'OpenID Connect認証プラグインのIdPタイプがMicrosoft Entra External IDに設定されている場合、Microsoft 365の機能は利用できません。Microsoft Entra External IDテナントは、Microsoft 365サービス（Exchange Online、Microsoft Teams、SharePoint/OneDrive、School Data Sync）のない顧客テナントであるため、このプラグインのすべての機能が無効になります。';
+$string['task_skipped_external_id'] = 'タスクはスキップされました。OpenID Connect認証プラグインのIdPタイプがMicrosoft Entra External IDであるため、このプラグインのMicrosoft 365機能は無効になっています。';
 $string['settings_setup_step1_existing_settings'] = '<h5>既存の設定</h5>';
 $string['settings_setup_step2'] = 'ステップ 2/2: 管理者の同意 &amp; 追加情報';
 $string['settings_setup_step2_desc'] = 'この最後のステップでは、一部のMicrosoft Entra IDアクセス権の使用に対して管理者の同意を与え、Microsoft 365環境に関する追加情報を収集します。<br /><br />';
