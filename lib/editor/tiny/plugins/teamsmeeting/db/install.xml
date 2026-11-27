@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <XMLDB PATH="lib/editor/tiny/plugins/teamsmeeting/db" VERSION="20200326" COMMENT="XMLDB file for Moodle tiny/teamsmeeting plugin"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:noNamespaceSchemaLocation="../../../../../xmldb/xmldb.xsd"
+       xsi:noNamespaceSchemaLocation="../../../../../../lib/xmldb/xmldb.xsd"
 >
     <TABLES>
         <TABLE NAME="tiny_teamsmeeting" COMMENT="Meetings data">
