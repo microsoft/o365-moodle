@@ -75,6 +75,15 @@ class main {
     protected array $fullusersbymoodleid = [];
 
     /**
+     * IDs of Moodle users that are flagged as deleted but still referenced by a local_o365_objects record.
+     *
+     * Populated during batch sync. These users are excluded from $fullusersbymoodleid so they are never updated.
+     *
+     * @var array
+     */
+    protected array $deletedmoodleuserids = [];
+
+    /**
      * Pre-fetched connection records keyed by Entra ID UPN, populated during batch sync.
      *
      * @var array
@@ -1736,11 +1745,18 @@ class main {
         }
 
         // Bulk fetch full user records.
+        // Accounts flagged as deleted are kept out of the list, so they are never updated (renamed, retokenised).
         $this->fullusersbymoodleid = [];
+        $this->deletedmoodleuserids = [];
         if ($moodleuserids) {
             [$museridssql, $museridsparams] = $DB->get_in_or_equal($moodleuserids);
             $fullusers = $DB->get_records_select('user', "id $museridssql", $museridsparams);
             foreach ($fullusers as $fulluser) {
+                if (!empty($fulluser->deleted)) {
+                    $this->deletedmoodleuserids[$fulluser->id] = $fulluser->id;
+                    continue;
+                }
+
                 $this->fullusersbymoodleid[$fulluser->id] = $fulluser;
             }
         }
@@ -1786,6 +1802,17 @@ class main {
                 continue;
             } else {
                 $processedusers[] = $entraiduser['convertedidentifier'];
+            }
+
+            // Skip users whose connected Moodle account is deleted. Do not update the account or its connection records,
+            // and do not create a new account while the stale connection exists.
+            if (
+                !empty($entraiduser['id']) &&
+                ($deletedconnection = ($this->o365objectsbyobjectid[$entraiduser['id']] ?? null)) &&
+                isset($this->deletedmoodleuserids[$deletedconnection->moodleid])
+            ) {
+                $this->mtrace('The connected Moodle account (#' . $deletedconnection->moodleid . ') is deleted; skipping...');
+                continue;
             }
 
             $needsyncprofile = false;
