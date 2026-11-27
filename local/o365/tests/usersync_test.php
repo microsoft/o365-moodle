@@ -1678,6 +1678,110 @@ final class usersync_test extends advanced_testcase {
     }
 
     /**
+     * Test sync_users leaves a deleted Moodle account alone when its connected Entra ID user is renamed.
+     *
+     * A deleted Moodle account can still be referenced by a stale local_o365_objects record. The sync must not
+     * update the deleted account's token or connection record, and must not create a replacement account.
+     *
+     * @dataProvider sync_users_renamed_connected_user_deleted_provider
+     * @covers \local_o365\feature\usersync\main::sync_users
+     * @param int $identifierchange Value of the support_user_identifier_change setting.
+     */
+    public function test_sync_users_renamed_connected_user_deleted(int $identifierchange): void {
+        global $CFG, $DB;
+
+        set_config('support_user_identifier_change', (string) $identifierchange, 'local_o365');
+        set_config('usersync', 'create,sync', 'local_o365');
+
+        $deleteduserid = $DB->insert_record('user', (object) [
+            'auth' => 'oidc',
+            'deleted' => '1',
+            'mnethostid' => $CFG->mnet_localhost_id,
+            'username' => 'olduser@example.onmicrosoft.com',
+            'firstname' => 'Old',
+            'lastname' => 'User',
+            'email' => 'olduser@example.onmicrosoft.com',
+            'lang' => 'en',
+        ]);
+        $o365id = $DB->insert_record('local_o365_objects', (object) [
+            'type' => 'user',
+            'subtype' => 'default',
+            'objectid' => '00000000-0000-0000-0000-000000000002',
+            'moodleid' => $deleteduserid,
+            'o365name' => 'olduser@example.onmicrosoft.com',
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ]);
+        $tokenid = $DB->insert_record('auth_oidc_token', (object) [
+            'oidcuniqid' => '00000000-0000-0000-0000-000000000002',
+            'authcode' => '000',
+            'username' => 'olduser@example.onmicrosoft.com',
+            'useridentifier' => 'olduser@example.onmicrosoft.com',
+            'userid' => $deleteduserid,
+            'scope' => 'test',
+            'tokenresource' => unified::get_tokenresource(),
+            'token' => '000',
+            'expiry' => '9999999999',
+            'refreshtoken' => 'refreshtoken2',
+            'idtoken' => 'idtoken2',
+        ]);
+
+        $response = json_encode(['value' => [[
+            'odata.type' => 'Microsoft.WindowsAzure.ActiveDirectory.User',
+            'objectType' => 'User',
+            'objectId' => '00000000-0000-0000-0000-000000000002',
+            'id' => '00000000-0000-0000-0000-000000000002',
+            'givenName' => 'Old',
+            'mail' => 'newuser@example.onmicrosoft.com',
+            'surname' => 'User',
+            'userPrincipalName' => 'newuser@example.onmicrosoft.com',
+            'useridentifier' => 'newuser@example.onmicrosoft.com',
+            'useridentifierlower' => 'newuser@example.onmicrosoft.com',
+            'upnsplit0' => 'newuser',
+        ]]]);
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response($response);
+
+        $apiclient = new unified($this->get_mock_token(), $httpclient);
+        $usersync = new main();
+        $apiclient->process_users_batched(function (array $userbatch) use ($usersync) {
+            $usersync->sync_users($userbatch, 'userPrincipalName');
+        });
+
+        $this->assertEquals(
+            'olduser@example.onmicrosoft.com',
+            $DB->get_field('user', 'username', ['id' => $deleteduserid]),
+            'The deleted account should not be renamed.'
+        );
+        $this->assertEquals(
+            'olduser@example.onmicrosoft.com',
+            $DB->get_field('local_o365_objects', 'o365name', ['id' => $o365id]),
+            'The connection record of a deleted account should not be updated.'
+        );
+        $this->assertEquals(
+            'olduser@example.onmicrosoft.com',
+            $DB->get_field('auth_oidc_token', 'useridentifier', ['id' => $tokenid]),
+            'The token of a deleted account should not be updated.'
+        );
+        $this->assertFalse(
+            $DB->record_exists('user', ['username' => 'newuser@example.onmicrosoft.com']),
+            'No replacement account should be created while a stale connection to a deleted account exists.'
+        );
+    }
+
+    /**
+     * Data provider for test_sync_users_renamed_connected_user_deleted.
+     *
+     * @return array
+     */
+    public static function sync_users_renamed_connected_user_deleted_provider(): array {
+        return [
+            'username update enabled' => [1],
+            'username update disabled' => [0],
+        ];
+    }
+
+    /**
      * Test user creation restrictions with multiple Microsoft 365 group object IDs.
      *
      * @covers \local_o365\feature\usersync\main::check_usercreationrestriction
